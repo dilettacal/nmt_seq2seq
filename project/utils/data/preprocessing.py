@@ -9,12 +9,10 @@ from sacremoses import MosesTokenizer
 import unicodedata
 import re
 
-import tokenizer
-from project import get_full_path
-from project.utils.data.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
+import TMX2Corpus.tokenizer as tokenizer
+from project.utils.data.mappings import ENG_CONTRACTIONS_MAP
 from project.utils.utils import Logger
 from settings import RAW_EUROPARL, DATA_DIR_PREPRO
-from tokenizer import TAG_REGEX
 
 
 class CustomTokenizer(tokenizer.Tokenizer):
