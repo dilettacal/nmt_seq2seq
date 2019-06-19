@@ -64,3 +64,5 @@ def experiment_parser():
 
     # parser.set_defaults(evaluate=False, bi=False, reverse_input=False, visualize=False)
     parser.set_defaults(evaluate=False)
+
+    return parser

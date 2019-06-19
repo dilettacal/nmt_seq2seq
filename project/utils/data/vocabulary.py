@@ -153,47 +153,29 @@ class TSVTranslationCorpus(torchtext.data.Dataset):
                      if d is not None)
 
 
-def prepare_dataset_iterators(corpus="europarl", language_code="de",
-                              src_l="de", v = 0, min_freq=5, max_sent_len=25,
-                              batch_size=64, char_level=False,
-                              include_lengths=False, device="cuda"):
+def get_vocabularies_iterators(src_lang, args):
+
+    device = args.cuda
 
     #### Create torchtext fields
     ####### SRC, TRG
     voc_limit = args.v
-    lang_code = args.lang_code
 
-    tie_emb = args.tie
-    rnn_type = args.rnn
-
-    src_lang = lang_code if args.reverse else "en"
-    trg_lang = "en" if src_lang == lang_code else lang_code
     char_level = args.c
     corpus = args.corpus
-    model_type = args.model_type
+    language_code = args.lang_code
+    print("Min_freq",voc_limit)
+    print("Max sequence length:", args.max_len)
 
-    src_lang = "en" if src_l == "en" else language_code
-    trg_lang = "en" if src_l == language_code else language_code
-
-    print("Language combination ({}-{})".format(src_lang, trg_lang))
-
-    lang_comb = "{}_{}".format(src_lang, trg_lang)
-
-    print("Min_freq", min_freq)
-    print("Max sequence length:", max_sent_len)
-
-    experiment_path = os.path.join(MODEL_STORE, lang_comb, model_type, str(layers), direction,
-                                   datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-    os.makedirs(experiment_path, exist_ok=True)
 
 
     tokenizer = lambda s: s.split() if char_level == False else lambda s: list(s)
 
-    src_vocab = TranslationReversibleField(tokenize=tokenizer, include_lengths=include_lengths,  pad_token=PAD_TOKEN, unk_token=UNK_TOKEN)
+    src_vocab = TranslationReversibleField(tokenize=tokenizer, include_lengths=False,  pad_token=PAD_TOKEN, unk_token=UNK_TOKEN)
 
-    trg_vocab = TranslationReversibleField(tokenize=tokenizer, include_lengths=include_lengths, init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN)
+    trg_vocab = TranslationReversibleField(tokenize=tokenizer, include_lengths=False, init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN)
 
-    fields = [(SRC_LABEL, src_vocab), (TRG_LABEL, trg_vocab)] if src_lang == "en" else [(TRG_LABEL, src_vocab), (SRC_LABEL, trg_vocab)]
+    fields = [(src_vocab, trg_vocab)]
 
     print("Fields created!")
     print(fields)
@@ -225,18 +207,18 @@ def prepare_dataset_iterators(corpus="europarl", language_code="de",
         exts = (".en", ".de") if src_lang == "en" else (".de", ".en")
         train, val, test = datasets.IWSLT.splits(root=path,
                                                  exts=exts, fields=(src_vocab, trg_vocab),
-                                                 filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= max_sent_len)
+                                                 filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= args.max_len)
         end = time.time()
         print("Duration: {}".format(convert(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
-    if v > 0:
-        src_vocab.build_vocab(train.src, val.src, test.src, min_freq=min_freq, max_size=v)
-        trg_vocab.build_vocab(train.trg, val.trg, test.src, min_freq=min_freq, max_size=v)
+    if voc_limit > 0:
+        src_vocab.build_vocab(train.src, val.src, test.src, min_freq=2, max_size=voc_limit)
+        trg_vocab.build_vocab(train.trg, val.trg, test.src, min_freq=2, max_size=voc_limit)
         print("Src vocabulary created!")
     else:
-        src_vocab.build_vocab(train.src, val.src, test.src, min_freq=min_freq)
-        trg_vocab.build_vocab(train.trg, val.trg, test.src, min_freq=min_freq)
+        src_vocab.build_vocab(train.src, val.src, test.src, min_freq=2)
+        trg_vocab.build_vocab(train.trg, val.trg, test.src, min_freq=2)
         print("Src vocabulary created!")
 
 
@@ -245,7 +227,7 @@ def prepare_dataset_iterators(corpus="europarl", language_code="de",
     #### Iterators
 
     # Create iterators to process text in batches of approx. the same length
-    train_iter = data.BucketIterator(train, batch_size=batch_size, device=device, repeat=False,
+    train_iter = data.BucketIterator(train, batch_size=args.b, device=device, repeat=False,
                                      sort_key=lambda x: len(x.src), sort_within_batch=True, shuffle=True)
     val_iter = data.Iterator(val, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))

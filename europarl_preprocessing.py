@@ -60,10 +60,12 @@ def split_data(src_sents, trg_sents, test_ratio=0.3, seed=42):
 
 
 def reduce_sent_len(src_sents, trg_sents, max_len=30):
-    for src_sent, trg_sent in zip(src_sents, trg_sents):
+    for i, (src_sent, trg_sent) in enumerate(zip(src_sents, trg_sents)):
+        if i % 10000 == 0:
+            print("Sentence pairs:")
+            print(src_sent, trg_sent)
         src_sent = perform_refinements(src_sent)
         trg_sent = perform_refinements(trg_sent)
-
         if (src_sent and trg_sent) or (src_sent!="" and trg_sent != ""):
             src_split = src_sent.split(" ")
             trg_split = trg_sent.split(" ")

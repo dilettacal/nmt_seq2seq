@@ -3,10 +3,10 @@ import os, datetime, time, sys
 import torch
 import torch.nn as nn
 
-from experiment.setup import experiment_parser
+from project.experiment.setup import experiment_parser
 from project.model.models import Seq2Seq, ChoSeq2Seq, VALID_MODELS
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
-from project.utils.data.vocabulary import prepare_dataset_iterators, print_data_info
+from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import predict_from_input, predict, validate, train
 from project.utils.utils import convert, Logger
 from settings import MODEL_STORE
@@ -16,21 +16,16 @@ def main():
     args = experiment_parser().parse_args()
     corpus = args.corpus
     device = "cuda" if (args.cuda and torch.cuda.is_available()) else "cpu"
-   # device = "cpu"
-
+    args.cuda = device
     print("Running experiment on:", device)
 
-    # models are stored in <root>/results
-    # results/de_en, results/en_de
-
-    voc_limit = args.v
     lang_code = args.lang_code
     tie_emb = args.tie
     rnn_type = args.rnn
     src_lang = lang_code if args.reverse else "en"
     trg_lang = "en" if src_lang == lang_code else lang_code
-    char_level = args.c
-    model_type = args.model_type.lower()
+    model_type = "custom"
+    args.model_type = model_type
 
     print("Language combination ({}-{})".format(src_lang, trg_lang))
 
@@ -45,12 +40,7 @@ def main():
     # Load and process data
     time_data = time.time()
     SRC, TRG, train_iter, val_iter, test_iter, train_data, val_data, test_data = \
-        prepare_dataset_iterators(v=voc_limit, corpus=corpus,
-                                  language_code=lang_code,
-                                  batch_size=args.b,
-                                  max_sent_len=args.max_len,
-                                  src_l=src_lang,
-                                  device=device, char_level=char_level)
+        get_vocabularies_iterators(src_lang, args)
 
     print('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab), convert(time.time() - time_data)))
     print("First train src batch:", SRC.reverse(next(iter(train_iter)).src), sep="\n")
@@ -72,18 +62,12 @@ def main():
 
     # Create model
     tokens = [TRG.vocab.stoi[x] for x in [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN,UNK_TOKEN]]
-    if model_type not in VALID_MODELS:
-        print("Wrong model type. Model type is set to custom")
-        model_type = "custom"
+
     if args.bi and args.reverse_input:
-        print("You set both bidirectional and reverse input. Reverse input argument is removed.")
         args.reverse_input = False
-    if args.reverse_input:
-        model_type = "sutskever"
 
-    ### generate the model ####
-    if model_type == "custom":
-        model = Seq2Seq(embedding_src=embedding_src,
+
+    model = Seq2Seq(embedding_src=embedding_src,
                         embedding_trg=embedding_trg,
                         h_dim=args.hs,
                         num_layers=layers,
@@ -94,42 +78,6 @@ def main():
                         tokens_bos_eos_pad_unk=tokens,
                         reverse_input=args.reverse_input,
                         device=device)
-    elif model_type == "sutskever":
-        if not args.reverse_input:
-            print("Input must be reversed.")
-            args.reverse_input = True
-        if args.nlayers < 2:
-            print("Architecture is set to be multilayered!")
-            args.layers = 2
-        if rnn_type != "lstm":
-            print("Cell type is set to lstm")
-            rnn_type = "lstm"
-        if args.bi:
-            print("Cell is set to be uni directional")
-            args.bi = False
-
-        model = Seq2Seq(embedding_src=embedding_src,
-                        embedding_trg=embedding_trg,
-                        h_dim=args.hs,
-                        num_layers=layers,
-                        dropout_p=args.dp,
-                        bi=args.bi,
-                        rnn_type=rnn_type,
-                        tie_emb=tie_emb,
-                        tokens_bos_eos_pad_unk=tokens,
-                        reverse_input=args.reverse_input,
-                        device=device)
-    elif model_type == "cho":
-        model = ChoSeq2Seq(embedding_src=embedding_src,
-                        embedding_trg=embedding_trg,
-                        h_dim=args.hs,
-                        num_layers=layers,
-                        dropout_p=args.dp,
-                        bi=args.bi,
-                        tie_emb=tie_emb,
-                        tokens_bos_eos_pad_unk=tokens,
-                        reverse_input=args.reverse_input,
-                        device=device, maxout_units=100)
 
     # Load pretrained model
     if args.model is not None and os.path.isfile(args.model):
