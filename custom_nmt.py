@@ -53,6 +53,11 @@ def main():
     for elem in all_togheter:
         print(elem)
 
+    print("***************************************")
+    all_togheter_rev = list(zip(SRC.reverse(first_batch.src), TRG.reverse(first_batch.trg)))
+    for elem in all_togheter_rev:
+        print(elem)
+
     exit()
     data_logger = Logger(path=experiment_path, file_name="data.log")
     print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, corpus)
