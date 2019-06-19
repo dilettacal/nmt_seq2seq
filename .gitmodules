@@ -1,0 +1,3 @@
+[submodule "TMX2Corpus"]
+	path = TMX2Corpus
+	url = https://github.com/amake/TMX2Corpus.git
