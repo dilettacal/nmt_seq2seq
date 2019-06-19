@@ -70,8 +70,8 @@ sudo -H $env_name/bin/python -m spacy download fr;
 sudo -H $env_name/bin/python -m spacy download it;
 sudo -H $env_name/bin/python -m spacy download xx;
 
-echo "Installing library tmx2corpus from git..."
-sudo -H $env_name/bin/pip install git+https://github.com/amake/tmx2corpus.git
+#echo "Installing library tmx2corpus from git..."
+#sudo -H $env_name/bin/pip install git+https://github.com/amake/tmx2corpus.git
 
 echo "Installing other requirements"
 
