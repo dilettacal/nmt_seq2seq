@@ -1,3 +1,6 @@
+import os, sys
+sys.path += [os.path.abspath('.')]
+
 from os.path import dirname, join
 
 PROJECT_ROOT = dirname(dirname(__file__))
