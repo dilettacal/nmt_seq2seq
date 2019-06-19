@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import os
 
 import math
@@ -44,32 +46,8 @@ def beam_search_decoder(data, k):
 
 
 
-
-
-
 if __name__ == '__main__':
-
-	exit()
-
-	# define a sequence of 10 words over a vocab of 5 words
-	data = torch.Tensor([[0.1, 0.2, 0.3, 0.4, 0.5],
-						 [0.5, 0.4, 0.3, 0.2, 0.1],
-						 [0.1, 0.2, 0.3, 0.4, 0.5],
-						 [0.5, 0.4, 0.3, 0.2, 0.1],
-						 [0.1, 0.2, 0.3, 0.4, 0.5],
-						 [0.5, 0.4, 0.3, 0.2, 0.1],
-						 [0.1, 0.2, 0.3, 0.4, 0.5],
-						 [0.5, 0.4, 0.3, 0.2, 0.1],
-						 [0.1, 0.2, 0.3, 0.4, 0.5],
-						 [0.5, 0.4, 0.3, 0.2, 0.1]])
-
-	# decode sequence
-	result = greedy_decoder(data)
-	print(result)
-
-	topK = torch.topk(data, 1)[1].squeeze().tolist()
-	print(topK)
-
-	print(sorted(beam_search_decoder(data, 4),reverse=True, key=lambda x: x[1]))
+    from TMX2Corpus import tmx2corpus
+    tmx2corpus.convert("")
 
 
