@@ -1,4 +1,4 @@
-# nmt_seq2seq
+# Neural Machine Translation - Seq2Seq in PyTorch
 Repository containing the code to my bachelor thesis about Neural Machine Translation
 
 My Bachelor Thesis is about Neural Machine Translation. Main topics discussed are Encoder-Decoder architectures or Sequence-to-Sequence models in their simplest form. As baseline models the implementations from following papers are proposed:
@@ -33,6 +33,9 @@ State-of-the-Art systems are based on the newest Google Architecture, the Transf
 Pre-State-of-the-Art systems adopted an Attention-Mechanism which allowed to focus on the relevant part of the source sentences, and which were taken into consideration during the decoding phase.
 
 The base of this mechanism can be found in the above mentioned papers by Sutskever and Cho. 
+
+## Code references
+The code in this repository is mainly based on this work by Luke Melas-Kyriazi: [Machine-Translation](https://github.com/lukemelas/Machine-Translation). The code has been readapted to meet my thesis requirements.
 
 ## How to use the program
 
