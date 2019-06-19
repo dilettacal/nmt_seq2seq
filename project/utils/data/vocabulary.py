@@ -5,12 +5,13 @@ import torch
 import torchtext
 from torchtext import data, datasets
 from torchtext.data import Example, Field, TabularDataset
+from torchtext.datasets import TranslationDataset
 
 from project import get_full_path
 from project.utils.constants import SRC_LABEL, TRG_LABEL, SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
 from project.utils.data.preprocessing import generate_splits_from_datasets
 from project.utils.utils import convert
-from settings import DATA_DIR_PREPRO
+from settings import DATA_DIR_PREPRO, MODEL_STORE
 
 CHUNK_SIZES = {10: 10e2, 20: 10e3, 30:10e4, 50:10e4}
 
@@ -159,14 +160,31 @@ def prepare_dataset_iterators(corpus="europarl", language_code="de",
 
     #### Create torchtext fields
     ####### SRC, TRG
+    voc_limit = args.v
+    lang_code = args.lang_code
+
+    tie_emb = args.tie
+    rnn_type = args.rnn
+
+    src_lang = lang_code if args.reverse else "en"
+    trg_lang = "en" if src_lang == lang_code else lang_code
+    char_level = args.c
+    corpus = args.corpus
+    model_type = args.model_type
 
     src_lang = "en" if src_l == "en" else language_code
     trg_lang = "en" if src_l == language_code else language_code
 
-    print("Src lang:", src_lang)
-    print("Trg lang:", trg_lang)
+    print("Language combination ({}-{})".format(src_lang, trg_lang))
+
+    lang_comb = "{}_{}".format(src_lang, trg_lang)
+
     print("Min_freq", min_freq)
     print("Max sequence length:", max_sent_len)
+
+    experiment_path = os.path.join(MODEL_STORE, lang_comb, model_type, str(layers), direction,
+                                   datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    os.makedirs(experiment_path, exist_ok=True)
 
 
     tokenizer = lambda s: s.split() if char_level == False else lambda s: list(s)
@@ -182,39 +200,18 @@ def prepare_dataset_iterators(corpus="europarl", language_code="de",
 
     ####### create splits
 
-    queries = []
-
     if corpus == "europarl":
+
         root = get_full_path(DATA_DIR_PREPRO)
         #print("Root:", root)
         data_dir = os.path.join(root, corpus, language_code)
-        #print("Datadir:", data_dir)
-        if max_sent_len:
-            data_dir = os.path.join(data_dir, str(max_sent_len))
-         #   print("Datadir:", data_dir)
-
-        if not os.path.isdir(data_dir):
-            print("No files preprocessed with the given maximum length of {}. Generating split files...".format(
-                max_sent_len))
-            generate_splits_from_datasets(max_len=max_sent_len, language_code=language_code)
-
-        else:
-            files = os.listdir(data_dir)
-            sp_fn = ["train.tsv", "val.tsv", "test.tsv"]
-            already_splitted = [x in files for x in sp_fn].count(True)
-            if already_splitted != 3:
-                print("Some split files are missing. Generating split files...".format(
-                    max_sent_len))
-                generate_splits_from_datasets(max_len=max_sent_len, language_code=language_code)
-
 
         print("Loading data...")
         start = time.time()
+        exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
 
-        train, val, test = TabularDataset.splits(path=data_dir, train='train.tsv',
-                                                 validation='val.tsv', test="test.tsv",
-                                                 format='tsv',
-                                                fields=fields)
+        train, val, test = TranslationDataset.splits(path=data_dir, train="train", validation="val", test="test", exts=exts)
+
 
         end = time.time()
         print("Duration: {}".format(convert(end - start)))

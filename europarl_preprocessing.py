@@ -7,7 +7,7 @@ import time
 import pandas as pd
 
 from project import get_full_path
-from project.utils.data.preprocessing import CustomTokenizer, clean_string, clearup
+from project.utils.data.preprocessing import CustomTokenizer, clean_string, clearup, perform_refinements
 from project.utils.download.europarl import maybe_download_and_extract, load_data, DATA_DIR
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
@@ -61,18 +61,10 @@ def split_data(src_sents, trg_sents, test_ratio=0.3, seed=42):
 
 def reduce_sent_len(src_sents, trg_sents, max_len=30):
     for src_sent, trg_sent in zip(src_sents, trg_sents):
-        sent = ' '.join(sent)
-        sent = clean_string(sent)
+        src_sent = perform_refinements(src_sent)
+        trg_sent = perform_refinements(trg_sent)
 
-        sent = clearup(sent, string.digits, "*")
-        sent = re.sub('\*+', 'NUM', sent)
-
-        sent = clearup(sent, string.punctuation, '')
-        sent = sent.strip().split(" ")
-        sent = [word if word.isupper() else word.lower() for word in sent]
-        sent = ' '.join(sent)
-
-        if sent or sent != "":
+        if (src_sent and trg_sent) or (src_sent!="" and trg_sent != ""):
             src_split = src_sent.split(" ")
             trg_split = trg_sent.split(" ")
             if (len(src_split) <= max_len and len(trg_split) <= max_len):
@@ -116,19 +108,23 @@ def preprocess_tokenize_europarl_generate_tsv(language_code="de", download_if_mi
         if download_if_missing:
             print("Raw train files not available. Downloading and extracting files..")
             maybe_download_and_extract(language_code="de", tmx=True)
-    try:
-        from TMX2Corpus import tmx2corpus
-        from TMX2Corpus.tmx2corpus import FileOutput
-        ### converting tmx file
-        tmx_file = os.path.join(DATA_DIR, "europarl", language_code)
+        try:
+            from TMX2Corpus import tmx2corpus
+            from TMX2Corpus.tmx2corpus import FileOutput
+            ### converting tmx file
+            tmx_file = os.path.join(DATA_DIR, "europarl", language_code)
 
-        data_dir = os.path.join(DATA_DIR_PREPRO, "europarl", language_code)
+            data_dir = os.path.join(DATA_DIR_PREPRO, "europarl", language_code)
 
-        tmx2corpus.convert(os.path.join(tmx_file, "{}-{}.tmx".format(language_code, "en")),
-                           output=FileOutput(path=data_dir),
-                           tokenizers=[CustomTokenizer("en"),
-                                       CustomTokenizer("de")])
+            tmx2corpus.convert(os.path.join(tmx_file, "{}-{}.tmx".format(language_code, "en")),
+                               output=FileOutput(path=data_dir),
+                               tokenizers=[CustomTokenizer("en"),
+                                           CustomTokenizer("de")])
+        except ImportError:
+            print("Please install tmx2corpus!")
 
+
+    else:
         src_data = load_data(english=True, language_code=language_code, tmx=True)
         trg_data = load_data(english=False, language_code=language_code, tmx=True)
         reduced_corpus = list(reduce_sent_len(src_data, trg_data, max_len))
@@ -151,11 +147,6 @@ def preprocess_tokenize_europarl_generate_tsv(language_code="de", download_if_mi
         store_to_plain_txt(valset[0], valset[1], language_code, file_name="val")
         store_to_plain_txt(testset[0], testset[1], language_code, file_name="test")
 
-    except ImportError:
-        print("Please install tmx2corpus!")
-    else:
-        print("Preprocessing not possible!")
-        exit(-1)
     print("Total duration: {}".format(convert(time.time() - start)))
 
 

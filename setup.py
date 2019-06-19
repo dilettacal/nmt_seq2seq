@@ -8,5 +8,6 @@ setup(
     author="DC",
     author_email="",
     description="Neural machine translation",
-    packages=find_packages()
+    packages=find_packages(),
+    install_requires=['TMX2Corpus']
 )

@@ -29,15 +29,6 @@ class CustomTokenizer(tokenizer.Tokenizer):
 
 
 def expand_contraction(sentence, mapping):
-    """
-    Expands tokens in sentence given a contraction dictionary
-
-    See: https://www.linkedin.com/pulse/processing-normalizing-text-data-saurav-ghosh
-
-    :param sentence: sentence to expand
-    :param mapping: contraction dictionary
-    :return: expanded sentence
-    """
     contractions_patterns = re.compile('({})'.format('|'.join(mapping.keys())), flags=re.IGNORECASE | re.DOTALL)
 
     def replace_text(t):
@@ -68,6 +59,19 @@ def clearup(s, chars, replacee):
         s = re.sub(' +', ' ', s)
     return s
 
+def perform_refinements(sent):
+    if isinstance(sent, list):
+        sent = ' '.join(sent)
+    sent = clean_string(sent)
+
+    sent = clearup(sent, string.digits, "*")
+    sent = re.sub('\*+', 'NUM', sent)
+
+    sent = clearup(sent, string.punctuation, '')
+    sent = sent.strip().split(" ")
+    sent = [word if word.isupper() else word.lower() for word in sent]
+    sent = ' '.join(sent)
+    return sent
 
 def basic_preprocess_sentence(sent, lang):
    # print("Raw sentence:", sent)

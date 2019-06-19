@@ -27,7 +27,7 @@ import os
 #data_dir = "data/europarl/" # original script
 from project import get_full_path
 from project.utils.download import download
-from settings import DATA_DIR_RAW
+from settings import DATA_DIR_RAW, DATA_DIR_PREPRO
 
 DATA_DIR = get_full_path(DATA_DIR_RAW, "europarl")
 # Base-URL for the data-sets on the internet.
@@ -106,21 +106,25 @@ def load_data(english=True, language_code="da", start="", end="", tmx=False):
     print("Trying to load data...")
 
     if tmx:
-        files = [file for file in os.listdir(os.path.join(DATA_DIR, language_code)) if file.startswith("bitext.tok") and file.split(".")[-1] in suffixes]
+        files = [file for file in os.listdir(os.path.join(DATA_DIR_PREPRO, "europarl", language_code)) if file.startswith("bitext.tok") and file.split(".")[-1] in suffixes]
+        print(files)
+        # Full path for the data-file.
+        data_dir = os.path.join(DATA_DIR_PREPRO, "europarl", language_code)
     else:
         files = [file for file in os.listdir(os.path.join(DATA_DIR, language_code)) if file.startswith("Europarl.") and file.split(".")[-1] in suffixes]
-
+        # Full path for the data-file.
+        data_dir = os.path.join(DATA_DIR, language_code)
     if english:
         # Load the English data.
        # filename = "europarl-v7.{0}-en.en".format(language_code)
         filename = [file for file in files if file.endswith("en")][0]
+        print(filename)
     else:
         # Load the other language.
        #filename = "europarl-v7.{0}-en.{0}".format(language_code)
         filename = [file for file in files if file.endswith(language_code)][0]
 
-    # Full path for the data-file.
-    data_dir = os.path.join(DATA_DIR, language_code)
+
     path = os.path.join(data_dir, filename)
 
     # Open and read all the contents of the data-file.
