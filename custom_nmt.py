@@ -19,6 +19,8 @@ def main():
     args.cuda = device
     print("Running experiment on:", device)
 
+    args.corpus = "europarl"
+
     lang_code = args.lang_code
     tie_emb = args.tie
     rnn_type = args.rnn
@@ -53,10 +55,12 @@ def main():
     for elem in all_togheter:
         print(elem)
 
-    print("***************************************")
+    print("***************************************************************")
     all_togheter_rev = list(zip(SRC.reverse(first_batch.src), TRG.reverse(first_batch.trg)))
     for elem in all_togheter_rev:
         print(elem)
+
+    print("***************************************************************")
 
     exit()
     data_logger = Logger(path=experiment_path, file_name="data.log")

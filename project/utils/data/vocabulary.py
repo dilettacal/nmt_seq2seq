@@ -138,7 +138,7 @@ class TSVTranslationCorpus(torchtext.data.Dataset):
 
 
     @classmethod
-    def splits(cls, path=None, root=DATA_DIR_PREPRO, train="train.tsv", validation="val.tsv", test="test.tsv", chunk_size_train = 10e3, max_sent_len = 30,
+    def splits(cls, path=None, root=DATA_DIR_PREPRO, train="train.tsv", validation=None, test=None, chunk_size_train = 10e3, max_sent_len = 30,
                **kwargs):
 
         assert os.path.isdir(path), "Directory: %s does not exist! Please generate splits, before creating datasets!" %path
@@ -176,10 +176,9 @@ def get_vocabularies_iterators(src_lang, args):
     trg_vocab = TranslationReversibleField(tokenize=tokenizer, include_lengths=False,
                       init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN)
 
-    fields = (src_vocab, trg_vocab)
+
 
     print("Fields created!")
-    print(fields)
 
     ####### create splits
 
@@ -191,10 +190,11 @@ def get_vocabularies_iterators(src_lang, args):
 
         print("Loading data...")
         start = time.time()
+        fields = (("src",src_vocab), ("trg",trg_vocab))
         exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
-
-        train, val, test = TranslationDataset.splits(path=data_dir, train="train", validation="val", test="test",
-                                                     exts=exts, fields=fields)
+        print(exts)
+        train, val, test = TSVTranslationCorpus.splits(path=data_dir, train="europarl.tsv", validation=None, test=None,
+                                                     fields=fields, format="tsv")
 
 
         end = time.time()
