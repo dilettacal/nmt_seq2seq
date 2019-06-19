@@ -101,8 +101,6 @@ def basic_preprocess_sentence(sent, lang):
 
 
 
-
-
 def preprocess_corpus(src_sents, trg_sents, language_code, max_len=30):
     for src_sent, trg_sent in zip(src_sents, trg_sents):
         src_sent = basic_preprocess_sentence(src_sent, "en")
@@ -155,7 +153,7 @@ def tokenize_input(text, lang ="en", char_level=False, reversed=False):
 
 
 def generate_splits_from_datasets(max_len, root=os.path.join(DATA_DIR_PREPRO, "europarl"), language_code="de",
-                                  filename="europarl.tsv", save_as="tsv"):
+                                  filename="europarl.tsv", save_as=None, reverse=False):
     """
     Generate train, val and test splits based on the ratio and the given filter query
     :param path_to_dataset: complete path to the .tsv file
@@ -175,23 +173,23 @@ def generate_splits_from_datasets(max_len, root=os.path.join(DATA_DIR_PREPRO, "e
     os.makedirs(store_path, exist_ok=True)
 
     files = os.listdir(store_path)
-    assert save_as == "tsv" or save_as == "txt", "Wrong format!"
 
-    if save_as == "tsv":
-        if "train.tsv" in files and "val.tsv" in files and "test.tsv" in files:
-            print("Splits for max sequence length {} already preprocessed!".format(max_len))
-            return
-    else:
-        FILES = sorted(["train.en", "val.en", "test.en",
-                        "train.{}".format(language_code), "val.{}".format(language_code),
-                        "test.{}".format(language_code)])
+    if save_as:
+        if save_as == "tsv":
+            if "train.tsv" in files and "val.tsv" in files and "test.tsv" in files:
+                print("Splits for max sequence length {} already preprocessed!".format(max_len))
+                return
+        else:
+            FILES = sorted(["train.en", "val.en", "test.en",
+                            "train.{}".format(language_code), "val.{}".format(language_code),
+                            "test.{}".format(language_code)])
 
-        files = sorted([file.lower() for file in files if
-                        (file.endswith(".en") or file.endswith(".{}".format(language_code))) and (
-                                file.split(".")[0] in ["train", "test", "val"])])
-        if files == FILES:
-            print("Splits for max sequence  length {} already preprocessed".format(max_len))
-            return
+            files = sorted([file.lower() for file in files if
+                            (file.endswith(".en") or file.endswith(".{}".format(language_code))) and (
+                                    file.split(".")[0] in ["train", "test", "val"])])
+            if files == FILES:
+                print("Splits for max sequence  length {} already preprocessed".format(max_len))
+                return
 
     ### Define data logger ###
     split_logger = Logger(store_path, file_name="split.log")
@@ -202,6 +200,14 @@ def generate_splits_from_datasets(max_len, root=os.path.join(DATA_DIR_PREPRO, "e
     split_logger.log("Original dataset contains {} samples.".format(len(main_df)))
     main_df = main_df[(main_df.src_len <= max_len) & (main_df.trg_len <= max_len)]
     split_logger.log("Dataset samples have been reduced to {} examples.".format(len(main_df)))
+
+    if reverse:
+        reversed_dict = {"src": main_df["trg"].values, "trg": main_df["src"].values,
+                         "src_len": main_df["trg_len"].values, "trg_len": main_df["src_len"].values}
+
+        reversed_df = pd.DataFrame(reversed_dict)
+        main_df = reversed_df
+        print(main_df.head(5))
 
     if len(main_df) >= 200000:
         fractions = np.array([0.6, 0.2, 0.2])
@@ -217,22 +223,23 @@ def generate_splits_from_datasets(max_len, root=os.path.join(DATA_DIR_PREPRO, "e
     print("Val samples:", val[:5], sep="\n")
     print("Test samples:", test[:5], sep="\n")
     print("")
+    if save_as:
+        if save_as == "tsv":
 
-    if save_as == "tsv":
+            train.to_csv(os.path.join(store_path, "train.tsv"), encoding="utf-8", sep="\t", index=False)
+            val.to_csv(os.path.join(store_path, "val.tsv"), encoding="utf-8", sep="\t", index=False)
+            test.to_csv(os.path.join(store_path, "test.tsv"), encoding="utf-8", sep="\t", index=False)
 
-        train.to_csv(os.path.join(store_path, "train.tsv"), encoding="utf-8", sep="\t", index=False)
-        val.to_csv(os.path.join(store_path, "val.tsv"), encoding="utf-8", sep="\t", index=False)
-        test.to_csv(os.path.join(store_path, "test.tsv"), encoding="utf-8", sep="\t", index=False)
+        elif save_as == "txt":
+            pass
 
-    elif save_as == "txt":
-        pass
-
-    else: raise Exception("Format not supported!")
+        else: raise Exception("Format not supported!")
 
     split_logger.log("Train samples: {}".format(len(train)))
     split_logger.log("Validation samples: {}".format(len(val)))
     split_logger.log("Testing samples: {}".format(len(test)))
     print("Splits created!")
+    return train, val, test
 
 
 def generate_splits_from_plain_text(root=os.path.join(DATA_DIR_PREPRO, "europarl"), language_code="de", max_len=30, filename="europarl"):

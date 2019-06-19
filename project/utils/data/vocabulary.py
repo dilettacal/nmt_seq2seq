@@ -9,7 +9,7 @@ from torchtext.datasets import TranslationDataset
 
 from project import get_full_path
 from project.utils.constants import SRC_LABEL, TRG_LABEL, SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
-from project.utils.data.preprocessing import generate_splits_from_datasets
+from project.utils.data.preprocessing import generate_splits_from_datasets, read_from_tsv
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, MODEL_STORE
 
@@ -152,6 +152,29 @@ class TSVTranslationCorpus(torchtext.data.Dataset):
         return tuple(d for d in (train_data, val_data, test_data)
                      if d is not None)
 
+class Seq2SeqDataset(torchtext.data.Dataset):
+    def __init__(self, data_lines, src_field, trg_field):
+        fields = [("src", src_field), ("trg", trg_field)]
+        examples = []
+        for src_line, trg_line in data_lines:
+            examples.append(data.Example.fromlist([src_line, trg_line], fields))
+
+        self.sort_key = lambda x: (len(x.src), len(x.trg))
+        super(Seq2SeqDataset, self).__init__(examples, fields)
+
+    @classmethod
+    def splits(cls, src_field, trg_field, seed=42, language_code="de", max_len=30, reverse=False, path=None, root=None):
+        train, val, test = generate_splits_from_datasets(max_len, language_code=language_code, reverse=reverse)
+        train_lines = train[["src", "trg"]].values.tolist()
+        val_lines = val[["src", "trg"]].values.tolist()
+        test_lines = test[["src", "trg"]].values.tolist()
+
+        train_data = cls(train_lines, src_field, trg_field)
+        val_data = cls(val_lines, src_field, trg_field)
+        test_data = cls(test_lines, src_field, trg_field)
+        return (train_data, val_data, test_data)
+
+
 
 def get_vocabularies_iterators(src_lang, args):
 
@@ -193,8 +216,7 @@ def get_vocabularies_iterators(src_lang, args):
         fields = (("src",src_vocab), ("trg",trg_vocab))
         exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
         print(exts)
-        train, val, test = TSVTranslationCorpus.splits(path=data_dir, train="europarl.tsv", validation=None, test=None,
-                                                     fields=fields, format="tsv")
+        train, val, test = Seq2SeqDataset.splits(src_vocab, trg_vocab, reverse=True if src_lang!="en" else False)
 
 
         end = time.time()
@@ -219,8 +241,8 @@ def get_vocabularies_iterators(src_lang, args):
         trg_vocab.build_vocab(train.trg, val.trg, test.src, min_freq=2, max_size=voc_limit)
         print("Src vocabulary created!")
     else:
-        src_vocab.build_vocab(train.src, val.src, test.src, min_freq=2)
-        trg_vocab.build_vocab(train.trg, val.trg, test.src, min_freq=2)
+        src_vocab.build_vocab(train, val, test, min_freq=2)
+        trg_vocab.build_vocab(train, val, test, min_freq=2)
         print("Src vocabulary created!")
 
 
