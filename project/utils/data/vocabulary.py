@@ -173,9 +173,10 @@ def get_vocabularies_iterators(src_lang, args):
 
     src_vocab = TranslationReversibleField(tokenize=tokenizer, include_lengths=False,  pad_token=PAD_TOKEN, unk_token=UNK_TOKEN)
 
-    trg_vocab = TranslationReversibleField(tokenize=tokenizer, include_lengths=False, init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN)
+    trg_vocab = TranslationReversibleField(tokenize=tokenizer, include_lengths=False,
+                      init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN)
 
-    fields = [(src_vocab, trg_vocab)]
+    fields = (src_vocab, trg_vocab)
 
     print("Fields created!")
     print(fields)
@@ -192,7 +193,8 @@ def get_vocabularies_iterators(src_lang, args):
         start = time.time()
         exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
 
-        train, val, test = TranslationDataset.splits(path=data_dir, train="train", validation="val", test="test", exts=exts)
+        train, val, test = TranslationDataset.splits(path=data_dir, train="train", validation="val", test="test",
+                                                     exts=exts, fields=fields)
 
 
         end = time.time()
@@ -228,7 +230,7 @@ def get_vocabularies_iterators(src_lang, args):
 
     # Create iterators to process text in batches of approx. the same length
     train_iter = data.BucketIterator(train, batch_size=args.b, device=device, repeat=False,
-                                     sort_key=lambda x: len(x.src), sort_within_batch=True, shuffle=True)
+                                     sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=True)
     val_iter = data.Iterator(val, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))
 
