@@ -1,10 +1,10 @@
-pandas==0.24.2
 torch==1.1.0
-torchtext==0.3.1
+spacy==2.1.4
 sacremoses==0.0.19
+Unidecode==1.1.0
 numpy==1.16.4
 setuptools==39.0.1
-spacy==2.1.4
 pipreqs==0.4.9
-atlas==0.27.0
-Unidecode==1.1.0
+pandas==0.24.2
+tinysegmenter==0.4
+torchtext==0.3.1

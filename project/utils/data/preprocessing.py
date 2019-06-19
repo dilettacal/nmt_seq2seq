@@ -7,13 +7,27 @@ import pandas as pd
 import unidecode as unidecode
 from sacremoses import MosesTokenizer
 import unicodedata
-
 import re
 
+import tokenizer
 from project import get_full_path
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import Logger
 from settings import RAW_EUROPARL, DATA_DIR_PREPRO
+from tokenizer import TAG_REGEX
+
+
+class CustomTokenizer(tokenizer.Tokenizer):
+
+    def __init__(self, lang):
+        self.lang = lang
+        super(CustomTokenizer, self).__init__(lang)
+
+    def _tokenize(self, text):
+        text = basic_preprocess_sentence(text, self.lang)
+        return text.split(" ")
+
+
 
 
 def expand_contraction(sentence, mapping):
@@ -63,8 +77,6 @@ def basic_preprocess_sentence(sent, lang):
 
     if lang == "en":
         sent = expand_contraction(sent, ENG_CONTRACTIONS_MAP)
-    elif lang == "de":
-        sent = expand_contraction(sent, UMLAUT_MAP)
     ### Regex ###
     space_before_mark = r"\s+([.?!])"
 
@@ -83,19 +95,9 @@ def basic_preprocess_sentence(sent, lang):
     sent = tokenizer.tokenize(sent.strip())
 
     sent = ' '.join(sent)
-    sent = clean_string(sent)
-
-    sent = clearup(sent, string.digits, "*")
-    sent = re.sub('\*+', 'NUM', sent)
-
-    sent = clearup(sent, string.punctuation, '')
-    sent = sent.strip().split(" ")
-    sent = [word if word.isupper() else word.lower() for word in sent]
-    sent = ' '.join(sent)
-
-    if not sent or sent == "":
-        sent = ""
     return sent
+
+
 
 
 

@@ -106,7 +106,7 @@ def load_data(english=True, language_code="da", start="", end="", tmx=False):
     print("Trying to load data...")
 
     if tmx:
-        files = [file for file in os.listdir(os.path.join(DATA_DIR, language_code)) if file.startswith("bitext") and file.split(".")[-1] in suffixes]
+        files = [file for file in os.listdir(os.path.join(DATA_DIR, language_code)) if file.startswith("bitext.tok") and file.split(".")[-1] in suffixes]
     else:
         files = [file for file in os.listdir(os.path.join(DATA_DIR, language_code)) if file.startswith("Europarl.") and file.split(".")[-1] in suffixes]
 

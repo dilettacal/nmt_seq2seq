@@ -43,11 +43,3 @@ def beam_search_decoder(data, k):
 		# select k best
 		sequences = ordered[:k]
 	return sequences
-
-
-
-if __name__ == '__main__':
-    from TMX2Corpus import tmx2corpus
-    tmx2corpus.convert("")
-
-
