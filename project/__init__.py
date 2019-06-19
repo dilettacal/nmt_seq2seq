@@ -1,5 +1,8 @@
-import os, sys
-sys.path += [os.path.abspath('.')]
+import os
+import sys
+sys.path.append(os.path.join(".", "TMX2Corpus"))
+
+
 
 from os.path import dirname, join
 
