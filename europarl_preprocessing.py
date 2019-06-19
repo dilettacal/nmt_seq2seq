@@ -129,25 +129,32 @@ def preprocess_tokenize_europarl_generate_tsv(language_code="de", download_if_mi
     else:
         src_data = load_data(english=True, language_code=language_code, tmx=True)
         trg_data = load_data(english=False, language_code=language_code, tmx=True)
-        reduced_corpus = list(reduce_sent_len(src_data, trg_data, max_len))
-        src_sents = [pair[0] for pair in reduced_corpus]
-        trg_sents = [pair[1] for pair in reduced_corpus]
+        #print("Reducing corpus....")
+       # reduced_corpus = list(reduce_sent_len(src_data, trg_data, max_len))
+        #src_sents = [pair[0] for pair in reduced_corpus]
+        #trg_sents = [pair[1] for pair in reduced_corpus]
 
-        assert len(src_sents) == len(trg_sents)
+        #assert len(src_sents) == len(trg_sents)
 
-        print("Dataset reduced to:", len(src_sents), len(trg_sents))
+        #print("Dataset reduced to:", len(src_sents), len(trg_sents))
+        src_sents = src_data
+        trg_sents =trg_data
+
         if save_tsv:
+
             path_to_tsv = store_data_to_tsv(src_sents, trg_sents, language_code)
             print("tsv file saved to {}".format(path_to_tsv))
 
-        store_to_plain_txt(src_sents, trg_sents, language_code)
+       # store_to_plain_txt(src_sents, trg_sents, language_code)
         ### generate splittings
-        trainset, valset, testset = split_data(src_sents, trg_sents)
 
-        print("Storing split files...")
-        store_to_plain_txt(trainset[0], trainset[1], language_code, file_name="train")
-        store_to_plain_txt(valset[0], valset[1], language_code, file_name="val")
-        store_to_plain_txt(testset[0], testset[1], language_code, file_name="test")
+
+        #trainset, valset, testset = split_data(src_sents, trg_sents)
+
+       # print("Storing split files...")
+       # store_to_plain_txt(trainset[0], trainset[1], language_code, file_name="train")
+       # store_to_plain_txt(valset[0], valset[1], language_code, file_name="val")
+        #store_to_plain_txt(testset[0], testset[1], language_code, file_name="test")
 
     print("Total duration: {}".format(convert(time.time() - start)))
 
