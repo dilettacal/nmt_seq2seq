@@ -102,3 +102,39 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+/src/main/data/raw/
+/src/main/data/preprocessed/
+.idea/
+
+*.csv
+env
+europarl-v*
+*.zip
+*.tgz
+*.gz
+.*txt
+!requirements.txt
+*.en
+*.de
+*.xml
+README
+iwslt
+*.tsv
+*.ids
+Europarl.*
+bpe.*
+*.bpe.*
+# exclusions
+!*-dataset.log
+!*_content_words.csv
+!*_functional_words.csv
+
+*.tmx
+
+# model extensions
+
+*.tar
+*.pkl
+
+
+
