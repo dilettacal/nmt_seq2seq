@@ -23,7 +23,7 @@ after_apos = r"(['])\s+([\w])"
 class EmptyFilter(object):
     def filter(self, bitext):
         filtered_texts = list(filter(lambda item: item[1] or item[1] != "", bitext.items()))
-        return bool(len(filtered_texts) == 2)  # both texts match the given predicate
+        return bool(len(filtered_texts) == 2)
 
 
 class MaxLenFilter(object):
@@ -160,7 +160,6 @@ def perform_refinements(sent):
     if isinstance(sent, list):
         sent = ' '.join(sent)
     sent = clean_string(sent)
-
 
     sent = clearup(sent, string.digits, "*")
     sent = re.sub('\*+', 'NUM', sent)

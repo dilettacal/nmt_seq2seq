@@ -7,7 +7,7 @@ from TMX2Corpus.tokenizer import PyEnTokenizer
 import os
 
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP
-from project.utils.data.preprocessing import WordTokenizer, expand_contraction, MaxLenFilter, MinLenFilter
+from project.utils.data.preprocessing import WordTokenizer, expand_contraction, MaxLenFilter, MinLenFilter, EmptyFilter
 from project.utils.utils import convert
 from settings import DATA_DIR, DATA_DIR_RAW
 
@@ -49,9 +49,6 @@ if __name__ == '__main__':
     print(list(nlp(text)))
   #  print([(tok.text, tok.pos_) for tok in nlp(text)])
 
-    exit()
-
-
     bitext = dict({"en": "I love music, and you? Are you a music lover? Why not?", "de": "Ich liebe Musik?"})
     print(bool(len(list(filter(lambda item: len(item[1].split(" ")) >= 10, bitext.items()))) ==2))
 
@@ -59,6 +56,7 @@ if __name__ == '__main__':
     converter = Converter(output=FileOutput(path=DATA_DIR))
     tokenizers = [WordTokenizer("en"), WordTokenizer("de")]
     converter.add_tokenizers(tokenizers)
+    converter.add_filter(EmptyFilter())
     converter.add_filter(MaxLenFilter(30))
     converter.add_filter(MinLenFilter(5))
     converter.convert([os.path.join(DATA_DIR_RAW,"europarl", "de", "de-en.tmx")])
