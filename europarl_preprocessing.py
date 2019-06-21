@@ -7,7 +7,7 @@ import time
 import pandas as pd
 
 from project import get_full_path
-from project.utils.data.preprocessing import CustomTokenizer, clean_string, clearup, perform_refinements
+from project.utils.data.preprocessing import WordTokenizer, clean_string, clearup, perform_refinements
 from project.utils.download.europarl import maybe_download_and_extract, load_data, DATA_DIR
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
@@ -120,8 +120,8 @@ def preprocess_tokenize_europarl_generate_tsv(language_code="de", download_if_mi
 
             tmx2corpus.convert(os.path.join(tmx_file, "{}-{}.tmx".format(language_code, "en")),
                                output=FileOutput(path=data_dir),
-                               tokenizers=[CustomTokenizer("en"),
-                                           CustomTokenizer("de")])
+                               tokenizers=[WordTokenizer("en"),
+                                           WordTokenizer("de")])
         except ImportError:
             print("Please install tmx2corpus!")
 

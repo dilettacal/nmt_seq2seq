@@ -32,6 +32,10 @@ LANG2 = "de"
 LANGUAGES = [LANG1, LANG2]
 
 
+SPACY_EN = "en_core_web_sm"
+SPACY_DE = "de_core_news_sm"
+
+
 SPLITTINGS = list('.'.join(x) for x in list(itertools.product(PREFIXES, LANGUAGES)))
 
 
@@ -40,8 +44,8 @@ MODEL_STORE = get_full_path(ROOT, "results")
 
 ### spacy models ###
 
-SPACY_EN = "en_core_web_sm"
-SPACY_DE = "de_core_news_sm"
+SUPPORTED_LANGS = dict({LANG1:SPACY_EN, LANG2:SPACY_DE})
+
 
 ###python -m spacy download en_core_web_sm
 

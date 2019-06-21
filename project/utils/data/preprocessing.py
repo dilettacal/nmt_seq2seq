@@ -12,18 +12,115 @@ import re
 import TMX2Corpus.tokenizer as tokenizer
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP
 from project.utils.utils import Logger
-from settings import RAW_EUROPARL, DATA_DIR_PREPRO
+from settings import RAW_EUROPARL, DATA_DIR_PREPRO, SUPPORTED_LANGS
+from TMX2Corpus.tmx2corpus import Converter
+
+### Regex ###
+space_before_punct = r'\s([?.!"](?:\s|$))'
+before_apos = r"\s+(['])"
+after_apos = r"(['])\s+([\w])"
+
+class EmptyFilter(object):
+    def filter(self, bitext):
+        filtered_texts = list(filter(lambda item: item[1] or item[1] != "", bitext.items()))
+        return bool(len(filtered_texts) == 2)  # both texts match the given predicate
 
 
-class CustomTokenizer(tokenizer.Tokenizer):
+class MaxLenFilter(object):
+    def __init__(self, length):
+        self.len = length
 
+    def filter(self, bitext):
+        filtered_texts = list(filter(lambda item: len(item[1].split(" ")) <= self.len, bitext.items()))
+        return bool(len(filtered_texts) == 2)  # both texts match the given predicate
+
+class MinLenFilter(object):
+    def __init__(self, length):
+        self.len = length
+
+    def filter(self, bitext):
+        filtered_texts = list(filter(lambda item: len(item[1].split(" ")) >= self.len, bitext.items()))
+        return bool(len(filtered_texts)==2) # both texts match the given predicate
+
+
+class CharTokenizer(tokenizer.Tokenizer):
     def __init__(self, lang):
-        self.lang = lang
-        super(CustomTokenizer, self).__init__(lang)
+        self.lang = lang.lower()
+        super(CharTokenizer, self).__init__(lang)
 
     def _tokenize(self, text):
-        text = basic_preprocess_sentence(text, self.lang)
-        return text.split(" ")
+        text = re.sub(space_before_punct, r"\1", text)
+        text = re.sub(before_apos, r"\1", text)
+        text = re.sub(after_apos, r"\1\2", text)
+        text = text.replace("-", "")
+        if self.lang == "en":
+            text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
+        return list(text)
+
+class SpacyTokenizer(object):
+    def __init__(self, model):
+        self.nlp = model
+    
+    def tokenize(self, text):
+        return [tok.text for tok in self.nlp(text)]
+
+class SplitTokenizer(object):
+    
+    def tokenize(self, text):
+        return self._boundary_tokenize(text)
+
+    def _boundary_tokenize(self, text):
+        tokens = []
+        i = 0
+        for m in tokenizer.BOUNDARY_REGEX.finditer(text):
+            tokens.append(text[i:m.start()])
+            i = m.end()
+        return tokens
+
+class WordTokenizer(tokenizer.Tokenizer):
+
+    def __init__(self, lang):
+        self.lang = lang.lower()
+        if lang in SUPPORTED_LANGS.keys():
+            try:
+                import spacy
+                nlp = spacy.load(SUPPORTED_LANGS[self.lang], disable=["parser", "tagger", "textcat", "ner"]) #makes it faster
+                self.word_tokenizer = SpacyTokenizer(nlp)
+            except:
+                print("Spacy not installed. Standard tokenization is used")
+                self.word_tokenizer = SplitTokenizer()
+
+        else:
+            self.word_tokenizer = SplitTokenizer()
+
+        super(WordTokenizer, self).__init__(lang)
+
+    def _tokenize(self, text):
+        text = re.sub(space_before_punct, r"\1", text)
+        text = re.sub(before_apos, r"\1", text)
+        text = re.sub(after_apos, r"\1\2", text)
+        text = text.replace("-", "")
+        if self.lang == "en":
+            text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
+
+        text = clean_string(text)
+        text = perform_refinements(text)
+
+        tokens = self.word_tokenizer.tokenize(text)
+        return tokens
+
+
+class TMXConverter(Converter):
+    def __init__(self, output):
+        super().__init__(output)
+
+
+class TXTConverter(Converter):
+    def __init__(self, output):
+        super().__init__(output)
+
+    def convert(self, files:list):
+        pass
 
 
 
@@ -63,6 +160,7 @@ def perform_refinements(sent):
     if isinstance(sent, list):
         sent = ' '.join(sent)
     sent = clean_string(sent)
+
 
     sent = clearup(sent, string.digits, "*")
     sent = re.sub('\*+', 'NUM', sent)
