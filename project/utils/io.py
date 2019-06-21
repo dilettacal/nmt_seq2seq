@@ -7,7 +7,8 @@ from TMX2Corpus.tokenizer import PyEnTokenizer
 import os
 
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP
-from project.utils.data.preprocessing import WordTokenizer, expand_contraction, MaxLenFilter, MinLenFilter, EmptyFilter
+from project.utils.data.preprocessing import WordTokenizer, expand_contraction, MaxLenFilter, MinLenFilter, EmptyFilter, \
+    TMXConverter
 from project.utils.utils import convert
 from settings import DATA_DIR, DATA_DIR_RAW
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     print(bool(len(list(filter(lambda item: len(item[1].split(" ")) >= 10, bitext.items()))) ==2))
 
     start = time.time()
-    converter = Converter(output=FileOutput(path=DATA_DIR))
+    converter = TMXConverter(output=FileOutput(path=DATA_DIR))
     tokenizers = [WordTokenizer("en"), WordTokenizer("de")]
     converter.add_tokenizers(tokenizers)
     converter.add_filter(EmptyFilter())

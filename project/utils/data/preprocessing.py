@@ -42,19 +42,29 @@ class MinLenFilter(object):
         filtered_texts = list(filter(lambda item: len(item[1].split(" ")) >= self.len, bitext.items()))
         return bool(len(filtered_texts)==2) # both texts match the given predicate
 
-
-class CharTokenizer(tokenizer.Tokenizer):
+class CustomTokenizer(tokenizer.Tokenizer):
     def __init__(self, lang):
-        self.lang = lang.lower()
-        super(CharTokenizer, self).__init__(lang)
+        super(CustomTokenizer, self).__init__(lang.lower())
 
-    def _tokenize(self, text):
+    def _clean_text(self, text):
         text = re.sub(space_before_punct, r"\1", text)
         text = re.sub(before_apos, r"\1", text)
         text = re.sub(after_apos, r"\1\2", text)
         text = text.replace("-", "")
         if self.lang == "en":
             text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
+        text = perform_refinements(text)
+        return text
+
+
+
+class CharTokenizer(CustomTokenizer):
+    def __init__(self, lang):
+        self.lang = lang.lower()
+        super(CharTokenizer, self).__init__(lang)
+
+    def _tokenize(self, text):
+        text = self._clean_text(text)
         return list(text)
 
 class SpacyTokenizer(object):
@@ -64,9 +74,10 @@ class SpacyTokenizer(object):
     def tokenize(self, text):
         return [tok.text for tok in self.nlp(text)]
 
-class SplitTokenizer(object):
+class SplitTokenizer(CustomTokenizer):
     
-    def tokenize(self, text):
+    def _tokenize(self, text):
+        text = self._clean_text(text)
         return self._boundary_tokenize(text)
 
     def _boundary_tokenize(self, text):
@@ -77,10 +88,9 @@ class SplitTokenizer(object):
             i = m.end()
         return tokens
 
-class WordTokenizer(tokenizer.Tokenizer):
+class WordTokenizer(CustomTokenizer):
 
     def __init__(self, lang):
-        self.lang = lang.lower()
         if lang in SUPPORTED_LANGS.keys():
             try:
                 import spacy
@@ -88,24 +98,15 @@ class WordTokenizer(tokenizer.Tokenizer):
                 self.word_tokenizer = SpacyTokenizer(nlp)
             except:
                 print("Spacy not installed. Standard tokenization is used")
-                self.word_tokenizer = SplitTokenizer()
+                self.word_tokenizer = SplitTokenizer(lang=lang)
 
         else:
-            self.word_tokenizer = SplitTokenizer()
+            self.word_tokenizer = SplitTokenizer(lang=lang)
 
         super(WordTokenizer, self).__init__(lang)
 
     def _tokenize(self, text):
-        text = re.sub(space_before_punct, r"\1", text)
-        text = re.sub(before_apos, r"\1", text)
-        text = re.sub(after_apos, r"\1\2", text)
-        text = text.replace("-", "")
-        if self.lang == "en":
-            text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
-
-        text = clean_string(text)
-        text = perform_refinements(text)
-
+        text = self._clean_text(text)
         tokens = self.word_tokenizer.tokenize(text)
         return tokens
 
@@ -113,6 +114,27 @@ class WordTokenizer(tokenizer.Tokenizer):
 class TMXConverter(Converter):
     def __init__(self, output):
         super().__init__(output)
+
+    def __output(self, bitext):
+        print(list(bitext.keys()))
+        for lang, text in list(bitext.items()):
+            tokenizer = self.tokenizers.get(lang, WordTokenizer(lang))
+            bitext['tok.' + lang] = tokenizer.tokenize(text)
+
+        for lang, text in list(bitext.items()):
+            for fltr in self.filters:
+                if not fltr.filter(bitext['tok.' + lang]):
+                    self.suppress_count += 1
+                    return
+
+
+        for lang in bitext.keys():
+            self.output.init(lang)
+
+        for lang, text in bitext.items():
+            self.output.write(lang, text)
+
+        self.output_lines += 1
 
 
 class TXTConverter(Converter):
@@ -159,12 +181,12 @@ def clearup(s, chars, replacee):
 def perform_refinements(sent):
     if isinstance(sent, list):
         sent = ' '.join(sent)
+
     sent = clean_string(sent)
 
     sent = clearup(sent, string.digits, "*")
     sent = re.sub('\*+', 'NUM', sent)
 
-    sent = clearup(sent, string.punctuation, '')
     sent = sent.strip().split(" ")
     sent = [word if word.isupper() else word.lower() for word in sent]
     sent = ' '.join(sent)
@@ -363,14 +385,17 @@ def generate_splits_from_plain_text(root=os.path.join(DATA_DIR_PREPRO, "europarl
 
 
 if __name__ == '__main__':
-    language_code = "de"
-    FILES = sorted(["train.en", "val.en", "test.en",
-             "train.{}".format(language_code), "val.{}".format(language_code), "test.{}".format(language_code)])
+  #  language_code = "de"
+   # FILES = sorted(["train.en", "val.en", "test.en",
+   #          "train.{}".format(language_code), "val.{}".format(language_code), "test.{}".format(language_code)])
 
-    files = ["train.en", "val.en", "test.en",
-                    "train.de", "val.de", "test.de", "europarl.de", "bitext.de"]
+ #   files = ["train.en", "val.en", "test.en",
+  #                  "train.de", "val.de", "test.de", "europarl.de", "bitext.de"]
+#
 
 
-
-    print(files)
-    print(FILES == files)
+  #  print(files)
+  #  print(FILES == files)
+  tokenizer = WordTokenizer(lang="en")
+  print(perform_refinements(tokenizer.tokenize("This text . Is to test . How it works ! Will it! Or won ' t it ? Hmm ? Is this Sara 's bag ? you can write her at this e-mail address: sara_looks@gmail.com. Or you can visit her site: https://sara-looks.de/contacts/")))
+ # print(perform_refinements("This text . Is to test . How it works ! Will it! Or won ' t it ? Hmm ? Is this Sara 's bag ? you can write her at this e-mail address: sara_looks@gmail.com. Or you can visit her site: https://sara-looks.de/contacts/"))
