@@ -60,7 +60,7 @@ class CustomTokenizer(tokenizer.Tokenizer):
 
     def _perform_refinements(self, text):
         if isinstance(text, list):
-            sent = ' '.join(text)
+            text = ' '.join(text)
 
         text = clean_string(text)
 
@@ -87,12 +87,12 @@ class SpacyTokenizer(object):
         self.nlp = model
     
     def _tokenize(self, text):
-        text = self.replace_entities(text, self.nlp)
-        text = ' '.join([word if word.isupper() else word.lower() for word in text.split(" ")])
-        return [tok.text for tok in self.nlp(text)]
+        doc = self.nlp(text)
+        text = self.replace_entities(text, doc)
+        tokens = [tok.text if text.lower().isupper() else tok.text.lower() for tok in doc]
+        return tokens
 
-    def replace_entities(self, text, nlp):
-        doc = nlp(text)
+    def replace_entities(self, text, doc):
         text_ents = [(str(ent), str(ent.label_)) for ent in doc.ents if ent.label_ in ["PER", "PERSON"]]
         # Replace entities
         for ent in text_ents:
