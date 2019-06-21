@@ -8,7 +8,6 @@ from sacremoses import MosesPunctNormalizer
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP
 from project.utils.data.preprocessing import expand_contraction
 
-
 POS = ["PROPN", "NUM", "SYM"]
 NER = ["ORG"]
 

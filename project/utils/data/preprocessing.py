@@ -1,3 +1,4 @@
+import logging
 import os
 import string
 from datetime import datetime
@@ -13,7 +14,7 @@ import TMX2Corpus.tokenizer as tokenizer
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP
 from project.utils.utils import Logger
 from settings import RAW_EUROPARL, DATA_DIR_PREPRO, SUPPORTED_LANGS
-from TMX2Corpus.tmx2corpus import Converter
+from TMX2Corpus.tmx2corpus import Converter, extract_tmx
 
 ### Regex ###
 space_before_punct = r'\s([?.!"](?:\s|$))'
@@ -44,6 +45,7 @@ class MinLenFilter(object):
 
 class CustomTokenizer(tokenizer.Tokenizer):
     def __init__(self, lang):
+      #  self.lang = lang.lower()
         super(CustomTokenizer, self).__init__(lang.lower())
 
     def _clean_text(self, text):
@@ -53,7 +55,20 @@ class CustomTokenizer(tokenizer.Tokenizer):
         text = text.replace("-", "")
         if self.lang == "en":
             text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
-        text = perform_refinements(text)
+        text = self._perform_refinements(text)
+        return text
+
+    def _perform_refinements(self, text):
+        if isinstance(text, list):
+            sent = ' '.join(text)
+
+        text = clean_string(text)
+
+        text = clearup(text, string.digits, "*")
+        text = re.sub('\*+', 'NUM', text)
+
+        text = text.strip().split(" ")
+        text = ' '.join(text)
         return text
 
 
@@ -71,8 +86,23 @@ class SpacyTokenizer(object):
     def __init__(self, model):
         self.nlp = model
     
-    def tokenize(self, text):
+    def _tokenize(self, text):
+        text = self.replace_entities(text, self.nlp)
+        text = ' '.join([word if word.isupper() else word.lower() for word in text.split(" ")])
         return [tok.text for tok in self.nlp(text)]
+
+    def replace_entities(self, text, nlp):
+        doc = nlp(text)
+        text_ents = [(str(ent), str(ent.label_)) for ent in doc.ents if ent.label_ in ["PER", "PERSON"]]
+        # Replace entities
+        for ent in text_ents:
+            replacee = str(ent[0])
+            replacer = "PERSON"
+            try:
+                text = text.replace(replacee, replacer)
+            except:
+                pass
+        return text
 
 class SplitTokenizer(CustomTokenizer):
     
@@ -91,50 +121,32 @@ class SplitTokenizer(CustomTokenizer):
 class WordTokenizer(CustomTokenizer):
 
     def __init__(self, lang):
+        super(WordTokenizer, self).__init__(lang)
         if lang in SUPPORTED_LANGS.keys():
             try:
                 import spacy
-                nlp = spacy.load(SUPPORTED_LANGS[self.lang], disable=["parser", "tagger", "textcat", "ner"]) #makes it faster
+                nlp = spacy.load(SUPPORTED_LANGS[self.lang], disable=["parser", "tagger", "textcat"]) #makes it faster
                 self.word_tokenizer = SpacyTokenizer(nlp)
-            except:
+                print("Using Spacy Tokenizer")
+            except ImportError:
                 print("Spacy not installed. Standard tokenization is used")
                 self.word_tokenizer = SplitTokenizer(lang=lang)
 
         else:
+            print("Using Standard Tokenizer")
             self.word_tokenizer = SplitTokenizer(lang=lang)
 
-        super(WordTokenizer, self).__init__(lang)
+
 
     def _tokenize(self, text):
         text = self._clean_text(text)
-        tokens = self.word_tokenizer.tokenize(text)
+        tokens = self.word_tokenizer._tokenize(text)
         return tokens
 
 
 class TMXConverter(Converter):
     def __init__(self, output):
         super().__init__(output)
-
-    def __output(self, bitext):
-        print(list(bitext.keys()))
-        for lang, text in list(bitext.items()):
-            tokenizer = self.tokenizers.get(lang, WordTokenizer(lang))
-            bitext['tok.' + lang] = tokenizer.tokenize(text)
-
-        for lang, text in list(bitext.items()):
-            for fltr in self.filters:
-                if not fltr.filter(bitext['tok.' + lang]):
-                    self.suppress_count += 1
-                    return
-
-
-        for lang in bitext.keys():
-            self.output.init(lang)
-
-        for lang, text in bitext.items():
-            self.output.write(lang, text)
-
-        self.output_lines += 1
 
 
 class TXTConverter(Converter):
@@ -143,6 +155,7 @@ class TXTConverter(Converter):
 
     def convert(self, files:list):
         pass
+
 
 
 
@@ -178,6 +191,7 @@ def clearup(s, chars, replacee):
         s = re.sub(' +', ' ', s)
     return s
 
+#TODO: REMOVE
 def perform_refinements(sent):
     if isinstance(sent, list):
         sent = ' '.join(sent)
@@ -188,7 +202,6 @@ def perform_refinements(sent):
     sent = re.sub('\*+', 'NUM', sent)
 
     sent = sent.strip().split(" ")
-    sent = [word if word.isupper() else word.lower() for word in sent]
     sent = ' '.join(sent)
     return sent
 
