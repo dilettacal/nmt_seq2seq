@@ -7,7 +7,7 @@ from TMX2Corpus.tokenizer import PyEnTokenizer
 import os
 
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP
-from project.utils.data.preprocessing import WordTokenizer, expand_contraction, MaxLenFilter, MinLenFilter, EmptyFilter, \
+from project.utils.data.preprocessing import WordbasedSeqTokenizer, expand_contraction, MaxLenFilter, MinLenFilter, EmptyFilter, \
     TMXConverter
 from project.utils.utils import convert
 from settings import DATA_DIR, DATA_DIR_RAW, DATA_DIR_PREPRO
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     start = time.time()
     converter = TMXConverter(output=FileOutput(path=os.path.join(DATA_DIR_PREPRO,"europarl", "de")))
-    tokenizers = [WordTokenizer("en"), WordTokenizer("de")]
+    tokenizers = [WordbasedSeqTokenizer("en"), WordbasedSeqTokenizer("de")]
     converter.add_tokenizers(tokenizers)
  #   converter.add_filter(EmptyFilter())
     converter.add_filter(MaxLenFilter(30))

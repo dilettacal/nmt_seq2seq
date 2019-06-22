@@ -11,7 +11,7 @@ import unicodedata
 import re
 
 import TMX2Corpus.tokenizer as tokenizer
-from project.utils.data.mappings import ENG_CONTRACTIONS_MAP
+from project.utils.data.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import Logger
 from settings import RAW_EUROPARL, DATA_DIR_PREPRO, SUPPORTED_LANGS
 from TMX2Corpus.tmx2corpus import Converter, extract_tmx
@@ -43,49 +43,40 @@ class MinLenFilter(object):
         filtered_texts = list(filter(lambda item: len(item[1].split(" ")) >= self.len, bitext.items()))
         return bool(len(filtered_texts)==2) # both texts match the given predicate
 
-class CustomTokenizer(tokenizer.Tokenizer):
-    def __init__(self, lang):
-      #  self.lang = lang.lower()
-        super(CustomTokenizer, self).__init__(lang.lower())
+class SequenceTokenizer(tokenizer.Tokenizer):
+    def __init__(self, lang, custom_tokenizer):
+        self.custom_tokenizer = custom_tokenizer
+        super(SequenceTokenizer, self).__init__(lang.lower())
+
+    def _tokenize(self, text):
+        text = self._clean_text(text)
+        tokens = self.custom_tokenizer._tokenize(text)
+        return tokens
 
     def _clean_text(self, text):
         text = re.sub(space_before_punct, r"\1", text)
         text = re.sub(before_apos, r"\1", text)
         text = re.sub(after_apos, r"\1\2", text)
-        text = text.replace("-", "")
         if self.lang == "en":
             text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
-        text = self._perform_refinements(text)
-        return text
-
-    def _perform_refinements(self, text):
-        if isinstance(text, list):
-            text = ' '.join(text)
-
-        text = clean_string(text)
-
-        text = clearup(text, string.digits, "*")
-        text = re.sub('\*+', 'NUM', text)
-
-        text = text.strip().split(" ")
-        text = ' '.join(text)
+        elif self.lang == "de":
+            text = expand_contraction(text, UMLAUT_MAP)
+        text = cleanup_digits(text)
         return text
 
 
 
-class CharTokenizer(CustomTokenizer):
-    def __init__(self, lang):
-        self.lang = lang.lower()
-        super(CharTokenizer, self).__init__(lang)
-
+class CustomTokenizer(object):
     def _tokenize(self, text):
-        text = self._clean_text(text)
+        raise NotImplemented
+
+class CharBasedTokenizer(CustomTokenizer):
+    def _tokenize(self, text):
         return list(text)
 
-class SpacyTokenizer(object):
+class SpacyTokenizer(CustomTokenizer):
     def __init__(self, model):
         self.nlp = model
-    
     def _tokenize(self, text):
         doc = self.nlp(text)
         text = self.replace_entities(text, doc)
@@ -104,13 +95,8 @@ class SpacyTokenizer(object):
                 pass
         return text
 
-class SplitTokenizer(CustomTokenizer):
-    
+class StandardSplitTokenizer(CustomTokenizer):
     def _tokenize(self, text):
-        text = self._clean_text(text)
-        return self._boundary_tokenize(text)
-
-    def _boundary_tokenize(self, text):
         tokens = []
         i = 0
         for m in tokenizer.BOUNDARY_REGEX.finditer(text):
@@ -118,30 +104,20 @@ class SplitTokenizer(CustomTokenizer):
             i = m.end()
         return tokens
 
-class WordTokenizer(CustomTokenizer):
-
-    def __init__(self, lang):
-        super(WordTokenizer, self).__init__(lang)
+def get_custom_tokenizer(lang, mode):
+    assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
+    if mode == "c":
+        return CharBasedTokenizer()
+    else:
         if lang in SUPPORTED_LANGS.keys():
             try:
                 import spacy
-                nlp = spacy.load(SUPPORTED_LANGS[self.lang], disable=["parser", "tagger", "textcat"]) #makes it faster
-                self.word_tokenizer = SpacyTokenizer(nlp)
-                print("Using Spacy Tokenizer")
+                nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"]) #makes it faster
+                return SpacyTokenizer(nlp)
             except ImportError:
                 print("Spacy not installed. Standard tokenization is used")
-                self.word_tokenizer = SplitTokenizer(lang=lang)
+                return StandardSplitTokenizer()
 
-        else:
-            print("Using Standard Tokenizer")
-            self.word_tokenizer = SplitTokenizer(lang=lang)
-
-
-
-    def _tokenize(self, text):
-        text = self._clean_text(text)
-        tokens = self.word_tokenizer._tokenize(text)
-        return tokens
 
 
 class TMXConverter(Converter):
@@ -157,7 +133,39 @@ class TXTConverter(Converter):
         pass
 
 
+def remove_adjacent_same_label(line):
+    if isinstance(line, str):
+        line = line.split(" ")
+    # Remove adjacent duplicate labels
+    toks = [line[i] for i in range(len(line)) if (i==0) or line[i] != line[i-1]]
+    line = ' '.join(toks).strip()
+    ### remove duplicate spaces
+    line = re.sub(r"\s\s+", " ", line)
+    return line.strip() # as string
 
+
+def cleanup_digits(line):
+    """
+    Ex:
+    Turchi Report [A5-0303/2001] and Linkohr Report (A5-0297/2001) - am 20. Juni 2019
+
+    :param line:
+    :return:
+    """
+
+    line = line.translate(str.maketrans('', '', string.punctuation))
+    # Turchi Report A503032001 and Linkohr Report A502972001 am 20 Juni 2019
+    line = line.strip()
+    ### replace digits
+    # Turchi Report A503032001 and Linkohr Report A502972001 am NUM Juni NUM
+    nums = [n for n in re.split(r"\D+", line) if n]
+    line = ' '.join([word if not word in nums else "NUM" for word in line.split(" ")])
+    ### Clean up regulations
+    ### A503032001 --> LAW
+    line = re.sub(r'[a-zA-Z]+[0-9]+',"LAW", line)
+    line = remove_adjacent_same_label(line)
+    ## final string: Turchi Report LAW and Linkohr Report LAW am NUM Juni NUM
+    return line
 
 
 def expand_contraction(sentence, mapping):
@@ -171,6 +179,8 @@ def expand_contraction(sentence, mapping):
     expanded_sentence = contractions_patterns.sub(replace_text, sentence)
     return expanded_sentence
 
+
+############### REMOVE ###############
 
 def char_filter(string):
     valid = re.compile('[a-zA-Z0-9]+')
@@ -409,6 +419,6 @@ if __name__ == '__main__':
 
   #  print(files)
   #  print(FILES == files)
-  tokenizer = WordTokenizer(lang="en")
+  tokenizer = WordbasedSeqTokenizer(lang="en")
   print(perform_refinements(tokenizer.tokenize("This text . Is to test . How it works ! Will it! Or won ' t it ? Hmm ? Is this Sara 's bag ? you can write her at this e-mail address: sara_looks@gmail.com. Or you can visit her site: https://sara-looks.de/contacts/")))
  # print(perform_refinements("This text . Is to test . How it works ! Will it! Or won ' t it ? Hmm ? Is this Sara 's bag ? you can write her at this e-mail address: sara_looks@gmail.com. Or you can visit her site: https://sara-looks.de/contacts/"))
