@@ -9,7 +9,7 @@ import numpy as np
 from torchtext.data import Field
 from torchtext.datasets import TranslationDataset
 
-from project.utils.io import Seq2SeqDataset
+from project.utils.io import Seq2SeqDataset, SrcField, TrgField
 from project.utils.utils import convert
 from settings import DATA_DIR, DATA_DIR_RAW, DATA_DIR_PREPRO
 
@@ -53,8 +53,8 @@ def beam_search_decoder(data, k):
 
 if __name__ == '__main__':
     ### test datase
-	src_field = Field(sequential=True)
-	trg_field = Field(sequential=True, init_token="<s>", eos_token="</s>")
+	src_field = SrcField()
+	trg_field = TrgField()
 	start = time.time()
 	train, val, test = Seq2SeqDataset.splits(path=os.path.join(DATA_DIR_PREPRO, "europarl", "de", "splits"), root="", exts=(".en", ".de"),
 											 train="train", validation="val", test="test", fields=(src_field, trg_field), reduce= [500000,100000,10000])
@@ -64,4 +64,35 @@ if __name__ == '__main__':
 	print(len(train))
 	print(len(val))
 	print(len(test))
+
+	src_field.build_vocab(train)
+	trg_field.build_vocab(train)
+	# 50981 EN
+#	# 146288 DE
+	print(len(src_field.vocab))
+	print(len(trg_field.vocab))
+
+
+
+	print("*" * 100)
+	src_field_tok = SrcField()
+	trg_field_tok = TrgField()
+	start = time.time()
+	train, _, _ = Seq2SeqDataset.splits(path=os.path.join(DATA_DIR_PREPRO, "europarl", "de"), root="",
+											 exts=(".en", ".de"),
+											 train="bitext", validation="", test="",
+											 fields=(src_field_tok, trg_field_tok))
+	print("Duration:", convert(time.time() - start))
+
+	src_field_tok.build_vocab(train)
+	trg_field_tok.build_vocab(train)
+	# 50981 EN
+	# 146288 DE
+	print(len(src_field_tok.vocab))
+	print(len(trg_field_tok.vocab))
+
+
+
+
+
 
