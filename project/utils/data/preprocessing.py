@@ -1,3 +1,4 @@
+import abc
 import logging
 import os
 import string
@@ -9,6 +10,8 @@ import unidecode as unidecode
 from sacremoses import MosesTokenizer
 import unicodedata
 import re
+
+from spacy.pipeline.pipes import EntityRecognizer
 
 import TMX2Corpus.tokenizer as tokenizer
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
@@ -44,14 +47,12 @@ class MinLenFilter(object):
         return bool(len(filtered_texts)==2) # both texts match the given predicate
 
 class SequenceTokenizer(tokenizer.Tokenizer):
-    def __init__(self, lang, custom_tokenizer):
-        self.custom_tokenizer = custom_tokenizer
+    def __init__(self, lang):
+        #self.custom_tokenizer = custom_tokenizer
         super(SequenceTokenizer, self).__init__(lang.lower())
 
     def _tokenize(self, text):
-        text = self._clean_text(text)
-        tokens = self.custom_tokenizer._tokenize(text)
-        return tokens
+       raise NotImplemented
 
     def _clean_text(self, text):
         text = re.sub(space_before_punct, r"\1", text)
@@ -66,37 +67,55 @@ class SequenceTokenizer(tokenizer.Tokenizer):
 
 
 
-class CustomTokenizer(object):
+class CustomTokenizer(SequenceTokenizer):
+
     def _tokenize(self, text):
-        raise NotImplemented
+        tokens = self._custom_tokenize(text)
+        text = self._clean_text(' '.join(tokens))
+        return text.split(" ")
+
+    @abc.abstractmethod
+    def _custom_tokenize(self, text):
+       pass
 
 class CharBasedTokenizer(CustomTokenizer):
-    def _tokenize(self, text):
+
+    def _custom_tokenize(self, text):
         return list(text)
 
 class SpacyTokenizer(CustomTokenizer):
-    def __init__(self, model):
+    def __init__(self, lang, model):
         self.nlp = model
-    def _tokenize(self, text):
+        super(SpacyTokenizer, self).__init__(lang)
+
+    def _custom_tokenize(self, text):
         doc = self.nlp(text)
-        text = self.replace_entities(text, doc)
-        tokens = [tok.text if text.lower().isupper() else tok.text.lower() for tok in doc]
+        ents = self.get_entities(text, doc)
+        tokens = [tok.text for tok in doc]
+        tokens = self.replace_text(tokens, ents)
+        tokens = [token if token.isupper() else token.lower() for token in tokens]
         return tokens
 
-    def replace_entities(self, text, doc):
-        text_ents = [(str(ent), str(ent.label_)) for ent in doc.ents if ent.label_ in ["PER", "PERSON"]]
-        # Replace entities
-        for ent in text_ents:
-            replacee = str(ent[0])
-            replacer = "PERSON"
-            try:
-                text = text.replace(replacee, replacer)
-            except:
-                pass
-        return text
+    def get_entities(self, text, doc):
+        text_ents = [(str(ent), "PERSON") for ent in doc.ents if ent.label_ in ["PER", "PERSON"]]
+        return text_ents
+
+    def replace_text(self, text, mapping):
+        if isinstance(text, list):
+            text = ' '.join(text)
+        for ent in mapping:
+              replacee = str(ent[0])
+              replacer = str(ent[1])
+              try:
+                   text = text.replace(replacee, replacer)
+              except:
+                   pass
+
+        return text.split(" ") if isinstance(text, str) else text
+
 
 class StandardSplitTokenizer(CustomTokenizer):
-    def _tokenize(self, text):
+    def _custom_tokenize(self, text):
         tokens = []
         i = 0
         for m in tokenizer.BOUNDARY_REGEX.finditer(text):
@@ -105,18 +124,19 @@ class StandardSplitTokenizer(CustomTokenizer):
         return tokens
 
 def get_custom_tokenizer(lang, mode):
+
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
     if mode == "c":
-        return CharBasedTokenizer()
+        return CharBasedTokenizer(lang)
     else:
         if lang in SUPPORTED_LANGS.keys():
             try:
                 import spacy
                 nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"]) #makes it faster
-                return SpacyTokenizer(nlp)
+                return SpacyTokenizer(lang, nlp)
             except ImportError:
                 print("Spacy not installed. Standard tokenization is used")
-                return StandardSplitTokenizer()
+                return StandardSplitTokenizer(lang)
 
 
 
@@ -408,17 +428,13 @@ def generate_splits_from_plain_text(root=os.path.join(DATA_DIR_PREPRO, "europarl
 
 
 if __name__ == '__main__':
-  #  language_code = "de"
-   # FILES = sorted(["train.en", "val.en", "test.en",
-   #          "train.{}".format(language_code), "val.{}".format(language_code), "test.{}".format(language_code)])
+    tokenizer = get_custom_tokenizer("en", "w")
+    seq_tokenizer = SequenceTokenizer("en", tokenizer)
+    frase = "Yes, Mr Evans, I feel an initiative of the type you have just suggested would be entirely appropriate. Am 20. Juni 2019, about the Linkohr Report (A5-0297/2001)"
+    print(expand_contraction(frase, ENG_CONTRACTIONS_MAP))
+    import spacy
+    nlp = spacy.load("en")
 
- #   files = ["train.en", "val.en", "test.en",
-  #                  "train.de", "val.de", "test.de", "europarl.de", "bitext.de"]
-#
+    print(nlp(frase).ents)
 
-
-  #  print(files)
-  #  print(FILES == files)
-  tokenizer = WordbasedSeqTokenizer(lang="en")
-  print(perform_refinements(tokenizer.tokenize("This text . Is to test . How it works ! Will it! Or won ' t it ? Hmm ? Is this Sara 's bag ? you can write her at this e-mail address: sara_looks@gmail.com. Or you can visit her site: https://sara-looks.de/contacts/")))
- # print(perform_refinements("This text . Is to test . How it works ! Will it! Or won ' t it ? Hmm ? Is this Sara 's bag ? you can write her at this e-mail address: sara_looks@gmail.com. Or you can visit her site: https://sara-looks.de/contacts/"))
+    print(seq_tokenizer.tokenize(frase))
