@@ -4,7 +4,7 @@ import time
 import pandas as pd
 
 from project import get_full_path
-from project.utils.data.preprocessing import WordbasedSeqTokenizer, perform_refinements
+from project.utils.data.preprocessing import perform_refinements
 from project.utils.download.europarl import maybe_download_and_extract, load_data, DATA_DIR
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW

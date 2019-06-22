@@ -116,20 +116,24 @@ class StandardSplitTokenizer(SequenceTokenizer):
             i = m.end()
         return tokens
 
-def get_custom_tokenizer(lang, mode):
+def get_custom_tokenizer(lang, mode, fast=False):
 
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
     if mode == "c":
         return CharBasedTokenizer(lang)
     else:
-        if lang in SUPPORTED_LANGS.keys():
-            try:
-                import spacy
-                nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"]) #makes it faster
-                return SpacyTokenizer(lang, nlp)
-            except ImportError:
-                print("Spacy not installed. Standard tokenization is used")
-                return StandardSplitTokenizer(lang)
+        if fast:
+            return StandardSplitTokenizer(lang)
+        else:
+            ## this may last more than 1 hour
+            if lang in SUPPORTED_LANGS.keys():
+                try:
+                    import spacy
+                    nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"]) #makes it faster
+                    return SpacyTokenizer(lang, nlp)
+                except ImportError:
+                    print("Spacy not installed. Standard tokenization is used")
+                    return StandardSplitTokenizer(lang)
 
 
 
