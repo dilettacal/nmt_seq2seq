@@ -10,7 +10,9 @@ DATA_DIR = get_full_path(os.path.join(ROOT, "data"))
 DATA_DIR_RAW = get_full_path(os.path.join(DATA_DIR, "raw"))
 DATA_DIR_PREPRO = get_full_path(os.path.join(DATA_DIR, "preprocessed"))
 
-MAX_SUPPORTED_LENGTH = 50
+MAX_SUPPORTED_LENGTH = 30
+
+SEED = 42
 
 
 ##### Files ##############

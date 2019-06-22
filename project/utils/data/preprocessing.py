@@ -1,6 +1,7 @@
 import abc
 import logging
 import os
+import random
 import string
 from datetime import datetime
 
@@ -11,13 +12,11 @@ from sacremoses import MosesTokenizer
 import unicodedata
 import re
 
-from spacy.pipeline.pipes import EntityRecognizer
-
 import TMX2Corpus.tokenizer as tokenizer
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import Logger
-from settings import RAW_EUROPARL, DATA_DIR_PREPRO, SUPPORTED_LANGS
-from TMX2Corpus.tmx2corpus import Converter, extract_tmx
+from settings import RAW_EUROPARL, DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED, DATA_DIR
+from TMX2Corpus.tmx2corpus import Converter
 
 ### Regex ###
 space_before_punct = r'\s([?.!"](?:\s|$))'
@@ -52,7 +51,13 @@ class SequenceTokenizer(tokenizer.Tokenizer):
         super(SequenceTokenizer, self).__init__(lang.lower())
 
     def _tokenize(self, text):
-       raise NotImplemented
+        tokens = self._custom_tokenize(text)
+        text = self._clean_text(' '.join(tokens))
+        return text.split(" ")
+
+    @abc.abstractmethod
+    def _custom_tokenize(self, text):
+        pass
 
     def _clean_text(self, text):
         text = re.sub(space_before_punct, r"\1", text)
@@ -66,24 +71,12 @@ class SequenceTokenizer(tokenizer.Tokenizer):
         return text
 
 
-
-class CustomTokenizer(SequenceTokenizer):
-
-    def _tokenize(self, text):
-        tokens = self._custom_tokenize(text)
-        text = self._clean_text(' '.join(tokens))
-        return text.split(" ")
-
-    @abc.abstractmethod
-    def _custom_tokenize(self, text):
-       pass
-
-class CharBasedTokenizer(CustomTokenizer):
+class CharBasedTokenizer(SequenceTokenizer):
 
     def _custom_tokenize(self, text):
         return list(text)
 
-class SpacyTokenizer(CustomTokenizer):
+class SpacyTokenizer(SequenceTokenizer):
     def __init__(self, lang, model):
         self.nlp = model
         super(SpacyTokenizer, self).__init__(lang)
@@ -114,7 +107,7 @@ class SpacyTokenizer(CustomTokenizer):
         return text.split(" ") if isinstance(text, str) else text
 
 
-class StandardSplitTokenizer(CustomTokenizer):
+class StandardSplitTokenizer(SequenceTokenizer):
     def _custom_tokenize(self, text):
         tokens = []
         i = 0
@@ -198,6 +191,38 @@ def expand_contraction(sentence, mapping):
 
     expanded_sentence = contractions_patterns.sub(replace_text, sentence)
     return expanded_sentence
+
+
+def split_data(src_sents, trg_sents, test_ratio=0.3, seed=SEED):
+    assert len(src_sents) == len(trg_sents)
+    data = list(zip(src_sents, trg_sents))
+
+    num_samples = len(data)
+    print("Total samples: ", num_samples)
+
+    test_range = int(num_samples * test_ratio)  # test dataset 0.1
+    train_range = num_samples - test_range
+    random.seed(seed)  # 30
+    random.shuffle(data)
+
+    data_set = data[:train_range]
+    val_set = data[train_range:]
+
+    # create test set
+    num_samples = len(data_set)
+    test_range = int(num_samples * 0.1)
+    train_range = num_samples - test_range
+
+    train_set = data_set[:train_range]
+    test_set = data_set[train_range:]
+
+    print(len(test_set) + len(train_set) + len(val_set))
+
+    train_set = list(zip(*train_set))
+    val_set = list(zip(*val_set))
+    test_set = list(zip(*test_set))
+
+    return train_set, val_set, test_set
 
 
 ############### REMOVE ###############
@@ -426,15 +451,27 @@ def generate_splits_from_plain_text(root=os.path.join(DATA_DIR_PREPRO, "europarl
         path_to_de = os.path.join(root, language_code, trg_file)
 
 
+def persist_txt(lines, store_path, file_name, exts):
+    with open(os.path.join(store_path, file_name + exts[0]), mode="w", encoding="utf-8") as src_out_file,\
+            open(os.path.join(store_path, file_name + exts[1]), mode="w", encoding="utf-8") as trg_out_file:
+        if len(lines) == 2:
+            lines = list(zip(lines[0], lines[1]))
+            for src, trg in lines:
+                src_out_file.write("{}\n".format(src))
+                trg_out_file.write("{}\n".format(trg))
+
+
 
 if __name__ == '__main__':
-    tokenizer = get_custom_tokenizer("en", "w")
-    seq_tokenizer = SequenceTokenizer("en", tokenizer)
-    frase = "Yes, Mr Evans, I feel an initiative of the type you have just suggested would be entirely appropriate. Am 20. Juni 2019, about the Linkohr Report (A5-0297/2001)"
-    print(expand_contraction(frase, ENG_CONTRACTIONS_MAP))
-    import spacy
-    nlp = spacy.load("en")
-
-    print(nlp(frase).ents)
-
-    print(seq_tokenizer.tokenize(frase))
+    import os
+    src_lines = [line.strip("\n") for line in open(os.path.join(DATA_DIR_PREPRO, "europarl", "de", "bitext.tok.en"), mode="r", encoding="utf-8").readlines() if line]
+    trg_lines = [line.strip("\n") for line in open(os.path.join(DATA_DIR_PREPRO, "europarl", "de", "bitext.tok.de"), mode="r", encoding="utf-8").readlines() if line]
+    train_data, val_data, test_data = split_data(src_lines, trg_lines)
+    print("Samples:")
+    print(len(train_data[0]), len(val_data[0]), len(test_data[0]))
+    store = os.path.expanduser(DATA_DIR_PREPRO)
+    store = os.path.join(store, "europarl", "de", "splits")
+    # store_path, file_name, exts
+    persist_txt(train_data, store, "train", exts=(".en", ".de"))
+    persist_txt(val_data, store, "val", exts=(".en", ".de"))
+    persist_txt(test_data, store, "test", exts=(".en", ".de"))

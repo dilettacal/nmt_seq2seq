@@ -1,13 +1,10 @@
 import os
-import random
-import re
-import string
 import time
 
 import pandas as pd
 
 from project import get_full_path
-from project.utils.data.preprocessing import WordbasedSeqTokenizer, clean_string, clearup, perform_refinements
+from project.utils.data.preprocessing import WordbasedSeqTokenizer, perform_refinements
 from project.utils.download.europarl import maybe_download_and_extract, load_data, DATA_DIR
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
@@ -25,38 +22,6 @@ DATASET = "europarl.tsv"
 MAX_EXPERIMENT_LEN = 50
 BUCKETS = [10, 25, MAX_EXPERIMENT_LEN]
 PRAFIX = ["Europarl.", "bitext"]
-
-
-def split_data(src_sents, trg_sents, test_ratio=0.3, seed=42):
-    assert len(src_sents) == len(trg_sents)
-    data = list(zip(src_sents, trg_sents))
-
-    num_samples = len(data)
-    print("Total samples: ", num_samples)
-
-    test_range = int(num_samples * test_ratio)  # test dataset 0.1
-    train_range = num_samples - test_range
-    random.seed(seed)  # 30
-    random.shuffle(data)
-
-    data_set = data[:train_range]
-    val_set = data[train_range:]
-
-    # create test set
-    num_samples = len(data_set)
-    test_range = int(num_samples * 0.1)
-    train_range = num_samples - test_range
-
-    train_set = data_set[:train_range]
-    test_set = data_set[train_range:]
-
-    print(len(test_set) + len(train_set) + len(val_set))
-
-    train_set = list(zip(*train_set))
-    val_set = list(zip(*val_set))
-    test_set = list(zip(*test_set))
-
-    return train_set, val_set, test_set
 
 
 def reduce_sent_len(src_sents, trg_sents, max_len=30):
