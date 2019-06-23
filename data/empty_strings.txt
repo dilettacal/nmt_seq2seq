@@ -1,0 +1,4 @@
+grep -cvP '\S' <file>
+grep -c ^$ <file>
+
+awk -F'[: \t]+' '{gsub(/^[: \t]+|[: \t]+$/, ""); print NF}' file

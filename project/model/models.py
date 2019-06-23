@@ -63,7 +63,7 @@ class Seq2Seq(nn.Module):
 
     def predict(self, src, beam_size=1, max_len =30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
-        beam_outputs = self._beam_search(src, beam_size, max_len=max_len, remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
+        beam_outputs = self.beam_search(src, beam_size, max_len=max_len, remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
         top1 = beam_outputs[0][1]  # a list of word indices (as ints)
         return top1
 
@@ -75,7 +75,7 @@ class Seq2Seq(nn.Module):
         return topk
 
 
-    def _beam_search(self, src, beam_size, max_len, remove_tokens=[]):
+    def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'''
         src = src.to(self.device)
         # Reverse src tensor
