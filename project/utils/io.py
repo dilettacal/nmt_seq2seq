@@ -1,5 +1,8 @@
 import io
 import time
+
+import torch
+import torchtext
 import torchtext.data as data
 from torchtext.data import Dataset
 from torchtext.datasets import TranslationDataset
@@ -16,9 +19,62 @@ from project.utils.utils import convert
 def read_file(path):
     pass
 
+class TranslationReversibleField(torchtext.data.Field):
+
+    def __init__(self, **kwargs):
+            ### Create vocabulary object
+            super(TranslationReversibleField, self).__init__(**kwargs)
+
+    def build_vocab(self, *args, **kwargs):
+            super(TranslationReversibleField, self).build_vocab(*args, **kwargs)
+            self.sos_id = self.vocab.stoi[self.init_token]
+            self.eos_id = self.vocab.stoi[self.eos_token]
+            self.pad_id = self.vocab.stoi[self.pad_token]
+
+            self.unk_id = self.vocab.stoi[self.unk_token]
+
+    def reverse(self, batch):
+            """
+            Readapted from: https://github.com/pytorch/text/blob/master/torchtext/data/field.py
+            Reverses the given batch back to the sentences (strings)
+            """
+            if self.include_lengths:
+                batch = batch[0]  # if lenghts are included, batch is a tuple containing an array of all the lengths
+
+            if not self.batch_first:
+                ### batch needs to be transposed, if shape is seq_len x batch
+                batch = batch.t()
+
+            with torch.cuda.device_of(batch):
+                batch = batch.tolist()
+
+            batch = [[self.vocab.itos[ind] for ind in ex] for ex in batch]
+
+            def trim(sent, token):
+                """
+                Removes from the given sentence the given token
+                :param sent:
+                :param token:
+                :return: tokenized sentence array without the given token
+                """
+                sentence = []
+                for word in sent:
+                    if word == token:
+                        break
+                    sentence.append(word)
+                return sentence
+
+            batch = [trim(ex, self.vocab.itos[self.eos_id]) for ex in batch]
+
+            def filter_special(token):
+                return token not in (self.init_token, self.pad_token)
+
+            batch = [filter(filter_special, ex) for ex in batch]
+
+            return [' '.join(ex) for ex in batch]  ## Reverse tokenization by joining the words
 
 
-class SrcField(data.Field):
+class SrcField(TranslationReversibleField):
 
     def __init__(self,sos_eos_pad_unk =[None, None, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True):
         self.sos_token = sos_eos_pad_unk[0]
@@ -31,7 +87,7 @@ class SrcField(data.Field):
                          sequential=sequential)
 
 
-class TrgField(data.Field):
+class TrgField(TranslationReversibleField):
 
     def __init__(self, sos_eos_pad_unk =[SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True):
         self.sos_token = sos_eos_pad_unk[0]
@@ -55,7 +111,7 @@ class Seq2SeqDataset(Dataset):
     def __init__(self, path, exts, fields, truncate=0, reduce=0):
 
         if not isinstance(fields[0], (tuple, list)):
-            print(fields)
+           # print(fields)
             fields = [('src', fields[0]), ('trg', fields[1])]
 
         src_path, trg_path = tuple(os.path.expanduser(path + x) for x in exts)

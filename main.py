@@ -6,6 +6,7 @@ import time
 import math
 import torch
 import numpy as np
+from torchtext import data
 from torchtext.data import Field
 from torchtext.datasets import TranslationDataset
 
@@ -53,11 +54,11 @@ def beam_search_decoder(data, k):
 
 if __name__ == '__main__':
     ### test datase
-	src_field = SrcField()
-	trg_field = TrgField()
+	SRC = SrcField()
+	TRG = TrgField()
 	start = time.time()
 	train, val, test = Seq2SeqDataset.splits(path=os.path.join(DATA_DIR_PREPRO, "europarl", "de", "splits"), root="", exts=(".en", ".de"),
-											 train="train", validation="val", test="test", fields=(src_field, trg_field), reduce= [500000,100000,10000])
+											 train="train", validation="val", test="test", fields=(SRC, TRG), reduce= [500000,100000,10000])
 	print("Duration:", convert(time.time()-start))
 
 	### 802919 382342 89213
@@ -65,31 +66,45 @@ if __name__ == '__main__':
 	print(len(val))
 	print(len(test))
 
-	src_field.build_vocab(train)
-	trg_field.build_vocab(train)
+	SRC.build_vocab(train, val, max_size=30000, min_freq=2)
+	TRG.build_vocab(train, val, max_size=50000,  min_freq=2)
 	# 50981 EN
 #	# 146288 DE
-	print(len(src_field.vocab))
-	print(len(trg_field.vocab))
+	print(len(SRC.vocab))
+	print(len(TRG.vocab))
+
+	# Create iterators to process text in batches of approx. the same length
+	train_iter = data.BucketIterator(train, batch_size=10, device="cuda", repeat=False,
+									 sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=True)
+	val_iter = data.Iterator(val, batch_size=1, device="cuda", repeat=False, sort_key=lambda x: len(x.src))
+	test_iter = data.Iterator(test, batch_size=1, device="cuda", repeat=False, sort_key=lambda x: len(x.src))
 
 
+	first_train_batch = next(iter(train_iter))
+	first_val_batch = next(iter(val_iter))
+	first_test_batch = next(iter(test_iter))
 
-	print("*" * 100)
-	src_field_tok = SrcField()
-	trg_field_tok = TrgField()
-	start = time.time()
-	train, _, _ = Seq2SeqDataset.splits(path=os.path.join(DATA_DIR_PREPRO, "europarl", "de"), root="",
-											 exts=(".en", ".de"),
-											 train="bitext", validation="", test="",
-											 fields=(src_field_tok, trg_field_tok))
-	print("Duration:", convert(time.time() - start))
+	print("Train batch...")
+	srcs = [' '.join([SRC.vocab.itos[i] for i in sent]) for sent in first_train_batch.src.t()]
+	trgs = [' '.join([TRG.vocab.itos[i] for i in sent]) for sent in first_train_batch.trg.t()]
 
-	src_field_tok.build_vocab(train)
-	trg_field_tok.build_vocab(train)
-	# 50981 EN
-	# 146288 DE
-	print(len(src_field_tok.vocab))
-	print(len(trg_field_tok.vocab))
+	print("First train batch:")
+	all_togheter = list(zip(srcs, trgs))
+	for elem in all_togheter:
+		print(elem)
+
+	print(SRC.reverse(first_train_batch.src))
+	print(TRG.reverse(first_train_batch.trg))
+
+	print("Val batch...")
+	srcs = [' '.join([SRC.vocab.itos[i] for i in sent]) for sent in first_val_batch.src.t()]
+	trgs = [' '.join([TRG.vocab.itos[i] for i in sent]) for sent in first_val_batch.trg.t()]
+
+	print("First val batch:")
+	all_togheter = list(zip(srcs, trgs))
+	for elem in all_togheter:
+		print(elem)
+
 
 
 
