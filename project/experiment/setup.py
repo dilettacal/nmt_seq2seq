@@ -31,7 +31,7 @@ def experiment_parser():
     #  help='attention: dot-product, additive or none, default: dot-product ')
     parser.add_argument('--reverse_input', dest='reverse_input', type=str2bool, default=False,
                         help='reverse input to encoder, default: False')
-    parser.add_argument('-v', default=0, type=int, metavar='N', help='vocab size, use 0 for maximum size, default: 0')
+    parser.add_argument('-v', default=50000, type=int, metavar='N', help='vocab size, use 0 for maximum size, default: 0')
     parser.add_argument('-b', default=64, type=int, metavar='N', help='batch size, default: 64')
     parser.add_argument('--epochs', default=5, type=int, metavar='N', help='number of epochs, default: 50')
     parser.add_argument('--model', metavar='DIR', default=None, help='path to model, default: None')
@@ -46,7 +46,7 @@ def experiment_parser():
     parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Sequence max length. Default 30 units.")
     parser.add_argument('--model_type', default="custom", metavar='STR', help="Model type (custom, cho, sutskever)")
 
-    parser.add_argument('--corpus', default="", metavar='STR',
+    parser.add_argument('--corpus', default="europarl", metavar='STR',
                         help="The corpus, where training should be performed. Possible values: \'europarl\' and \'simple'\ - the iwslt dataset from torchtext")
 
     parser.add_argument('-c', metavar='STR', default=False, help="Training at char level")

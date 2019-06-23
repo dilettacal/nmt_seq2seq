@@ -9,7 +9,7 @@ from torchtext.data import Example
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
 from project.utils.data.preprocessing import generate_splits_from_datasets
-from project.utils.io import SrcField
+from project.utils.io import SrcField, Seq2SeqDataset
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO
 
@@ -55,10 +55,8 @@ def get_vocabularies_iterators(src_lang, args):
 
         print("Loading data...")
         start = time.time()
-        fields = (("src",src_vocab), ("trg",trg_vocab))
         exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
-        print(exts)
-        train, val, test = Seq2SeqDataset.splits(src_vocab, trg_vocab, reverse=True if src_lang!="en" else False)
+        train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab), exts=exts, train="train", validation="val", test="test", path=data_dir)
 
 
         end = time.time()

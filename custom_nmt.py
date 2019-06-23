@@ -45,26 +45,9 @@ def main():
         get_vocabularies_iterators(src_lang, args)
 
     print('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab), convert(time.time() - time_data)))
-    first_batch= next(iter(train_iter))
-    print("First train src:")
-    srcs = [' '.join([SRC.vocab.itos[i] for i in sent]) for sent in first_batch.src.t()]
-    trgs =  [' '.join([TRG.vocab.itos[i] for i in sent]) for sent in first_batch.trg.t()]
 
-    print("First batch:")
-    all_togheter = list(zip(srcs, trgs))
-    for elem in all_togheter:
-        print(elem)
-
-    print("***************************************************************")
-    all_togheter_rev = list(zip(SRC.reverse(first_batch.src), TRG.reverse(first_batch.trg)))
-    for elem in all_togheter_rev:
-        print(elem)
-
-    print("***************************************************************")
-
-    exit()
     data_logger = Logger(path=experiment_path, file_name="data.log")
-    print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, corpus)
+    print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, args.corpus)
 
     # Load embeddings if available
     LOAD_EMBEDDINGS = False
