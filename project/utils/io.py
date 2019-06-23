@@ -76,7 +76,7 @@ class TranslationReversibleField(torchtext.data.Field):
 
 class SrcField(TranslationReversibleField):
 
-    def __init__(self,sos_eos_pad_unk =[None, None, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True):
+    def __init__(self,sos_eos_pad_unk =[None, None, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True, tokenize=None):
         self.sos_token = sos_eos_pad_unk[0]
         self.eos_token = sos_eos_pad_unk[1]
         self.pad_token = sos_eos_pad_unk[2]
@@ -84,12 +84,12 @@ class SrcField(TranslationReversibleField):
         super().__init__(lower=False, pad_token=self.pad_token,
                          eos_token=self.eos_token, init_token=self.sos_token,
                          unk_token=self.unk_token, include_lengths=include_lengths,
-                         sequential=sequential)
+                         sequential=sequential, tokenize=tokenize)
 
 
 class TrgField(TranslationReversibleField):
 
-    def __init__(self, sos_eos_pad_unk =[SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True):
+    def __init__(self, sos_eos_pad_unk =[SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True, tokenize=None):
         self.sos_token = sos_eos_pad_unk[0]
         self.eos_token = sos_eos_pad_unk[1]
         self.pad_token = sos_eos_pad_unk[2]
@@ -97,7 +97,7 @@ class TrgField(TranslationReversibleField):
         super().__init__(lower=False, pad_token=self.pad_token,
                          eos_token=self.eos_token, init_token=self.sos_token,
                          unk_token=self.unk_token, include_lengths=include_lengths,
-                         sequential=sequential)
+                         sequential=sequential, tokenize=tokenize)
 
 
 
