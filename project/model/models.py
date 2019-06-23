@@ -67,6 +67,13 @@ class Seq2Seq(nn.Module):
         top1 = beam_outputs[0][1]  # a list of word indices (as ints)
         return top1
 
+    def predict_k(self, src, k, max_len=30, remove_tokens=[]):
+        '''Predict top k possibilities for first max_len words.'''
+        beam_outputs = self.beam_search(src, k, max_len=max_len,
+                                        remove_tokens=remove_tokens)  # returns top k options (as list of tuples)
+        topk = [option[1] for option in beam_outputs]  # list of k lists of word indices (as ints)
+        return topk
+
 
     def _beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'''

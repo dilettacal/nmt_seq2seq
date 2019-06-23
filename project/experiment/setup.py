@@ -16,7 +16,10 @@ def str2float(s):
         return float(s)
     except ValueError:
         return None
-
+def str2array(s):
+    if s:
+        s = s.split(" ")
+    return s
 
 def experiment_parser():
     parser = argparse.ArgumentParser(description='Neural Machine Translation')
@@ -33,7 +36,7 @@ def experiment_parser():
                         help='reverse input to encoder, default: False')
     parser.add_argument('-v', default=50000, type=int, metavar='N', help='vocab size, use 0 for maximum size, default: 0')
     parser.add_argument('-b', default=64, type=int, metavar='N', help='batch size, default: 64')
-    parser.add_argument('--epochs', default=5, type=int, metavar='N', help='number of epochs, default: 50')
+    parser.add_argument('--epochs', default=10, type=int, metavar='N', help='number of epochs, default: 50')
     parser.add_argument('--model', metavar='DIR', default=None, help='path to model, default: None')
     parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                         help='only evaluate model, default: False')

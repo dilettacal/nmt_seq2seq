@@ -27,7 +27,8 @@ def get_vocabularies_iterators(src_lang, args):
     char_level = args.c
     corpus = args.corpus
     language_code = args.lang_code
-    print("Min_freq",voc_limit)
+    reduce = args.reduce
+    print("Vocabulary limit:",voc_limit)
     print("Max sequence length:", args.max_len)
 
 
@@ -40,8 +41,6 @@ def get_vocabularies_iterators(src_lang, args):
     src_vocab = SrcField(tokenize=tokenizer, include_lengths=False,sos_eos_pad_unk=SRC_sos_eos_pad_unk)
 
     trg_vocab = SrcField(tokenize=tokenizer, include_lengths=False, sos_eos_pad_unk=TRGsos_eos_pad_unk)
-
-
 
     print("Fields created!")
 
@@ -56,7 +55,7 @@ def get_vocabularies_iterators(src_lang, args):
         print("Loading data...")
         start = time.time()
         exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
-        train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab), exts=exts, train="train", validation="val", test="test", path=data_dir)
+        train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab), exts=exts, train="train", validation="val", test="test", path=data_dir, reduce=reduce)
 
 
         end = time.time()
@@ -94,7 +93,7 @@ def get_vocabularies_iterators(src_lang, args):
     train_iter = data.BucketIterator(train, batch_size=args.b, device=device, repeat=False,
                                      sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=True)
     val_iter = data.Iterator(val, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))
-    test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))
+    test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src), shuffle=False, sort_within_batch=True)
 
     #print(next(iter(train_iter)))
 

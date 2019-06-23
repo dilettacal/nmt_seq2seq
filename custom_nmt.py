@@ -7,7 +7,7 @@ from project.experiment.setup import experiment_parser
 from project.model.models import Seq2Seq, ChoSeq2Seq, VALID_MODELS
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
-from project.utils.training import predict_from_input, predict, validate, train
+from project.utils.training import predict_from_input, predict, validate, train, translate_test_set
 from project.utils.utils import convert, Logger
 from settings import MODEL_STORE
 
@@ -19,7 +19,7 @@ def main():
     args.cuda = device
     print("Running experiment on:", device)
 
-    args.corpus = "europarl"
+   # args.corpus = "europarl"
 
     lang_code = args.lang_code
     tie_emb = args.tie
@@ -29,13 +29,18 @@ def main():
     model_type = "custom"
     args.model_type = model_type
 
+    args.reduce = [0, 0, 5000]
+    args.epochs = 50
+
     print("Language combination ({}-{})".format(src_lang, trg_lang))
 
     lang_comb = "{}_{}".format(src_lang, trg_lang)
     layers = args.nlayers
     direction = "bi" if args.bi else "uni"
 
-    experiment_path = os.path.join(MODEL_STORE, lang_comb, model_type, str(layers), direction, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    experiment_path = os.path.join(MODEL_STORE, lang_comb, model_type, str(layers),
+                                   direction,
+                                   datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
     os.makedirs(experiment_path, exist_ok=True)
 
 
@@ -104,17 +109,30 @@ def main():
                                                                                                vars(scheduler), model),
                stdout=False)
     # Train, validate, or predict
+
+    results_logger = Logger(experiment_path, file_name="results.log")
     start_time = time.time()
-    if args.predict_from_input is not None:
-        predict_from_input(model, args.predict_from_input, SRC, TRG, logger)
-    elif args.predict is not None:
-        predict(model, args.predict, args.predict_outfile, SRC, TRG, logger)
-    #elif args.visualize:
-    #    visualize(train_iter, model, SRC, TRG, logger)
-    elif args.evaluate:
-        validate(val_iter, model, criterion, SRC, TRG, logger, device)
-    else:
-        train(train_iter, val_iter, model, criterion, optimizer, scheduler, SRC, TRG, args.epochs, logger, device)
+    ### Training the model
+    train(train_iter, val_iter, model, criterion, optimizer, scheduler, SRC, TRG, args.epochs, logger, device)
+
+    ### Evaluation on test set
+    beam_size = 1
+    logger.log("Validation of test set - Beam size: {}".format(beam_size))
+    validate(test_iter, model, TRG, logger, device, test_set=True)
+
+   # beam_size = 2
+   # logger.log("Validation of test set - Beam size: {}".format(beam_size))
+   # validate(test_iter, model, TRG, logger, device, test_set=True)
+
+    beam_size = 5
+    logger.log("Validation of test set - Beam size: {}".format(beam_size))
+    validate(test_iter, model, TRG, logger, device, test_set=True)
+
+    ### Prediction on test set
+    translate_test_set(model, test_iter, SRC, TRG, results_logger, device, beam_size=1)
+ #   translate_test_set(model, test_iter, SRC, TRG, results_logger, device, beam_size=2)
+    translate_test_set(model, test_iter, SRC, TRG, results_logger, device, beam_size=5)
+
     logger.log('Finished in {}'.format(convert(time.time() - start_time)))
     return
 

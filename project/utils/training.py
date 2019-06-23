@@ -16,7 +16,7 @@ def train(train_iter, val_iter, model, criterion, optimizer, scheduler, SRC, TRG
 
         # Validate model with BLEU
         start_time = time.time()  # timer
-        bleu_val = validate(val_iter, model, criterion, SRC, TRG, logger, device)
+        bleu_val = validate(val_iter, model, TRG, logger, device)
         if bleu_val > bleu_best:
             bleu_best = bleu_val
             logger.save_model(model.state_dict(), epoch)
@@ -75,19 +75,18 @@ def train(train_iter, val_iter, model, criterion, optimizer, scheduler, SRC, TRG
         logger.log('Training time: {:.3f}'.format(time.time() - val_time))
 
 
-def validate(val_iter, model, criterion, SRC, TRG, logger, device):
-    print("Eval on device: {}".format(device))
+def validate(data_iter, model, TRG, logger, device, test_set=False, beam_size=1):
     model.eval()
 
     # Iterate over words in validation batch.
     sents_out = []  # list of sentences from decoder
     sents_ref = []  # list of target sentences
-    for i, batch in enumerate(val_iter):
+    for i, batch in enumerate(data_iter):
         # Use GPU
         src = batch.src.to(device)
         trg = batch.trg.to(device)
         # Get model prediction (from beam search)
-        out = model.predict(src, beam_size=1)  # list of ints (word indices) from greedy search
+        out = model.predict(src, beam_size=beam_size)  # list of ints (word indices) from greedy search
         ref = list(trg.data.squeeze())
         # Prepare sentence for bleu script
         remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
@@ -100,10 +99,37 @@ def validate(val_iter, model, criterion, SRC, TRG, logger, device):
     # Run moses bleu script
     bleu = moses_multi_bleu(sents_out, sents_ref)
     # Log information after validation
-    logger.log('Validation complete. BLEU: {bleu:.3f}'.format(bleu=bleu))
-
+    if not test_set: logger.log('Validation on validation set complete. BLEU: {bleu:.3f}'.format(bleu=bleu))
+    else: logger.log('Validation on test set complete. BLEU: {bleu:.3f}'.format(bleu=bleu))
 
     return bleu
+
+def translate_test_set(model, data_iter, SRC, TRG, logger, device, beam_size=1):
+    logger.log("Translation on test set. Beam size {}".format(beam_size))
+    model.eval()
+
+    for i, batch in enumerate(data_iter):
+        if i == 50: break
+        # Use GPU
+        src = batch.src.to(device)
+        trg = batch.trg.to(device)
+        # Get model prediction (from beam search)
+        out = model.predict(src, beam_size=beam_size)  # list of ints (word indices) from greedy search
+        ref = list(trg.data.squeeze())
+        # Prepare sentence for bleu script
+        remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
+        out = [w for w in out if w not in remove_tokens]
+        ref = [w for w in ref if w not in remove_tokens]
+        src = [w for w in src if w not in remove_tokens]
+        sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
+        sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+        src_sent = ' '.join(SRC.vocab.itos[j] for j in src)
+
+        logger.log("Source > {}".format(src_sent), stdout=False)
+        logger.log("Target > {}".format(sent_ref), stdout=False)
+        logger.log("Pred   > {}".format(sent_out), stdout=False)
+        logger.log("")
+
 
 
 # called from main.py: predict.predict(model, args.predict, args.predict_outfile, SRC, TRG, logger)
@@ -133,6 +159,9 @@ def predict(model, infile, outfile, SRC, TRG, logger, device="cuda"):
                 logger.log('Source: {}\nTarget: {}\n'.format(input_sent, final_preds[0:100]))
         logger.log('Finished predicting')
     return
+
+
+
 
 def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
     input_sent = input_sentence.split(' ') # sentence --> list of words
