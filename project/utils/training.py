@@ -4,14 +4,12 @@ import torch
 import numpy as np
 import math
 
+from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert, AverageMeter
 from settings import DEFAULT_DEVICE
-from nltk.translate.bleu_score import sentence_bleu
-
-import warnings
-warnings.filterwarnings("ignore", message="The hypothesis contains 0 counts of 4-gram overlaps. Therefore the BLEU score evaluates to 0, independently of how many N-gram overlaps of lower order it contains. Consider using lower n-gram order or use SmoothingFunction()")
-
+from nltk.translate.bleu_score import corpus_bleu
+from sacrebleu import corpus_bleu as sacre_corpus_bleu
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE):
     best_valid_loss = float('inf')
@@ -21,6 +19,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device)
         #val_iter, model, criterion, device, TRG,
         avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG)
+        #print(avg_bleu_loss)
         scheduler.step(avg_val_loss)  # input bleu score
 
         if avg_val_loss < best_valid_loss:
@@ -68,36 +67,19 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
     return losses.avg
 
 
-def compute_bleu(candidate, tgt, TRG):
-    ref = list(tgt.data.squeeze())
-
-    # Prepare sentence for bleu script
-    remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
-    candidate = [w for w in candidate if w not in remove_tokens]
-    ref = [w for w in ref if w not in remove_tokens]
-
-    hypothesis = [TRG.vocab.itos[j] for j in candidate]
-  #  print("Candidate:", hypothesis)
-    ref = [[TRG.vocab.itos[j] for j in ref]]
-  #  print("Reference:", ref)
-    return sentence_bleu(references=ref, hypothesis=hypothesis)
-
 
 def validate(val_iter, model, criterion, device, TRG, beam_size = 1):
     model.eval()
     losses = AverageMeter()
-    bleus = AverageMeter()
+    sent_candidates = []
+    sent_references = []
     for i, batch in enumerate(val_iter):
         src = batch.src.to(device)
         tgt = batch.trg.to(device)
         ### compute normal scores
         scores = model(src, tgt)
 
-        # compute scores with greedy search
-        out = model.predict(src, beam_size=beam_size) # out is a list
-        bleu = compute_bleu(tgt=tgt, candidate=out, TRG=TRG)
-        #print("BLEU:", bleu)
-        bleus.update(bleu)
+
         scores = scores[:-1]
         tgt = tgt[1:]
 
@@ -109,7 +91,28 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 1):
         loss = criterion(scores, tgt)
         losses.update(loss.item())
 
-    return losses.avg, bleus.avg
+        #### BLEU
+        # compute scores with greedy search
+        out = model.predict(src, beam_size=beam_size)  # out is a list
+
+        ## Prepare sentences for BLEU
+        ref = list(tgt.data.squeeze())
+        # Prepare sentence for bleu script
+        remove_tokens = [TRG.vocab.stoi['<pad>'], TRG.vocab.stoi['<s>'], TRG.vocab.stoi['</s>']]
+        out = [w for w in out if w not in remove_tokens]
+        ref = [w for w in ref if w not in remove_tokens]
+        sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
+        sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+        sent_candidates.append(sent_out)
+        sent_references.append(sent_ref)
+
+    bleu = get_moses_multi_bleu(references=sent_references, hypotheses=sent_candidates, lowercase=True)
+#    sacrebl = sacre_corpus_bleu(sys_stream=sent_references, ref_streams=sent_candidates, lowercase=True)
+    #nlkt_bleu = corpus_bleu(list_of_references=[[sent.split() for sent in sent_references]], hypotheses=[hyp.split() for hyp in sent_candidates])
+  #  print("Sacrebleu:", sacrebl)
+    #print("Script bleu:", bleu)
+   # print("NLTK:", nlkt_bleu)
+    return losses.avg, bleu
 
 
 def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):

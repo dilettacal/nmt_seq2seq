@@ -55,7 +55,6 @@ def main():
 
     # Load embeddings if available
     # Create model
-    tokens = [TRG.vocab.stoi[x] for x in [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN,UNK_TOKEN]]
 
     if args.bi and args.reverse_input:
         args.reverse_input = False
