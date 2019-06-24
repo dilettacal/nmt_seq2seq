@@ -27,7 +27,7 @@ def main():
     model_type = "custom"
     args.model_type = model_type
 
-    args.reduce = [5000, 1000, 100]
+    args.reduce = [200000, 20000, 5000]
     args.epochs = 50
 
     print("Language combination ({}-{})".format(src_lang, trg_lang))

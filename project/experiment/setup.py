@@ -35,7 +35,7 @@ def experiment_parser():
     parser.add_argument('--reverse_input', dest='reverse_input', type=str2bool, default=False,
                         help='reverse input to encoder, default: False')
     parser.add_argument('-v', default=30000, type=int, metavar='N', help='vocab size, use 0 for maximum size, default: 0')
-    parser.add_argument('-b', default=100, type=int, metavar='N', help='batch size, default: 64')
+    parser.add_argument('-b', default=64, type=int, metavar='N', help='batch size, default: 64')
     parser.add_argument('--epochs', default=50, type=int, metavar='N', help='number of epochs, default: 50')
     parser.add_argument('--model', metavar='DIR', default=None, help='path to model, default: None')
     parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
@@ -56,7 +56,7 @@ def experiment_parser():
 
     parser.add_argument('-lang_code', metavar='STR', default="de",
                         help="Provide language code, e.g. 'de'. This is the source or target language.")
-    parser.add_argument('--reverse', metavar="STR", default=True,
+    parser.add_argument('--reverse', metavar="STR", default=False,
                         help="Reverse language combination. Standard: EN > <lang>, if reverse, then <lang> > EN")
 
     parser.add_argument('--cuda', metavar='STR', default=True)
