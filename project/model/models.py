@@ -14,24 +14,27 @@ VALID_CELLS = [LSTM, GRU]
 VALID_MODELS = ["standard", "sutskever", "cho"]
 
 class Seq2Seq(nn.Module):
-    def __init__(self, src_vocab_size, trg_vocab_size, emb_size, h_dim, num_layers, dropout_p, bi, rnn_type="lstm",
-             tokens_bos_eos_pad_unk=[0, 1, 2, 3],  device=DEFAULT_DEVICE):
+    def __init__(self, args, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
 
-        self.hid_dim = h_dim
-        self.num_layers = num_layers
+        self.hid_dim = args.hid
+        self.num_layers = args.nlayers
         self.bos_token = tokens_bos_eos_pad_unk[0]
         self.eos_token = tokens_bos_eos_pad_unk[1]
         self.pad_token = tokens_bos_eos_pad_unk[2]
         self.unk_token = tokens_bos_eos_pad_unk[3]
-        self.device = device
+        self.device = args.get("device", DEFAULT_DEVICE)
+        rnn_type = args.rnn
+
         print("Model inputs reversed: {}".format(self.reverse_input))
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
-        self.encoder = Encoder(src_vocab_size, emb_size, h_dim, num_layers, dropout_p=dropout_p, bidirectional=bi, rnn_cell=rnn_type, device=self.device)
-        self.decoder = Decoder(trg_vocab_size, emb_size, h_dim, num_layers * 2 if bi else num_layers, dropout_p=dropout_p)
-        self.dropout = nn.Dropout(dropout_p)
+        self.encoder = Encoder(args.src_vocab_size, args.emb, args.hid, args.nlayers,
+                               dropout_p=args.dp, bidirectional=args.bi, rnn_cell=rnn_type, device=self.device)
+        self.decoder = Decoder(args.trg_vocab_size, args.emb, args.hid,
+                               args.nlayers * 2 if args.bi else args.nlayers, dropout_p=args.dp)
+        self.dropout = nn.Dropout(args.dp)
         self.output = nn.Linear(self.hid_dim, self.vocab_size_trg)
 
         ### create encoder and decoder
@@ -94,16 +97,11 @@ class Seq2Seq(nn.Module):
 
 
 class ChoSeq2Seq(Seq2Seq):
-    def __init__(self, embedding_src, embedding_trg, h_dim, num_layers, dropout_p, bi,
-                 tokens_bos_eos_pad_unk=[0, 1, 2, 3], reverse_input=False, tie_emb=False, device="cuda", maxout_units=None):
-        super(ChoSeq2Seq, self).__init__(embedding_src=embedding_src, embedding_trg=embedding_trg,
-                                         h_dim=h_dim, num_layers=num_layers,
-                                         dropout_p=dropout_p, bi=bi, rnn_type="gru",
-                                         tokens_bos_eos_pad_unk=tokens_bos_eos_pad_unk,
-                                         reverse_input=reverse_input, tie_emb=tie_emb, device=device)
+    def __init__(self, args, tokens_bos_eos_pad_unk, maxout_units=None):
+        super(ChoSeq2Seq, self).__init__(args, tokens_bos_eos_pad_unk)
 
         if maxout_units:
             self.output = MaxoutLinearLayer(input_dim=self.emb_dim_trg * 2, hidden_units=maxout_units,
                                          output_dim=self.vocab_size_trg, k=2)
         else:
-            self.output = nn.ReLU(nn.Linear(self.embedding.embedding_dim + h_dim * 2, self.vocab_size))
+            self.output = nn.ReLU(nn.Linear(self.embedding.embedding_dim + self.hid_dim * 2, self.vocab_size))

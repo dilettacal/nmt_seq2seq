@@ -22,7 +22,6 @@ def main():
    # args.corpus = "europarl"
 
     lang_code = args.lang_code
-    tie_emb = args.tie
     rnn_type = args.rnn
     src_lang = lang_code if args.reverse else "en"
     trg_lang = "en" if src_lang == lang_code else lang_code
@@ -55,34 +54,15 @@ def main():
     print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, args.corpus)
 
     # Load embeddings if available
-    LOAD_EMBEDDINGS = False
-    if LOAD_EMBEDDINGS:
-        # TODO: Change this if pretrained embeddings are used
-        embedding_src = None
-        embedding_trg = None
-    else:
-        embedding_src = (torch.rand(len(SRC.vocab), args.emb) - 0.5) * 2
-        embedding_trg = (torch.rand(len(TRG.vocab), args.emb) - 0.5) * 2
-        print('Initialized embedding vectors')
-
     # Create model
     tokens = [TRG.vocab.stoi[x] for x in [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN,UNK_TOKEN]]
 
     if args.bi and args.reverse_input:
         args.reverse_input = False
 
-
-    model = Seq2Seq(embedding_src=embedding_src,
-                        embedding_trg=embedding_trg,
-                        h_dim=args.hs,
-                        num_layers=layers,
-                        dropout_p=args.dp,
-                        bi=args.bi,
-                        rnn_type=rnn_type,
-                        tie_emb=tie_emb,
-                        tokens_bos_eos_pad_unk=tokens,
-                        reverse_input=args.reverse_input,
-                        device=device)
+    tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
+    ### src_vocab_size, trg_vocab_size, emb_size, h_dim, num_layers, dropout_p, bi, rnn_type="lstm", tokens_bos_eos_pad_unk=[0, 1, 2, 3],  device=DEFAULT_DEVICE
+    model = Seq2Seq(args, tokens_bos_eos_pad_unk)
 
     # Load pretrained model
     if args.model is not None and os.path.isfile(args.model):
