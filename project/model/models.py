@@ -41,10 +41,6 @@ class Seq2Seq(nn.Module):
         self.dropout = nn.Dropout(dropout_p)
         #### Here Hidden size!
         self.output = nn.Linear(self.hid_dim, self.vocab_size_trg)
-        # Tie weights of decoder embedding and output
-        if tie_emb and self.decoder.embedding.weight.size() == self.output.weight.size():
-            print('Weight tying!')
-            self.output.weight = self.decoder.embedding.weight
 
         ### create encoder and decoder
     def forward(self, src, trg):
@@ -101,7 +97,7 @@ class Seq2Seq(nn.Module):
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
                     # Decode
                     outputs_d, new_state = self.decoder(last_word_input, current_state)
-                    print(outputs_d.size())
+                #    print(outputs_d.size())
 
                     x = self.output(outputs_d)
                     x = x.squeeze().data.clone()
