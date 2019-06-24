@@ -9,10 +9,10 @@ from settings import DEFAULT_DEVICE
 
 
 class Encoder(nn.Module):
-    def __init__(self, embedding, h_dim, num_layers=1, dropout_p=0.0,
+    def __init__(self, src_vocab_size, embedding, h_dim, num_layers=1, dropout_p=0.0,
                  bidirectional = False, device = DEFAULT_DEVICE, rnn_cell="lstm"):
         super(Encoder, self).__init__()
-        self.vocab_size, self.embedding_size = embedding.size()
+        self.vocab_size, self.embedding_size = src_vocab_size, embedding
         self.num_layers = num_layers
         self.h_dim = h_dim
         self.dropout_p = dropout_p
@@ -21,7 +21,6 @@ class Encoder(nn.Module):
 
         # Create word embedding and LSTM
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size)
-        self.embedding.weight.data.copy_(embedding)
 
         if rnn_cell.lower() == "lstm":
             self.rnn = nn.LSTM(self.embedding_size, self.h_dim, num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=False)

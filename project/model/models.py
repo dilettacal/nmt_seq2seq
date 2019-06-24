@@ -3,7 +3,7 @@ import random
 import torch
 import torch.nn as nn
 
-from project.model.decoders import Decoder, ChoDecoder
+from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
 from project.model.layers import MaxoutLinearLayer
 from settings import DEFAULT_DEVICE
@@ -14,15 +14,12 @@ VALID_CELLS = [LSTM, GRU]
 VALID_MODELS = ["standard", "sutskever", "cho"]
 
 class Seq2Seq(nn.Module):
-    def __init__(self, embedding_src, embedding_trg, h_dim, num_layers, dropout_p,
-                 bi,
-                 rnn_type="lstm",
+    def __init__(self, src_vocab_size, trg_vocab_size, emb_size, h_dim, num_layers, dropout_p, bi, rnn_type="lstm",
              tokens_bos_eos_pad_unk=[0, 1, 2, 3],  device=DEFAULT_DEVICE):
         super(Seq2Seq, self).__init__()
 
         self.hid_dim = h_dim
         self.num_layers = num_layers
-        self.vocab_size_trg, self.emb_dim_trg = embedding_trg.size()
         self.bos_token = tokens_bos_eos_pad_unk[0]
         self.eos_token = tokens_bos_eos_pad_unk[1]
         self.pad_token = tokens_bos_eos_pad_unk[2]
@@ -32,12 +29,9 @@ class Seq2Seq(nn.Module):
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
-        self.encoder = Encoder(embedding_src, h_dim, num_layers, dropout_p=dropout_p, bidirectional=bi, rnn_cell=rnn_type, device=self.device)
-
-        self.decoder = Decoder(embedding_trg, h_dim, num_layers * 2 if bi else num_layers, dropout_p=dropout_p)
-
+        self.encoder = Encoder(src_vocab_size, emb_size, h_dim, num_layers, dropout_p=dropout_p, bidirectional=bi, rnn_cell=rnn_type, device=self.device)
+        self.decoder = Decoder(trg_vocab_size, emb_size, h_dim, num_layers * 2 if bi else num_layers, dropout_p=dropout_p)
         self.dropout = nn.Dropout(dropout_p)
-        #### Here Hidden size!
         self.output = nn.Linear(self.hid_dim, self.vocab_size_trg)
 
         ### create encoder and decoder
@@ -49,6 +43,7 @@ class Seq2Seq(nn.Module):
         out_e, final_e = self.encoder(src)
         # Decode
         out_d, _ = self.decoder(trg, final_e)
+        x = self.dropout(self.tanh(out_d))
         x = self.output(out_d)
         return x
 
@@ -58,22 +53,9 @@ class Seq2Seq(nn.Module):
         top1 = beam_outputs[0][1]  # a list of word indices (as ints)
         return top1
 
-    def predict_k(self, src, k, max_len=30, remove_tokens=[]):
-        '''Predict top k possibilities for first max_len words.'''
-        beam_outputs = self.beam_search(src, k, max_len=max_len,
-                                        remove_tokens=remove_tokens)  # returns top k options (as list of tuples)
-        topk = [option[1] for option in beam_outputs]  # list of k lists of word indices (as ints)
-        return topk
-
-
     def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'''
         src = src.to(self.device)
-        # Reverse src tensor
-        if self.reverse_input:
-            inv_index = torch.arange(src.size(0) - 1, -1, -1).long()
-            inv_index = inv_index.to(self.device)
-            src = src.index_select(0, inv_index)
         # Encode
         outputs_e, states = self.encoder(src)  # batch size = 1
         # Start with '<s>'

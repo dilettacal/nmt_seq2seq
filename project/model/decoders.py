@@ -6,16 +6,16 @@ from project.model.layers import MaxoutLinearLayer
 
 
 class Decoder(nn.Module):
-    def __init__(self, embedding, h_dim, num_layers, dropout_p=0.0, rnn_type="lstm"):
+    def __init__(self, trg_vocab_size, embedding, h_dim, num_layers, dropout_p=0.0, rnn_type="lstm"):
         super(Decoder, self).__init__()
-        self.vocab_size, self.embedding_size = embedding.size()
+        self.vocab_size, self.embedding_size = trg_vocab_size, embedding
         self.num_layers = num_layers
         self.h_dim = h_dim
         self.dropout_p = dropout_p
 
         # Create word embedding, LSTM
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size)
-        self.embedding.weight.data.copy_(embedding)
+
         if rnn_type.lower() == "lstm":
             self.rnn = nn.LSTM(self.embedding_size, self.h_dim, self.num_layers, dropout=self.dropout_p)
         else:
@@ -32,7 +32,7 @@ class Decoder(nn.Module):
         return out, h
 
 
-class ChoDecoder(Decoder):
+class ContextDecoder(Decoder):
     def __init__(self, embedding, h_dim, num_layers, dropout_p=0.0, maxout_units=500):
         super().__init__(embedding, h_dim, num_layers, dropout_p, rnn_type="gru")
         self.max_out_units = maxout_units

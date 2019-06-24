@@ -14,15 +14,16 @@ def train(train_iter, val_iter, model, criterion, optimizer, scheduler, SRC, TRG
     bleu_best = -1
     for epoch in range(num_epochs):
 
-        # Validate model with BLEU
         start_time = time.time()  # timer
-        bleu_val = validate(val_iter, model, TRG, logger, device)
-        if bleu_val > bleu_best:
-            bleu_best = bleu_val
-            logger.save_model(model.state_dict(), epoch)
-            logger.log('New best: {:.3f}'.format(bleu_best))
-        val_time = time.time()
-        logger.log('Validation time: {:.3f}'.format(val_time - start_time))
+        with torch.no_grad():
+            #val_loss = validate(val_iter, model, criterion)
+            bleu_val = validate(val_iter, model, TRG, logger, device)
+            if bleu_val > bleu_best:
+                bleu_best = bleu_val
+                logger.save_model(model.state_dict(), epoch)
+                logger.log('New best: {:.3f}'.format(bleu_best))
+            val_time = time.time()
+            logger.log('Validation time: {:.3f}'.format(val_time - start_time))
 
         # Validate model with teacher forcing (for PPL)
         val_loss = 0  # validate_losses(val_iter, model, criterion, logger)
