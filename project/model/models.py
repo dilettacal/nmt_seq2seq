@@ -17,8 +17,7 @@ class Seq2Seq(nn.Module):
     def __init__(self, embedding_src, embedding_trg, h_dim, num_layers, dropout_p,
                  bi,
                  rnn_type="lstm",
-             tokens_bos_eos_pad_unk=[0, 1, 2, 3], reverse_input=False,
-                 tie_emb=False, device=DEFAULT_DEVICE):
+             tokens_bos_eos_pad_unk=[0, 1, 2, 3],  device=DEFAULT_DEVICE):
         super(Seq2Seq, self).__init__()
 
         self.hid_dim = h_dim
@@ -28,7 +27,6 @@ class Seq2Seq(nn.Module):
         self.eos_token = tokens_bos_eos_pad_unk[1]
         self.pad_token = tokens_bos_eos_pad_unk[2]
         self.unk_token = tokens_bos_eos_pad_unk[3]
-        self.reverse_input = reverse_input
         self.device = device
         print("Model inputs reversed: {}".format(self.reverse_input))
 
@@ -46,11 +44,7 @@ class Seq2Seq(nn.Module):
     def forward(self, src, trg):
         src = src.to(self.device)
         trg = trg.to(self.device)
-        # Reverse src tensor
-        if self.reverse_input:
-            inv_index = torch.arange(src.size(0)-1, -1, -1).long()
-            inv_index = inv_index.to(self.device)
-            src = src.index_select(0, inv_index)
+
         # Encode
         out_e, final_e = self.encoder(src)
         # Decode

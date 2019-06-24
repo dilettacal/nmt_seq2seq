@@ -108,7 +108,7 @@ class Seq2SeqDataset(Dataset):
     def sort_key(x):
         return (len(x.src), len(x.trg))
 
-    def __init__(self, path, exts, fields, truncate=0, reduce=0):
+    def __init__(self, path, exts, fields, truncate=0, reduce=0, reverse_input=False):
 
         if not isinstance(fields[0], (tuple, list)):
            # print(fields)
@@ -120,7 +120,7 @@ class Seq2SeqDataset(Dataset):
 
         super(Seq2SeqDataset, self).__init__(examples, fields)
 
-    def _generate_examples(self, src_path, trg_path, fields, truncate, reduce):
+    def _generate_examples(self, src_path, trg_path, fields, truncate, reduce, reverse_input=False):
         examples = []
         with io.open(src_path, mode='r', encoding='utf-8') as src_file, \
                 io.open(trg_path, mode='r', encoding='utf-8') as trg_file:
@@ -128,6 +128,8 @@ class Seq2SeqDataset(Dataset):
                 if reduce >0 and i == reduce:
                     break
                 src_line, trg_line = src_line.strip(), trg_line.strip()
+                if reverse_input:
+                    src_line = src_line[::-1]
                 if src_line != '' and trg_line != '':
                     if truncate > 0:
                         src_line, trg_line = src_line.split(" "),trg_line.split(" ")
@@ -143,22 +145,22 @@ class Seq2SeqDataset(Dataset):
 
     @classmethod
     def splits(cls, path=None, root='', train=None, validation=None,
-               test=None, reduce = [0,0,0], **kwargs):
+               test=None, reduce = [0,0,0], reverse_input = False, **kwargs):
 
         exts = kwargs["exts"]
         reduce_samples = reduce
         fields = kwargs["fields"]
         truncate = kwargs.get("truncate", 0)
         if train or train != "":
-            train_data = cls(os.path.join(path, train), exts=exts, reduce=reduce_samples[0], truncate=truncate, fields=fields)
+            train_data = cls(os.path.join(path, train), exts=exts, reduce=reduce_samples[0], truncate=truncate, fields=fields, reverse_input=reverse_input)
         else: train_data = None
 
         if validation or validation != "":
-            val_data = cls(os.path.join(path, validation), exts=exts, reduce=reduce_samples[1], truncate=truncate, fields=fields)
+            val_data = cls(os.path.join(path, validation), exts=exts, reduce=reduce_samples[1], truncate=truncate, fields=fields, reverse_input=reverse_input)
         else: val_data = None
 
         if test or test != "":
-            test_data = cls(os.path.join(path, test), exts=exts, reduce=reduce_samples[2], truncate=truncate, fields=fields)
+            test_data = cls(os.path.join(path, test), exts=exts, reduce=reduce_samples[2], truncate=truncate, fields=fields, reverse_input=reverse_input)
         else: test_data = None
         return tuple(d for d in (train_data, val_data, test_data)
                      if d is not None)
