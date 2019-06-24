@@ -4,17 +4,16 @@ import torch
 import torch.nn as nn
 
 from project.experiment.setup import experiment_parser
-from project.model.models import Seq2Seq, ChoSeq2Seq, VALID_MODELS
+from project.model.models import Seq2Seq
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
-from project.utils.training import predict_from_input, predict, validate, train, translate_test_set
+from project.utils.training import validate, train_model
 from project.utils.utils import convert, Logger
 from settings import MODEL_STORE
 
 
 def main():
     args = experiment_parser().parse_args()
-    corpus = args.corpus
     device = "cuda" if (args.cuda and torch.cuda.is_available()) else "cpu"
     args.cuda = device
     print("Running experiment on:", device)
@@ -22,13 +21,12 @@ def main():
    # args.corpus = "europarl"
 
     lang_code = args.lang_code
-    rnn_type = args.rnn
     src_lang = lang_code if args.reverse else "en"
     trg_lang = "en" if src_lang == lang_code else lang_code
     model_type = "custom"
     args.model_type = model_type
 
-    args.reduce = [200000, 20000, 5000]
+    args.reduce = [5000, 1000, 100]
     args.epochs = 50
 
     print("Language combination ({}-{})".format(src_lang, trg_lang))
@@ -50,6 +48,8 @@ def main():
 
     print('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab), convert(time.time() - time_data)))
 
+    args.src_vocab_size = len(SRC.vocab)
+    args.trg_vocab_size = len(TRG.vocab)
     data_logger = Logger(path=experiment_path, file_name="data.log")
     print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, args.corpus)
 
@@ -79,7 +79,7 @@ def main():
     # Create loss function and optimizer
     criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=30, factor=0.25, verbose=True,
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=30, factor=0.25, verbose=True,
                                                            cooldown=6)
 
     # Create directory for logs, create logger, log hyperparameters
@@ -88,17 +88,18 @@ def main():
     logger.log('ARGS: {}\nOPTIMIZER: {}\nLEARNING RATE: {}\nSCHEDULER: {}\nMODEL: {}\n'.format(args, optimizer, args.lr,
                                                                                                vars(scheduler), model),
                stdout=False)
-    # Train, validate, or predict
+    # Train, validate, or predict{math.exp(avg_val_loss):7.3f}
 
     results_logger = Logger(experiment_path, file_name="results.log")
     start_time = time.time()
-    ### Training the model
-    train(train_iter, val_iter, model, criterion, optimizer, scheduler, SRC, TRG, args.epochs, logger, device)
+
+    #train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, logger=None, device=DEFAULT_DEVICE
+    train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG, epochs=args.epochs, logger=logger, device=device)
 
     ### Evaluation on test set
     beam_size = 1
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    validate(test_iter, model, TRG, logger, device, test_set=True)
+    validate(val_iter=test_iter, model=model, criterion=criterion, device=device, TRG=TRG, beam_size=1)
 
    # beam_size = 2
    # logger.log("Validation of test set - Beam size: {}".format(beam_size))
@@ -106,12 +107,7 @@ def main():
 
     beam_size = 5
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    validate(test_iter, model, TRG, logger, device, test_set=True)
-
-    ### Prediction on test set
-    translate_test_set(model, test_iter, SRC, TRG, results_logger, device, beam_size=1)
- #   translate_test_set(model, test_iter, SRC, TRG, results_logger, device, beam_size=2)
-    translate_test_set(model, test_iter, SRC, TRG, results_logger, device, beam_size=5)
+    validate(val_iter=test_iter, model=model, criterion=criterion, device=device, TRG=TRG, beam_size=5)
 
     logger.log('Finished in {}'.format(convert(time.time() - start_time)))
     return

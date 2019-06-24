@@ -17,25 +17,24 @@ class Seq2Seq(nn.Module):
     def __init__(self, args, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
 
-        self.hid_dim = args.hid
+        self.hid_dim = args.hs
         self.num_layers = args.nlayers
         self.bos_token = tokens_bos_eos_pad_unk[0]
         self.eos_token = tokens_bos_eos_pad_unk[1]
         self.pad_token = tokens_bos_eos_pad_unk[2]
         self.unk_token = tokens_bos_eos_pad_unk[3]
-        self.device = args.get("device", DEFAULT_DEVICE)
+        self.device = args.cuda
         rnn_type = args.rnn
-
-        print("Model inputs reversed: {}".format(self.reverse_input))
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
-        self.encoder = Encoder(args.src_vocab_size, args.emb, args.hid, args.nlayers,
+        self.encoder = Encoder(args.src_vocab_size, args.emb, args.hs, args.nlayers,
                                dropout_p=args.dp, bidirectional=args.bi, rnn_cell=rnn_type, device=self.device)
-        self.decoder = Decoder(args.trg_vocab_size, args.emb, args.hid,
+        self.decoder = Decoder(args.trg_vocab_size, args.emb, args.hs,
                                args.nlayers * 2 if args.bi else args.nlayers, dropout_p=args.dp)
         self.dropout = nn.Dropout(args.dp)
-        self.output = nn.Linear(self.hid_dim, self.vocab_size_trg)
+        self.tanh = nn.Tanh()
+        self.output = nn.Linear(self.hid_dim, args.trg_vocab_size)
 
         ### create encoder and decoder
     def forward(self, src, trg):
@@ -47,7 +46,7 @@ class Seq2Seq(nn.Module):
         # Decode
         out_d, _ = self.decoder(trg, final_e)
         x = self.dropout(self.tanh(out_d))
-        x = self.output(out_d)
+        x = self.output(x)
         return x
 
     def predict(self, src, beam_size=1, max_len =30, remove_tokens=[]):

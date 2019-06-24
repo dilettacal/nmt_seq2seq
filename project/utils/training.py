@@ -4,29 +4,33 @@ import torch
 import numpy as np
 import math
 
-from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN
+from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert, AverageMeter
 from settings import DEFAULT_DEVICE
 from nltk.translate.bleu_score import sentence_bleu
 
+import warnings
+warnings.filterwarnings("ignore", message="The hypothesis contains 0 counts of 4-gram overlaps. Therefore the BLEU score evaluates to 0, independently of how many N-gram overlaps of lower order it contains. Consider using lower n-gram order or use SmoothingFunction()")
 
-def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, logger=None, device=DEFAULT_DEVICE):
+
+def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE):
     best_valid_loss = float('inf')
 
     for epoch in range(epochs):
         start_time = time.time()
-        avg_train_loss = train(train_iter, model, criterion, optimizer, scheduler)
-        avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device)
+        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device)
+        #val_iter, model, criterion, device, TRG,
+        avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG)
         scheduler.step(avg_val_loss)  # input bleu score
 
         if avg_val_loss < best_valid_loss:
             best_valid_loss = avg_val_loss
-            # save model
-        ### logging
+            logger.save_model(model.state_dict(), epoch)
+            logger.log('New best loss: {:.3f}'.format(best_valid_loss))
 
         end_epoch_time = time.time()
 
-        logger.log(f'Epoch: {epoch + 1:02} | Time: {convert(start_time-end_epoch_time)}')
+        logger.log('Epoch: {} | Time: {}'.format(epoch+1, convert(start_time-end_epoch_time)))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {math.exp(avg_train_loss):7.3f}')
         logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {math.exp(avg_val_loss):7.3f} | Val. BLEU: {avg_bleu_loss:.3f}')
 
@@ -66,26 +70,34 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
 
 def compute_bleu(candidate, tgt, TRG):
     ref = list(tgt.data.squeeze())
+
     # Prepare sentence for bleu script
-    remove_tokens = [TRG.vocab.stoi['<pad>'], TRG.vocab.stoi['<s>'], TRG.vocab.stoi['</s>']]
+    remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
     candidate = [w for w in candidate if w not in remove_tokens]
-    ref = [[w for w in ref if w not in remove_tokens]]
-    return sentence_bleu(references=ref, hypothesis=candidate)
+    ref = [w for w in ref if w not in remove_tokens]
+
+    hypothesis = [TRG.vocab.itos[j] for j in candidate]
+  #  print("Candidate:", hypothesis)
+    ref = [[TRG.vocab.itos[j] for j in ref]]
+  #  print("Reference:", ref)
+    return sentence_bleu(references=ref, hypothesis=hypothesis)
 
 
-def validate(val_iter, model, criterion, device, TRG, greedy=True, beam_size = 1):
+def validate(val_iter, model, criterion, device, TRG, beam_size = 1):
     model.eval()
     losses = AverageMeter()
     bleus = AverageMeter()
     for i, batch in enumerate(val_iter):
         src = batch.src.to(device)
         tgt = batch.trg.to(device)
+        ### compute normal scores
+        scores = model(src, tgt)
 
-        scores = model.predict(src, beam_size=beam_size)
-
-        bleu = compute_bleu(tgt=tgt.data.squeeze(), candidate=scores, TRG=TRG)
+        # compute scores with greedy search
+        out = model.predict(src, beam_size=beam_size) # out is a list
+        bleu = compute_bleu(tgt=tgt, candidate=out, TRG=TRG)
+        #print("BLEU:", bleu)
         bleus.update(bleu)
-
         scores = scores[:-1]
         tgt = tgt[1:]
 
