@@ -10,6 +10,7 @@ from project.utils.data.vocabulary import get_vocabularies_iterators, print_data
 from project.utils.training import validate, train_model
 from project.utils.utils import convert, Logger
 from settings import MODEL_STORE
+import math
 
 
 def main():
@@ -98,7 +99,9 @@ def main():
     ### Evaluation on test set
     beam_size = 1
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    validate(val_iter=test_iter, model=model, criterion=criterion, device=device, TRG=TRG, beam_size=1)
+    val_loss, bleu= validate(val_iter=test_iter, model=model, criterion=criterion, device=device, TRG=TRG, beam_size=1)
+    logger.log(
+        f'\t Val. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Val. BLEU: {bleu:.3f}')
 
    # beam_size = 2
    # logger.log("Validation of test set - Beam size: {}".format(beam_size))
@@ -106,7 +109,9 @@ def main():
 
     beam_size = 5
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    validate(val_iter=test_iter, model=model, criterion=criterion, device=device, TRG=TRG, beam_size=5)
+    val_loss, bleu = validate(val_iter=test_iter, model=model, criterion=criterion, device=device, TRG=TRG, beam_size=5)
+    logger.log(
+        f'\t Val. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Val. BLEU: {bleu:.3f}')
 
     logger.log('Finished in {}'.format(convert(time.time() - start_time)))
     return
