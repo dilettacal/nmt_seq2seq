@@ -42,15 +42,18 @@ class ContextDecoder(Decoder):
 
 
     def forward(self, x, h0, context=None):
+        #h0 and context: 1, 64, 500
 
-        x = self.dropout(self.embedding(x))
+        x = self.dropout(self.embedding(x.unsqueeze(0))) #[1,64,500] - seq_len, bs, emb_size
 
         emb_con = torch.cat((x, context), dim=2)
 
-        output, h = self.rnn(emb_con, h0)
+        output, h = self.rnn(emb_con, h0) #1,64,500
+        #print(output.size())
 
-        output = torch.cat((x, h.squeeze(0), context.squeeze(0)),
+        output = torch.cat((x.squeeze(0), h.squeeze(0), context.squeeze(0)),
                            dim=1)
+        #print(output.size()) # 64, 1500
 
         return output, h
 
