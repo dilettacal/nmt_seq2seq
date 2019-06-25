@@ -6,10 +6,14 @@ import time
 import math
 import torch
 import numpy as np
+from nltk.translate.bleu_score import corpus_bleu, sentence_bleu, SmoothingFunction
+from sacrebleu import corpus_bleu as cb
+from sacrebleu import sentence_bleu as sb
 from torchtext import data
 from torchtext.data import Field
 from torchtext.datasets import TranslationDataset
 
+from project.utils.bleu import get_moses_multi_bleu
 from project.utils.io import Seq2SeqDataset, SrcField, TrgField
 from project.utils.utils import convert
 from settings import DATA_DIR, DATA_DIR_RAW, DATA_DIR_PREPRO
@@ -53,6 +57,34 @@ def beam_search_decoder(data, k):
 
 
 if __name__ == '__main__':
+
+	#### multubleu tests
+
+
+	refernces = ["Hallo, ich bin eine Referenz", "Ich bin die zweite Refi", "Wie geht es dir?", "Ansonsten alles gut?"]
+	candidates = ["Hallo, ich bin eine Referenz", "Ich bin die zweite Refi", "Laeuft alles gut?", "Ansonsten alles gut?"]
+
+	bleu = get_moses_multi_bleu(references=refernces, hypotheses=candidates, lowercase=True)
+	#    sacrebl = sacre_corpus_bleu(sys_stream=sent_references, ref_streams=sent_candidates, lowercase=True)
+	nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in refernces],
+							hypotheses=[hyp.split() for hyp in candidates], smoothing_function=SmoothingFunction().method4)
+
+	nltk_sent_bleu = [[sentence_bleu(ref, hyp, smoothing_function=SmoothingFunction().method4)*100] for (ref, hyp) in zip([[sent] for sent in refernces], candidates)]
+
+
+	sacre_corpus = [[cb(sys_stream=hyp, ref_streams=ref)] for (ref, hyp) in zip(refernces, candidates)]
+
+	sacre_corpus = list(x[0].score for x in sacre_corpus)
+	print(bleu)
+	print("NLTK corpus", nlkt_bleu*100)
+	print(np.mean(nltk_sent_bleu))
+	print(np.mean(sacre_corpus))
+
+	print("Mean of all the computations:")
+
+
+	exit()
+
     ### test datase
 	SRC = SrcField()
 	TRG = TrgField()

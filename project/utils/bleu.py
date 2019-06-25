@@ -1,6 +1,8 @@
 # coding=utf-8
-# Modifications copyright (C) 2019 dltcls
 
+# Modifications copyright (C) 2019 dltcls
+# The download part has been removed. The path to the perl script has been adapted to the project requirements.
+#
 # Copyright 2017 The Tensor2Tensor Authors.
 # Copyright 2017 Google Inc.
 #
@@ -17,8 +19,6 @@
 # limitations under the License.
 
 
-#### https://github.com/google/seq2seq/blob/master/seq2seq/metrics/bleu.py###
-
 import os
 import re
 import subprocess
@@ -27,35 +27,30 @@ import logging
 
 import numpy as np
 
-from six.moves import urllib
-
 from settings import ROOT
 
 logger = logging.getLogger(__name__)
 
 
 def get_moses_multi_bleu(hypotheses, references, lowercase=False):
-    """Get the BLEU score using the moses `multi-bleu.perl` script.
-    **Script:**
-    https://raw.githubusercontent.com/moses-smt/mosesdecoder/master/scripts/generic/multi-bleu.perl
-    Args:
-      hypotheses (list of str): List of predicted values
-      references (list of str): List of target values
-      lowercase (bool): If true, pass the "-lc" flag to the `multi-bleu.perl` script
-    Returns:
-      (:class:`np.float32`) The BLEU score as a float32 value.
-    Example:
-      >>> hypotheses = [
-      ...   "The brown fox jumps over the dog 笑",
-      ...   "The brown fox jumps over the dog 2 笑"
-      ... ]
-      >>> references = [
-      ...   "The quick brown fox jumps over the lazy dog 笑",
-      ...   "The quick brown fox jumps over the lazy dog 笑"
-      ... ]
-      >>> get_moses_multi_bleu(hypotheses, references, lowercase=True)
-      46.51
+
     """
+    Computes the Bleu score for the given hypothesis and references.
+    This method uses the perl script from mosesdecoder, available at:
+     https://raw.githubusercontent.com/moses-smt/mosesdecoder/master/scripts/generic/multi-bleu.perl
+
+    The python computation is taken from the Google seq2seq implementation.
+    The download part has been removed, as it is not needed within this project.
+
+    See license above and the original code at: https://github.com/google/seq2seq/blob/master/seq2seq/metrics/bleu.py
+    for further details.
+
+    :param hypotheses:
+    :param references:
+    :param lowercase:
+    :return:
+    """
+
     if isinstance(hypotheses, list):
         hypotheses = np.array(hypotheses)
     if isinstance(references, list):
@@ -64,15 +59,7 @@ def get_moses_multi_bleu(hypotheses, references, lowercase=False):
     if np.size(hypotheses) == 0:
         return np.float32(0.0)
 
-    # Get MOSES multi-bleu script
-    try:
-        multi_bleu_path, _ = urllib.request.urlretrieve(
-            "https://raw.githubusercontent.com/moses-smt/mosesdecoder/master/scripts/generic/multi-bleu.perl",
-            os.path.join(os.path.abspath(ROOT), "scripts", "multi-bleu.perl"))
-        os.chmod(multi_bleu_path, 0o755)
-    except:
-        logger.warning("Unable to fetch multi-bleu.perl script")
-        return None
+    multi_bleu_path = os.path.join(os.path.abspath(ROOT), "scripts", "multi-bleu.perl")
 
     # Dump hypotheses and references to tempfiles
     hypothesis_file = tempfile.NamedTemporaryFile()
