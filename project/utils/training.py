@@ -32,7 +32,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
         if avg_val_loss < best_valid_loss:
             best_valid_loss = avg_val_loss
-            logger.save_model(model, type=model_type)
+            logger.save_model(model.state_dict(), type=model_type)
             logger.log('New best loss: {:.3f}'.format(best_valid_loss))
 
         end_epoch_time = time.time()

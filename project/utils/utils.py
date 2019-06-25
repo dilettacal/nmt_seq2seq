@@ -38,22 +38,11 @@ class Logger():
         if stdout:
             print(info)
 
-    def save_model(self, model, type="sutskever"):
+    def save_model(self, model_dict, type="sutskever"):
         model_name = "{}-model.pkl".format(type)
         self.log(">>>> Path to model: {}".format(os.path.join(self.path, model_name)))
 
-        checkpoint = {'model': model.__class__.__name__,
-                      'state_dict': model.state_dict(),
-                      'emb': model.emb_size,
-                      'hid': model.hid_dim,
-                      'bi': model.enc_bi,
-                      'dp': model.dp,
-                      'nlayers': model.num_layers,
-                      'src_vocab': model.src_vocab_size,
-                      'trg_vocab': model.trg_vocab_size}
-
-        # with open(os.path.join(self.path, 'model.pkl'), 'w') as f:
-        torch.save(checkpoint, os.path.join(self.path, model_name))
+        torch.save(model_dict, os.path.join(self.path, model_name))
 
     def save(self, obj_dict):
         torch.save(obj_dict, os.path.join(self.path, "experiment.pkl"), pickle_module=dill)
