@@ -1,8 +1,17 @@
+"""
+Class: Decoder
+
+Handles the decoder part of a Seq2Seq model.
+The decoder can be custom with lstm and gru cells.
+Or it can propagate context to the embeddings and to the final output layer, as proposed in Cho et al. (2014).
+
+The ContextDecoder is unrolled during the training/evaluate mode.
+
+"""
+
 import torch
 from torch import nn
-import torch.functional as F
 
-from project.model.layers import MaxoutLinearLayer
 
 
 class Decoder(nn.Module):
@@ -26,15 +35,10 @@ class Decoder(nn.Module):
         self.dropout = nn.Dropout(self.dropout_p)
 
     def forward(self, x, h0, context=None):
-        print("X:", x.shape)
-        print("H", h0[0].shape)
         # Embed text and pass through GRU
         x = self.embedding(x)
-        print("EMBE", x.shape)
         x = self.dropout(x)
         out, h = self.rnn(x, h0)
-        print("OUT", out.shape)
-
         return out, h
 
 
@@ -48,22 +52,16 @@ class ContextDecoder(Decoder):
         self.dropout = nn.Dropout(dropout_p)
 
     def forward(self, x, h0, context=None, val=False):
-        print("Context", h0.shape) ## 1,1,100
-        print(x.shape)
         if not val:
             x = x.unsqueeze(0)
-        print(x.shape)
 
         embedded = self.dropout(self.embedding(x))  # [1,64,500] - seq_len, bs, emb_size, 1,1,emb_size
-        print(embedded.size())
 
         emb_con = torch.cat((embedded, context), dim=2)
 
         output, h = self.rnn(emb_con, h0)  # 1,64,500
-        print(output.size())
 
         output = torch.cat((embedded.squeeze(0), h.squeeze(0), context.squeeze(0)),
                            dim=1)
-        print(output.size()) # 64, 1500
 
         return output, h

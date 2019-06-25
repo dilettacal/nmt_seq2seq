@@ -1,4 +1,12 @@
-import itertools
+"""
+Class: Encoder
+
+Handles the encoder part of a Seq2Seq model.
+The encoder can be set up with lstm or gru.
+It can handle bidirectionality.
+
+All these models can handle beam search.
+"""
 
 import torch
 from torch import nn

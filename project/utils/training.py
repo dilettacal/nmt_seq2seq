@@ -1,10 +1,18 @@
+"""
+This script contains methods to train the model and to modify gradients.
+
+Code inspirations:
+- Luke Melas: https://lukemelas.github.io/machine-translation.html
+- Ben Trevett 2018: https://github.com/bentrevett/pytorch-seq2seq/
+
+"""
+
 import time
 
 import torch
 import numpy as np
 import math
 
-from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert, AverageMeter
 from settings import DEFAULT_DEVICE

@@ -1,3 +1,19 @@
+"""
+Credits for some parts of this source code to this blog post:
+
+Author: Luke Melas
+Title: Machine Translation with Recurrent Neural Networks
+URL: https://lukemelas.github.io/machine-translation.html
+
+Classes:
+- Seq2Seq is a vanilla Seq2Seq model. This can handle LSTMs, GRUs and bidirectional Encoders
+- ContextSeq2Seq aims to replicate the model proposed by Cho et al. Learning Phrase Representations using RNN Encoder–Decoderfor Statistical Machine Translation (2014), (URL:https://arxiv.org/pdf/1406.1078.pdf)
+- AttSeq2Seq is a Seq2Seq model with attention, as implemented in the blog post of Luke Melas.
+
+All these models can handle beam search.
+"""
+
+
 import torch
 import torch.nn as nn
 
@@ -5,6 +21,9 @@ from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
 from settings import VALID_CELLS
+
+
+
 
 """
 Parameters:
@@ -77,7 +96,9 @@ class Seq2Seq(nn.Module):
         return top1
 
     def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
-        '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'''
+        '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.
+        Slightly modified from: https://lukemelas.github.io/machine-translation.html
+        '''
         src = src.to(self.device)
         # Encode
         outputs_e, states = self.encoder(src)  # batch size = 1
@@ -143,7 +164,9 @@ class ContextSeq2Seq(Seq2Seq):
 
 
     def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
-        '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'''
+        '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'
+         Slightly modified from: https://lukemelas.github.io/machine-translation.html, to handle context
+        '''
         src = src.to(self.device)
         # Encode
         outputs_e, states = self.encoder(src)  # batch size = 1
