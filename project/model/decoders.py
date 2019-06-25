@@ -49,11 +49,11 @@ class ContextDecoder(Decoder):
         emb_con = torch.cat((x, context), dim=2)
 
         output, h = self.rnn(emb_con, h0) #1,64,500
-        print(output.size())
+        #print(output.size())
 
         output = torch.cat((x.squeeze(0), h.squeeze(0), context.squeeze(0)),
                            dim=1)
-        print(output.size()) # 64, 1500
+        #print(output.size()) # 64, 1500
 
         return output, h
 
