@@ -128,19 +128,20 @@ class Seq2SeqDataset(Dataset):
                 if reduce > 0 and i == reduce:
                     break
                 src_line, trg_line = src_line.strip(), trg_line.strip()
+                if src_line != '' and trg_line != '':
+                    if truncate > 0:
+                        src_line, trg_line = src_line.split(" "), trg_line.split(" ")
+                        src_line = src_line[:truncate]
+                        trg_line = trg_line[:truncate]
+                        assert (len(src_line) <= truncate) and (len(trg_line) <= truncate)
+                        src_line = ' '.join(src_line)
+                        trg_line = ' '.join(trg_line)
+
                 if reverse_input:
                     src_line = src_line.split(" ")[::-1]
                     src_line = ' '.join(src_line)
                     if i < 2:
                         print("Source inputs reversed:\t", src_line)
-                if src_line != '' and trg_line != '':
-                    if truncate > 0:
-                        src_line, trg_line = src_line.split(" "),trg_line.split(" ")
-                        src_line = src_line[:truncate]
-                        trg_line = trg_line[:truncate]
-                        assert len(src_line) == len(trg_line)
-                        src_line = ' '.join(src_line)
-                        trg_line = ' '.join(trg_line)
 
                     examples.append(data.Example.fromlist(
                         [src_line, trg_line], fields))

@@ -86,6 +86,8 @@ class Experiment(object):
         self.lang_code = self.args.lang_code
         self.reverse_lang_comb = self.args.reverse
         self.model_type = self.args.model_type
+        self.truncate = self.args.max_len
+        self.data_dir = self.args.data_dir
 
         self.src_lang = self.lang_code if self.reverse_lang_comb else "en"
         self.trg_lang = "en" if self.src_lang == self.lang_code else self.lang_code
@@ -94,7 +96,6 @@ class Experiment(object):
         self.lr = self.args.lr
         self.reverse_input = self.args.reverse_input
         self.char_level = self.args.c
-        self.max_len = self.args.max_len
 
         self.src_vocab_size = None
         self.trg_vocab_size = None
