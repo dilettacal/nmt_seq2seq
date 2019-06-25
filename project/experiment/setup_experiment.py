@@ -67,6 +67,7 @@ def experiment_parser():
     parser.add_argument('--train', default=200000, type=int, help="Number of training examples")
     parser.add_argument('--val', default=20000, type=int, help="Number of validation examples")
     parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
+    parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
 
     return parser
 

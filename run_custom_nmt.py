@@ -41,11 +41,13 @@ def main():
                                    datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
     os.makedirs(experiment_path, exist_ok=True)
 
+    data_dir = experiment.data_dir
+
 
     # Load and process data
     time_data = time.time()
     SRC, TRG, train_iter, val_iter, test_iter, train_data, val_data, test_data = \
-        get_vocabularies_iterators(src_lang, experiment, experiment_path)
+        get_vocabularies_iterators(src_lang, experiment, data_dir)
 
     print('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab), convert(time.time() - time_data)))
 
