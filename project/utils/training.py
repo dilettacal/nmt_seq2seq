@@ -104,7 +104,7 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 2):
 
         #### BLEU
         # compute scores with greedy search
-        out = model.predict(src, beam_size=beam_size)  # out is a list
+        out = model.predict(src, beam_size=beam_size, trg_max_len=tgt.shape[0])  # out is a list
 
         ## Prepare sentences for BLEU
         ref = list(tgt.data.squeeze())

@@ -36,22 +36,22 @@ class ContextDecoder(Decoder):
     def __init__(self, trg_vocab_size, emb_size, h_dim, num_layers, dropout_p=0.0):
         super().__init__(trg_vocab_size, emb_size, h_dim, num_layers, dropout_p, rnn_cell="gru")
 
-        self.rnn = nn.GRU(self.embedding.embedding_dim + h_dim, h_dim, num_layers=num_layers, dropout=dropout_p)
+        self.rnn = nn.GRU(self.embedding.embedding_dim + h_dim, h_dim, num_layers=num_layers, dropout=dropout_p if num_layers > 1 else 0)
 
         self.dropout = nn.Dropout(dropout_p)
 
 
     def forward(self, x, h0, context=None):
         #h0 and context: 1, 64, 500
+        x = x.unsqueeze(0)
+        embedded = self.dropout(self.embedding(x)) #[1,64,500] - seq_len, bs, emb_size
 
-        x = self.dropout(self.embedding(x.unsqueeze(0))) #[1,64,500] - seq_len, bs, emb_size
-
-        emb_con = torch.cat((x, context), dim=2)
+        emb_con = torch.cat((embedded, context), dim=2)
 
         output, h = self.rnn(emb_con, h0) #1,64,500
         #print(output.size())
 
-        output = torch.cat((x.squeeze(0), h.squeeze(0), context.squeeze(0)),
+        output = torch.cat((embedded.squeeze(0), h.squeeze(0), context.squeeze(0)),
                            dim=1)
         #print(output.size()) # 64, 1500
 
