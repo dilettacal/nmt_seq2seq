@@ -50,8 +50,6 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
         # Forward, backprop, optimizer
         model.zero_grad()
         scores = model(src, trg)
-        print(scores.size())
-
         # Remove <s> from trg and </s> from scores
         scores = scores[:-1]
         trg = trg[1:]
@@ -92,7 +90,6 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 2):
         tgt = batch.trg.to(device)
         ### compute normal scores
         scores = model(src, tgt)
-
 
         scores = scores[:-1]
         tgt = tgt[1:]

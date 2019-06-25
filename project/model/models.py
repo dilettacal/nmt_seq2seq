@@ -39,12 +39,18 @@ class Seq2Seq(nn.Module):
                                dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
         if self.decoder_type == "custom":
             self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
-                               self.num_layers * 2 if self.enc_bi else self.num_layers,rnn_cell=rnn_type, dropout_p=self.dp)
+                                   self.num_layers * 2 if self.enc_bi else self.num_layers,rnn_cell=rnn_type, dropout_p=self.dp)
         elif self.decoder_type == "context":
             self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
                                    self.num_layers * 2 if self.enc_bi else self.num_layers,  dropout_p=self.dp)
         elif self.decoder_type == "attn":
             pass
+        else:
+            ### standardmaeßig
+            self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
+                                   self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=rnn_type,
+                                   dropout_p=self.dp)
+
         self.dropout = nn.Dropout(experiment_config.dp)
         self.output = nn.Linear(self.hid_dim, experiment_config.trg_vocab_size)
 
