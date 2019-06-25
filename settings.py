@@ -54,3 +54,8 @@ SUPPORTED_LANGS = dict({LANG1:SPACY_EN, LANG2:SPACY_DE})
 RAW_EUROPARL = "raw_europarl.tsv"
 
 DEFAULT_DEVICE = "cpu"
+LSTM = "lstm"
+GRU = "gru"
+VALID_CELLS = [LSTM, GRU]
+VALID_MODELS = ["custom", "s", "c", "attn"]
+VALID_DEC = ["standard", "context", "attn"]

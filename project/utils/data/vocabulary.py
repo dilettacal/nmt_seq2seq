@@ -13,20 +13,23 @@ from settings import DATA_DIR_PREPRO
 CHUNK_SIZES = {10: 10e2, 20: 10e3, 30:10e4, 50:10e4}
 
 
-def get_vocabularies_iterators(src_lang, args):
+def get_vocabularies_iterators(src_lang, experiment):
 
-    device = args.cuda
+    device = experiment.get_device()
 
     #### Create torchtext fields
     ####### SRC, TRG
-    voc_limit = args.v
+    voc_limit = experiment.voc_limit
 
-    char_level = args.c
-    corpus = args.corpus
-    language_code = args.lang_code
-    reduce = args.reduce
+    char_level = experiment.char_level
+    corpus = experiment.corpus
+    language_code = experiment.lang_code
+    reduce = experiment.reduce
     print("Vocabulary limit:",voc_limit)
-    print("Max sequence length:", args.max_len)
+  #  print("Max sequence length:", experiment.max_len)
+
+    reverse_input = experiment.reverse_input
+    print("Source reversed:", reverse_input)
 
 
 
@@ -52,7 +55,9 @@ def get_vocabularies_iterators(src_lang, args):
         print("Loading data...")
         start = time.time()
         exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
-        train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab), exts=exts, train="train", validation="val", test="test", path=data_dir, reduce=reduce)
+        train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
+                                                 exts=exts, train="train", validation="val", test="test",
+                                                 path=data_dir, reduce=reduce, reverse_input=reverse_input)
 
 
         end = time.time()
@@ -67,7 +72,7 @@ def get_vocabularies_iterators(src_lang, args):
         exts = (".en", ".de") if src_lang == "en" else (".de", ".en")
         train, val, test = datasets.IWSLT.splits(root=path,
                                                  exts=exts, fields=(src_vocab, trg_vocab),
-                                                 filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= args.max_len)
+                                                 filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= experiment.max_len)
         end = time.time()
         print("Duration: {}".format(convert(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
@@ -87,7 +92,7 @@ def get_vocabularies_iterators(src_lang, args):
     #### Iterators
 
     # Create iterators to process text in batches of approx. the same length
-    train_iter = data.BucketIterator(train, batch_size=args.b, device=device, repeat=False,
+    train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False,
                                      sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=True)
     val_iter = data.Iterator(val, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src), shuffle=False, sort_within_batch=True)

@@ -1,0 +1,13 @@
+Total number of samples: 2007724
+Total number of words: 147221
+Minimum sentence length: (1, 66)
+Maximum sentence length: (665, 1721334)
+Minimum sentence length (char_level): (1, 65434)
+Maximum sentence length (char_level): (3747, 1721334)
+Number of functional words: 205
+Number of content words: 147015
+Content hapaxes: 73843
+Functional hapaxes: 52
+Duration: 00:13:45
+Duration: 00:08:47
+Statistics about both languages stored! Duration: 00:22:32
