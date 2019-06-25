@@ -8,8 +8,7 @@ from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert, AverageMeter
 from settings import DEFAULT_DEVICE
-from nltk.translate.bleu_score import corpus_bleu
-
+from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE):
@@ -108,16 +107,12 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 1):
         sent_references.append(sent_ref)
 
     bleu = get_moses_multi_bleu(references=sent_references, hypotheses=sent_candidates, lowercase=True)
+    print("Bleu Moses Script:", bleu)
 #    sacrebl = sacre_corpus_bleu(sys_stream=sent_references, ref_streams=sent_candidates, lowercase=True)
-    nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references], hypotheses=[hyp.split() for hyp in sent_candidates])
-
-    script_bleu = multi_bleu(all_references=sent_references, candidates=sent_candidates)
-  #  print("Sacrebleu:", sacrebl)
-    #print("Script bleu:", bleu)
+    smooth = SmoothingFunction()
+    nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references], hypotheses=[hyp.split() for hyp in sent_candidates], smoothing_function=smooth.method4) *100
     print("NLTK:", nlkt_bleu)
-    print("NLTK*100", nlkt_bleu*100)
-    print("GIST Bleu", script_bleu)
-    return losses.avg, bleu
+    return losses.avg, nlkt_bleu
 
 
 def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
