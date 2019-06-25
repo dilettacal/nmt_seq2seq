@@ -3,6 +3,7 @@ import random
 import torch
 import torch.nn as nn
 
+from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
 from project.model.layers import MaxoutLinearLayer
@@ -13,28 +14,40 @@ GRU = "gru"
 VALID_CELLS = [LSTM, GRU]
 VALID_MODELS = ["standard", "sutskever", "cho"]
 
+
+
+
+
 class Seq2Seq(nn.Module):
-    def __init__(self, args, tokens_bos_eos_pad_unk):
+    def __init__(self, experiment_config:Experiment, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
 
-        self.hid_dim = args.hs
-        self.num_layers = args.nlayers
+        self.hid_dim = experiment_config.hid_dim
+        self.emb_size = experiment_config.emb_size
+        self.src_vocab_size = experiment_config.src_vocab_size
+        self.trg_vocab_size = experiment_config.trg_vocab_size
+        self.dp = experiment_config.dp
+        self.enc_bi = experiment_config.bi
+        self.num_layers = experiment_config.nlayers
         self.bos_token = tokens_bos_eos_pad_unk[0]
         self.eos_token = tokens_bos_eos_pad_unk[1]
         self.pad_token = tokens_bos_eos_pad_unk[2]
         self.unk_token = tokens_bos_eos_pad_unk[3]
-        self.device = args.cuda
-        rnn_type = args.rnn
+        self.device = experiment_config.get_device()
+        rnn_type = experiment_config.rnn_type
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
-        self.encoder = Encoder(args.src_vocab_size, args.emb, args.hs, args.nlayers,
-                               dropout_p=args.dp, bidirectional=args.bi, rnn_cell=rnn_type, device=self.device)
-        self.decoder = Decoder(args.trg_vocab_size, args.emb, args.hs,
-                               args.nlayers * 2 if args.bi else args.nlayers, dropout_p=args.dp)
-        self.dropout = nn.Dropout(args.dp)
+        self.encoder = Encoder(self.src_vocab_size, self.emb_size, self.hid_dim, self.num_layers,
+                               dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
+        self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
+                               self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
+        self.dropout = nn.Dropout(experiment_config.dp)
         self.tanh = nn.Tanh()
-        self.output = nn.Linear(self.hid_dim, args.trg_vocab_size)
+        self.output = nn.Linear(self.hid_dim, experiment_config.trg_vocab_size)
+
+    def init_weights(self):
+        pass
 
         ### create encoder and decoder
     def forward(self, src, trg):
@@ -94,13 +107,56 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
+class Sutskever(Seq2Seq):
+    def __init__(self, experiment_config, tokens_bos_eos_pad_unk):
+        experiment_config.nlayers = 4
+        experiment_config.hs = 1000
+        experiment_config.emb = 1000
+        super(Sutskever, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
+
+    def init_weights(self):
+        self.apply(uniform_init_weights(self))
 
 class ChoSeq2Seq(Seq2Seq):
-    def __init__(self, args, tokens_bos_eos_pad_unk, maxout_units=None):
-        super(ChoSeq2Seq, self).__init__(args, tokens_bos_eos_pad_unk)
+    def __init__(self, experiment_config, tokens_bos_eos_pad_unk, maxout_units=None):
+        experiment_config.emb = 500
+        experiment_config.hs = 500
+        maxout_units = maxout_units
+        super(ChoSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
+
 
         if maxout_units:
             self.output = MaxoutLinearLayer(input_dim=self.emb_dim_trg * 2, hidden_units=maxout_units,
                                          output_dim=self.vocab_size_trg, k=2)
         else:
             self.output = nn.ReLU(nn.Linear(self.embedding.embedding_dim + self.hid_dim * 2, self.vocab_size))
+
+    def init_weights(self):
+        self.apply(normal_init_weights(self))
+
+
+
+def uniform_init_weights(m):
+    for name, param in m.named_parameters():
+        nn.init.uniform_(param.data, -0.08, 0.08)
+
+def normal_init_weights(m):
+    for name, param in m.named_parameters():
+        nn.init.normal_(param.data, mean=0, std=0.01)
+
+def badahnau_init_weights(m):
+    for name, param in m.named_parameters():
+        if 'weight' in name:
+            nn.init.normal_(param.data, mean=0, std=0.01)
+        else:
+            nn.init.constant_(param.data, 0)
+
+
+def get_nmt_model(experiment_config:Experiment):
+    model_type = experiment_config.model_type
+    assert model_type in ["custom", "s", "c"]
+
+    if model_type == "custom":
+        return Seq2Seq(experiment_config)
+    elif model_type == "c":
+        return ChoSeq2Seq(experiment_config, maxout_units=experiment_config.maxout)

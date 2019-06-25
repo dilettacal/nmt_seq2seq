@@ -116,7 +116,7 @@ class Seq2SeqDataset(Dataset):
 
         src_path, trg_path = tuple(os.path.expanduser(path + x) for x in exts)
 
-        examples = self._generate_examples(src_path, trg_path, fields, truncate=truncate, reduce=reduce)
+        examples = self._generate_examples(src_path, trg_path, fields, truncate=truncate, reduce=reduce, reverse_input=reverse_input)
 
         super(Seq2SeqDataset, self).__init__(examples, fields)
 
@@ -125,11 +125,14 @@ class Seq2SeqDataset(Dataset):
         with io.open(src_path, mode='r', encoding='utf-8') as src_file, \
                 io.open(trg_path, mode='r', encoding='utf-8') as trg_file:
             for i, (src_line, trg_line) in enumerate(zip(src_file, trg_file)):
-                if reduce >0 and i == reduce:
+                if reduce > 0 and i == reduce:
                     break
                 src_line, trg_line = src_line.strip(), trg_line.strip()
                 if reverse_input:
-                    src_line = src_line[::-1]
+                    src_line = src_line.split(" ")[::-1]
+                    src_line = ' '.join(src_line)
+                    if i < 2:
+                        print("Source inputs reversed:\t", src_line)
                 if src_line != '' and trg_line != '':
                     if truncate > 0:
                         src_line, trg_line = src_line.split(" "),trg_line.split(" ")

@@ -28,18 +28,21 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             logger.log('New best loss: {:.3f}'.format(best_valid_loss))
 
         end_epoch_time = time.time()
+        total_epoch = convert(end_epoch_time-start_time)
 
-        logger.log('Epoch: {} | Time: {}'.format(epoch+1, convert(start_time-end_epoch_time)))
+        logger.log('Epoch: {} | Time: {}'.format(epoch+1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {math.exp(avg_train_loss):7.3f}')
         logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {math.exp(avg_val_loss):7.3f} | Val. BLEU: {avg_bleu_loss:.3f}')
 
 
 def train(train_iter, model, criterion, optimizer, device="cuda"):
+   # print(device)
 
     # Train model
     model.train()
     losses = AverageMeter()
     for i, batch in enumerate(train_iter):
+        #print(device)
         # Use GPU
         src = batch.src.to(device)
         trg = batch.trg.to(device)
@@ -68,7 +71,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
 
 
 
-def validate(val_iter, model, criterion, device, TRG, beam_size = 1):
+def validate(val_iter, model, criterion, device, TRG, beam_size = 2):
     model.eval()
     losses = AverageMeter()
     sent_candidates = []
@@ -98,7 +101,7 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 1):
         ## Prepare sentences for BLEU
         ref = list(tgt.data.squeeze())
         # Prepare sentence for bleu script
-        remove_tokens = [TRG.vocab.stoi['<pad>'], TRG.vocab.stoi['<s>'], TRG.vocab.stoi['</s>']]
+        remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
         out = [w for w in out if w not in remove_tokens]
         ref = [w for w in ref if w not in remove_tokens]
         sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
@@ -127,6 +130,21 @@ def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
     return
 
 
+def check_gradient_norm(m):
+    total_norm = 0
+    for p in m.parameters():
+        param_norm = p.grad.data.norm(2)
+        total_norm += param_norm.item() ** 2
+    total_norm = total_norm ** (1. / 2)
+    return total_norm
+
+def customized_clip_value(parameters, values):
+    if isinstance(parameters, torch.Tensor):
+        parameters = [parameters]
+
+    clip_value = [float(v) for v in values]
+    for p in filter(lambda p: p.grad is not None, parameters):
+        p.grad.data.clamp_(min=-clip_value, max=clip_value)
 
 def get_gradient_statistics(model):
     parameters = list(filter(lambda p: p.grad is not None, model.parameters()))
