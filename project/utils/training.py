@@ -113,7 +113,6 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 2):
 
             #### BLEU
             # compute scores with greedy search
-            print("Prediction...")
             out = model.predict(src, beam_size=beam_size)  # out is a list
 
             ## Prepare sentences for BLEU
