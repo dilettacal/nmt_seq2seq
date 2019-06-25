@@ -2,6 +2,7 @@ import argparse
 
 import torch
 
+from settings import VALID_MODELS, VALID_DEC
 from project.utils.utils import Logger
 
 
@@ -45,6 +46,7 @@ def experiment_parser():
     parser.add_argument('--predict_from_input', metavar='STR', default=None, help='Source sentence to translate')
     parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Sequence max length. Default 30 units.")
     parser.add_argument('--model_type', default="custom", metavar='STR', help="Model type (custom, cho, sutskever)")
+    parser.add_argument('--dec', type=str, default="standard", help="Decoder type: Standard, Context, attn")
 
     parser.add_argument('--corpus', default="europarl", metavar='STR',
                         help="The corpus, where training should be performed. Possible values: \'europarl\' and \'simple'\ - the iwslt dataset from torchtext")
@@ -72,6 +74,9 @@ def experiment_parser():
 class Experiment(object):
     def __init__(self):
         self.args = experiment_parser().parse_args()
+
+        assert self.args.model_type.lower() in VALID_MODELS
+        assert self.args.dec in VALID_DEC
         #### Training configurations
         self.epochs = self.args.epochs
         self.batch_size = self.args.b
@@ -93,7 +98,6 @@ class Experiment(object):
         self.src_vocab_size = None
         self.trg_vocab_size = None
 
-        self.maxout = self.args.maxout
 
         ### samples config
         self.train_samples = self.args.train
@@ -109,6 +113,10 @@ class Experiment(object):
         self.nlayers = self.args.nlayers
         self.dp = self.args.dp
         self.bi = self.args.bi
+
+        self.decoder_type = self.args.dec
+        if self.decoder_type == "context":
+            self.rnn_type = "gru"
 
 
     def get_args(self):

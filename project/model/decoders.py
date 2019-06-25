@@ -33,12 +33,10 @@ class Decoder(nn.Module):
 
 
 class ContextDecoder(Decoder):
-    def __init__(self, embedding, h_dim, num_layers, dropout_p=0.0, maxout_units=500):
-        super().__init__(embedding, h_dim, num_layers, dropout_p, rnn_cell="gru")
-        self.max_out_units = maxout_units
+    def __init__(self, trg_vocab_size, emb_size, h_dim, num_layers, dropout_p=0.0):
+        super().__init__(trg_vocab_size, emb_size, h_dim, num_layers, dropout_p, rnn_cell="gru")
 
-
-        self.rnn = nn.GRU(self.embedding.embedding_dim + h_dim, h_dim, num_layers=num_layers)
+        self.rnn = nn.GRU(self.embedding.embedding_dim + h_dim, h_dim, num_layers=num_layers, dropout=dropout_p)
 
         self.dropout = nn.Dropout(dropout_p)
 

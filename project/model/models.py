@@ -1,18 +1,10 @@
-import random
-
 import torch
 import torch.nn as nn
 
 from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
-from project.model.layers import MaxoutLinearLayer
-from settings import DEFAULT_DEVICE
-
-LSTM = "lstm"
-GRU = "gru"
-VALID_CELLS = [LSTM, GRU]
-VALID_MODELS = ["custom", "s", "c", "attn"]
+from settings import VALID_CELLS
 
 """
 Parameters:
@@ -25,8 +17,8 @@ class Seq2Seq(nn.Module):
     def __init__(self, experiment_config:Experiment, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
 
-        assert experiment_config.model_type in VALID_MODELS
         self.model_type = experiment_config.model_type
+        self.decoder_type = experiment_config.decoder_type
         self.hid_dim = experiment_config.hid_dim
         self.emb_size = experiment_config.emb_size
         self.src_vocab_size = experiment_config.src_vocab_size
@@ -45,8 +37,14 @@ class Seq2Seq(nn.Module):
 
         self.encoder = Encoder(self.src_vocab_size, self.emb_size, self.hid_dim, self.num_layers,
                                dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
-        self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
+        if self.decoder_type == "custom":
+            self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
                                self.num_layers * 2 if self.enc_bi else self.num_layers,rnn_cell=rnn_type, dropout_p=self.dp)
+        elif self.decoder_type == "context":
+            self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
+                                   self.num_layers * 2 if self.enc_bi else self.num_layers,  dropout_p=self.dp)
+        elif self.decoder_type == "attn":
+            pass
         self.dropout = nn.Dropout(experiment_config.dp)
         self.output = nn.Linear(self.hid_dim, experiment_config.trg_vocab_size)
 
@@ -111,17 +109,6 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
-class ContextSeq2Seq(Seq2Seq):
-    def __init__(self, experiment_config, tokens_bos_eos_pad_unk, maxout_units=None):
-        super(ContextSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
-
-
-        if maxout_units > 0:
-            self.output = MaxoutLinearLayer(input_dim=self.emb_size * 2, hidden_units=maxout_units,
-                                         output_dim=self.trg_vocab_size, k=2)
-        else:
-            self.output = nn.ReLU(nn.Linear(self.hid_dim , self.trg_vocab_size))
-
 
 class AttentionSeq2Seq(Seq2Seq):
     def __init__(self, experiment_config, token_bos_eos_pad_unk):
@@ -168,7 +155,9 @@ def get_nmt_model(experiment_config:Experiment, tokens_bos_eos_pad_unk):
         #### This returns a model like in Cho et al. #####
         if experiment_config.bi and experiment_config.reverse_input:
             experiment_config.reverse_input = False
-        return ContextSeq2Seq(experiment_config,tokens_bos_eos_pad_unk, maxout_units=experiment_config.maxout)
+        experiment_config.rnn_type = "gru"
+        experiment_config.decoder_type = "context"
+        return Seq2Seq(experiment_config,tokens_bos_eos_pad_unk)
 
     elif model_type == "s":
         #### This returs a model like in Sutskever et al. ####
