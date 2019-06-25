@@ -80,7 +80,9 @@ class AverageMeter():
 
 
 def moses_multi_bleu(outputs, references, lw=False):
-    '''Outputs, references are lists of strings. Calculates BLEU score using https://raw.githubusercontent.com/moses-smt/mosesdecoder/master/scripts/generic/multi-bleu.perl -- Python function from Google '''
+    '''Outputs, references are lists of strings. Calculates BLEU score using
+    https://raw.githubusercontent.com/moses-smt/mosesdecoder/master/scripts/generic/multi-bleu.perl --
+    Python function from Google '''
 
     # Save outputs and references as temporary text files
     out_file = tempfile.NamedTemporaryFile()

@@ -15,10 +15,10 @@ import math
 
 def main():
     args = experiment_parser().parse_args()
-    device = "cuda" if (args.cuda and torch.cuda.is_available()) else "cpu"
+    cuda = args.cuda
+    device = "cuda" if (cuda and torch.cuda.is_available()) else "cpu"
     args.cuda = device
     print("Running experiment on:", device)
-
    # args.corpus = "europarl"
 
     lang_code = args.lang_code
@@ -27,7 +27,7 @@ def main():
     model_type = "custom"
     args.model_type = model_type
 
-    args.reduce = [200000, 20000, 5000]
+    args.reduce = [args.train, args.val, args.test]
     args.epochs = 50
 
     print("Language combination ({}-{})".format(src_lang, trg_lang))

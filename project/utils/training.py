@@ -6,6 +6,7 @@ import math
 
 from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
+from project.utils.moses_multi_bleu import multi_bleu
 from project.utils.utils import convert, AverageMeter
 from settings import DEFAULT_DEVICE
 from nltk.translate.bleu_score import corpus_bleu
@@ -108,10 +109,12 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 1):
 
     bleu = get_moses_multi_bleu(references=sent_references, hypotheses=sent_candidates, lowercase=True)
 #    sacrebl = sacre_corpus_bleu(sys_stream=sent_references, ref_streams=sent_candidates, lowercase=True)
-    #nlkt_bleu = corpus_bleu(list_of_references=[[sent.split() for sent in sent_references]], hypotheses=[hyp.split() for hyp in sent_candidates])
+    nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references], hypotheses=[hyp.split() for hyp in sent_candidates])
+
+    script_bleu = multi_bleu()
   #  print("Sacrebleu:", sacrebl)
     #print("Script bleu:", bleu)
-   # print("NLTK:", nlkt_bleu)
+    print("NLTK:", nlkt_bleu)
     return losses.avg, bleu
 
 
