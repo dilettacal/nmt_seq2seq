@@ -12,16 +12,14 @@ from settings import DEFAULT_DEVICE
 LSTM = "lstm"
 GRU = "gru"
 VALID_CELLS = [LSTM, GRU]
-VALID_MODELS = ["standard", "sutskever", "cho"]
-
-
-
-
+VALID_MODELS = ["custom", "s", "c", "attn"]
 
 class Seq2Seq(nn.Module):
     def __init__(self, experiment_config:Experiment, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
 
+        assert experiment_config.model_type in VALID_MODELS
+        self.model_type = experiment_config.model_type
         self.hid_dim = experiment_config.hid_dim
         self.emb_size = experiment_config.emb_size
         self.src_vocab_size = experiment_config.src_vocab_size
@@ -41,13 +39,14 @@ class Seq2Seq(nn.Module):
         self.encoder = Encoder(self.src_vocab_size, self.emb_size, self.hid_dim, self.num_layers,
                                dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
         self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
-                               self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
+                               self.num_layers * 2 if self.enc_bi else self.num_layers,rnn_cell=rnn_type, dropout_p=self.dp)
         self.dropout = nn.Dropout(experiment_config.dp)
-        self.tanh = nn.Tanh()
         self.output = nn.Linear(self.hid_dim, experiment_config.trg_vocab_size)
 
-    def init_weights(self):
-        pass
+    def init_weights(self, func=None):
+        if self.model_type == "custom": pass
+        elif self.model_type == "s": self.apply(uniform_init_weights(self))
+        elif self.model_type == "c": self.apply(normal_init_weights(self))
 
         ### create encoder and decoder
     def forward(self, src, trg):
@@ -58,7 +57,7 @@ class Seq2Seq(nn.Module):
         out_e, final_e = self.encoder(src)
         # Decode
         out_d, _ = self.decoder(trg, final_e)
-        x = self.dropout(self.tanh(out_d))
+        x = self.dropout(torch.tanh(out_d))
         x = self.output(x)
         return x
 
@@ -88,8 +87,6 @@ class Seq2Seq(nn.Module):
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
                     # Decode
                     outputs_d, new_state = self.decoder(last_word_input, current_state)
-                #    print(outputs_d.size())
-
                     x = self.output(outputs_d)
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
@@ -107,22 +104,12 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
-class Sutskever(Seq2Seq):
-    def __init__(self, experiment_config, tokens_bos_eos_pad_unk):
-        experiment_config.nlayers = 4
-        experiment_config.hs = 1000
-        experiment_config.emb = 1000
-        super(Sutskever, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
-
-    def init_weights(self):
-        self.apply(uniform_init_weights(self))
-
-class ChoSeq2Seq(Seq2Seq):
+class ContextSeq2Seq(Seq2Seq):
     def __init__(self, experiment_config, tokens_bos_eos_pad_unk, maxout_units=None):
         experiment_config.emb = 500
         experiment_config.hs = 500
         maxout_units = maxout_units
-        super(ChoSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
+        super(ContextSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
 
 
         if maxout_units:
@@ -131,8 +118,16 @@ class ChoSeq2Seq(Seq2Seq):
         else:
             self.output = nn.ReLU(nn.Linear(self.embedding.embedding_dim + self.hid_dim * 2, self.vocab_size))
 
-    def init_weights(self):
-        self.apply(normal_init_weights(self))
+
+class AttentionSeq2Seq(Seq2Seq):
+    def __init__(self, experiment_config, token_bos_eos_pad_unk):
+        super().__init__(experiment_config, token_bos_eos_pad_unk)
+        ### add attention stuff
+
+    def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
+        ## modifiy with attention stuff
+        pass
+
 
 
 
@@ -163,4 +158,4 @@ def get_nmt_model(experiment_config:Experiment):
     if model_type == "custom":
         return Seq2Seq(experiment_config)
     elif model_type == "c":
-        return ChoSeq2Seq(experiment_config, maxout_units=experiment_config.maxout)
+        return ContextSeq2Seq(experiment_config, maxout_units=experiment_config.maxout)

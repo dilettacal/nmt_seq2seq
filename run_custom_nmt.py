@@ -56,17 +56,9 @@ def main():
 
     # Load embeddings if available
     # Create model
-
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
-    ### src_vocab_size, trg_vocab_size, emb_size, h_dim, num_layers, dropout_p, bi, rnn_type="lstm", tokens_bos_eos_pad_unk=[0, 1, 2, 3],  device=DEFAULT_DEVICE
     model = Seq2Seq(experiment, tokens_bos_eos_pad_unk)
     print(model)
-
-    # Load pretrained model
-
-    #if args.model is not None and os.path.isfile(args.model):
-     #   model.load_state_dict(torch.load(args.model))
-      #  print('Loaded pretrained model.')
 
     model = model.to(experiment.get_device())
 
@@ -88,7 +80,7 @@ def main():
                                                                                                vars(scheduler), model),
                stdout=False)
 
-    logger.log("MODEL PARAMETERS: {}".format(count_parameters(model)))
+    logger.log('Trainable parameters: {count_parameters(model):,}')
 
     results_logger = Logger(experiment_path, file_name="results.log")
     start_time = time.time()
@@ -97,7 +89,6 @@ def main():
     Training the model
     
     """
-
     #train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, logger=None, device=DEFAULT_DEVICE
     train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG, epochs=experiment.epochs, logger=logger, device=experiment.get_device())
 
