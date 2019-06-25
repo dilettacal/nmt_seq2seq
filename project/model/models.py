@@ -151,11 +151,17 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def get_nmt_model(experiment_config:Experiment):
+def get_nmt_model(experiment_config:Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
     assert model_type in ["custom", "s", "c"]
 
     if model_type == "custom":
-        return Seq2Seq(experiment_config)
+        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
     elif model_type == "c":
-        return ContextSeq2Seq(experiment_config, maxout_units=experiment_config.maxout)
+        return ContextSeq2Seq(experiment_config,tokens_bos_eos_pad_unk, maxout_units=experiment_config.maxout)
+    elif model_type == "s":
+        experiment_config.reverse_input = True
+        experiment_config.bi = False
+        if experiment_config.hid_dim < 500: experiment_config.hid_dim = 500
+        if experiment_config.emb_size < 500: experiment_config.emb_size = 500
+        if experiment_config.nlayers < 2: experiment_config.nlayers = 2
