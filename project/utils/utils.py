@@ -38,7 +38,7 @@ class Logger():
             print(info)
 
     def save_model(self, model_dict, epoch, type="sutskever"):
-        model_name = "{}-model_{}.pkl".format(type, epoch)
+        model_name = "{}-model.pkl".format(type)
         # with open(os.path.join(self.path, 'model.pkl'), 'w') as f:
         torch.save(model_dict, os.path.join(self.path, model_name))
 
