@@ -13,8 +13,9 @@ Parameters:
 - 4 layers, 1000, 1000: 146,511,004
 """
 
+
 class Seq2Seq(nn.Module):
-    def __init__(self, experiment_config:Experiment, tokens_bos_eos_pad_unk):
+    def __init__(self, experiment_config: Experiment, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
 
         self.model_type = experiment_config.model_type
@@ -37,44 +38,41 @@ class Seq2Seq(nn.Module):
 
         self.encoder = Encoder(self.src_vocab_size, self.emb_size, self.hid_dim, self.num_layers,
                                dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
-        if self.decoder_type == "custom":
-            self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
-                               self.num_layers * 2 if self.enc_bi else self.num_layers,rnn_cell=rnn_type, dropout_p=self.dp)
-        elif self.decoder_type == "context":
-            self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
-                                   self.num_layers * 2 if self.enc_bi else self.num_layers,  dropout_p=self.dp)
-        elif self.decoder_type == "attn":
-            pass
+
+        self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
+                                   self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=rnn_type,
+                                   dropout_p=self.dp)
+
         self.dropout = nn.Dropout(experiment_config.dp)
         self.output = nn.Linear(self.hid_dim, experiment_config.trg_vocab_size)
 
     def init_weights(self, func=None):
-        if self.model_type == "custom": pass
-        elif self.model_type == "s": self.apply(uniform_init_weights(self))
-        elif self.model_type == "c": self.apply(normal_init_weights(self))
+        if self.model_type == "custom":
+            pass
+        elif self.model_type == "s":
+            self.apply(uniform_init_weights(self))
+        elif self.model_type == "c":
+            self.apply(normal_init_weights(self))
 
         ### create encoder and decoder
+
     def forward(self, src, trg):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
         # Encode
         out_e, final_e = self.encoder(src)
-        if self.model_type == "c" or self.decoder_type == "context":
-            context = final_e
-            # Decode
-            out_d, _ = self.decoder(trg, final_e, context)
-        else:
-            # Decode
-            out_d, _ = self.decoder(trg, final_e)
+
+        out_d, _ = self.decoder(trg, final_e)
 
         x = self.dropout(torch.tanh(out_d))
         x = self.output(x)
         return x
 
-    def predict(self, src, beam_size=1, max_len =30, remove_tokens=[]):
+    def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
-        beam_outputs = self.beam_search(src, beam_size, max_len=max_len, remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
+        beam_outputs = self.beam_search(src, beam_size, max_len=max_len,
+                                        remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
         top1 = beam_outputs[0][1]  # a list of word indices (as ints)
         return top1
 
@@ -115,6 +113,35 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
+class ContextSeq2Seq(Seq2Seq):
+    def __init__(self, experiment_config, token_bos_eos_pad_unk):
+        super().__init__(experiment_config, token_bos_eos_pad_unk)
+
+        self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
+                                      self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
+
+        self.output = nn.Linear(self.emb_size + self.hid_dim*2, experiment_config.trg_vocab_size)
+
+    def forward(self, src, trg):
+        src = src.to(self.device)
+        trg = trg.to(self.device)
+
+        # Encode
+        out_e, final_e = self.encoder(src)
+        seq_len, batch_size = trg.size()
+        outputs = torch.zeros(seq_len, batch_size, self.emb_size + self.hid_dim * 2).to(self.device)
+        input = trg[0, :]
+        for i in range(seq_len):
+            context = final_e
+            # Decode
+            out_d, _ = self.decoder(input, final_e, context)
+            outputs[i] = out_d
+            input = trg[i]
+
+        x = self.dropout(torch.tanh(outputs))
+        x = self.output(x)
+        return x
+
 
 class AttentionSeq2Seq(Seq2Seq):
     def __init__(self, experiment_config, token_bos_eos_pad_unk):
@@ -126,15 +153,15 @@ class AttentionSeq2Seq(Seq2Seq):
         pass
 
 
-
-
 def uniform_init_weights(m):
     for name, param in m.named_parameters():
         nn.init.uniform_(param.data, -0.08, 0.08)
 
+
 def normal_init_weights(m):
     for name, param in m.named_parameters():
         nn.init.normal_(param.data, mean=0, std=0.01)
+
 
 def badahnau_init_weights(m):
     for name, param in m.named_parameters():
@@ -148,7 +175,7 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def get_nmt_model(experiment_config:Experiment, tokens_bos_eos_pad_unk):
+def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
     assert model_type in ["custom", "s", "c"]
 
@@ -163,7 +190,7 @@ def get_nmt_model(experiment_config:Experiment, tokens_bos_eos_pad_unk):
             experiment_config.reverse_input = False
         experiment_config.rnn_type = "gru"
         experiment_config.decoder_type = "context"
-        return Seq2Seq(experiment_config,tokens_bos_eos_pad_unk)
+        return ContextSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
     elif model_type == "s":
         #### This returs a model like in Sutskever et al. ####
