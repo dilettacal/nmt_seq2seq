@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 from project.experiment.setup_experiment import experiment_parser, Experiment
-from project.model.models import Seq2Seq
+from project.model.models import Seq2Seq, count_parameters
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import validate, train_model
@@ -87,6 +87,8 @@ def main():
     logger.log('ARGS: {}\nOPTIMIZER: {}\nLEARNING RATE: {}\nSCHEDULER: {}\nMODEL: {}\n'.format(experiment.get_args(), optimizer, experiment.lr,
                                                                                                vars(scheduler), model),
                stdout=False)
+
+    logger.log("MODEL PARAMETERS: {}".format(count_parameters(model)))
 
     results_logger = Logger(experiment_path, file_name="results.log")
     start_time = time.time()

@@ -152,6 +152,10 @@ def badahnau_init_weights(m):
             nn.init.constant_(param.data, 0)
 
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 def get_nmt_model(experiment_config:Experiment):
     model_type = experiment_config.model_type
     assert model_type in ["custom", "s", "c"]

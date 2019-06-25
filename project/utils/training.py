@@ -11,12 +11,12 @@ from settings import DEFAULT_DEVICE
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 
-def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE):
+def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom"):
     best_valid_loss = float('inf')
 
     for epoch in range(epochs):
         start_time = time.time()
-        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device)
+        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type)
         #val_iter, model, criterion, device, TRG,
         avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG)
         #print(avg_bleu_loss)
@@ -35,7 +35,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {math.exp(avg_val_loss):7.3f} | Val. BLEU: {avg_bleu_loss:.3f}')
 
 
-def train(train_iter, model, criterion, optimizer, device="cuda"):
+def train(train_iter, model, criterion, optimizer, device="cuda", model_type="custom", logger=None):
    # print(device)
 
     # Train model
@@ -64,7 +64,17 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
         loss.backward()
         losses.update(loss.item())
         # Clip gradient norms and step optimizer
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
+        ### Sutskever gradient clipping type
+        if model_type == "s":
+            norm_range = [10,25]
+            grad_norm = check_gradient_norm(model)
+            logger.log("Gradient Norm: {}".format(grad_norm))
+            if not (grad_norm >= norm_range[0] and grad_norm <=norm_range[1]):
+                customized_clip_value(model.parameters(), norm_range)
+
+        else:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
 
     return losses.avg
@@ -144,7 +154,7 @@ def customized_clip_value(parameters, values):
 
     clip_value = [float(v) for v in values]
     for p in filter(lambda p: p.grad is not None, parameters):
-        p.grad.data.clamp_(min=-clip_value, max=clip_value)
+        p.grad.data.clamp_(min=clip_value[0], max=clip_value[1])
 
 def get_gradient_statistics(model):
     parameters = list(filter(lambda p: p.grad is not None, model.parameters()))
