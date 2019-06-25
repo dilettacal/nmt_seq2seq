@@ -104,19 +104,6 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
-class ContextSeq2Seq(Seq2Seq):
-    def __init__(self, experiment_config, tokens_bos_eos_pad_unk, maxout_units=None):
-        experiment_config.emb = 500
-        experiment_config.hs = 500
-        maxout_units = maxout_units
-        super(ContextSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
-
-
-        if maxout_units:
-            self.output = MaxoutLinearLayer(input_dim=self.emb_dim_trg * 2, hidden_units=maxout_units,
-                                         output_dim=self.vocab_size_trg, k=2)
-        else:
-            self.output = nn.ReLU(nn.Linear(self.embedding.embedding_dim + self.hid_dim * 2, self.vocab_size))
 
 
 class AttentionSeq2Seq(Seq2Seq):
@@ -156,12 +143,21 @@ def get_nmt_model(experiment_config:Experiment, tokens_bos_eos_pad_unk):
     assert model_type in ["custom", "s", "c"]
 
     if model_type == "custom":
+        if experiment_config.bi and experiment_config.reverse_input:
+            experiment_config.reverse_input = False
         return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+
     elif model_type == "c":
+        #### This returns a model like in Cho et al. #####
+        if experiment_config.bi and experiment_config.reverse_input:
+            experiment_config.reverse_input = False
         return ContextSeq2Seq(experiment_config,tokens_bos_eos_pad_unk, maxout_units=experiment_config.maxout)
+
     elif model_type == "s":
+        #### This returs a model like in Sutskever et al. ####
         experiment_config.reverse_input = True
         experiment_config.bi = False
         if experiment_config.hid_dim < 500: experiment_config.hid_dim = 500
         if experiment_config.emb_size < 500: experiment_config.emb_size = 500
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
+        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)

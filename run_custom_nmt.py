@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 from project.experiment.setup_experiment import experiment_parser, Experiment
-from project.model.models import Seq2Seq, count_parameters
+from project.model.models import Seq2Seq, count_parameters, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import validate, train_model
@@ -57,7 +57,7 @@ def main():
     # Load embeddings if available
     # Create model
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
-    model = Seq2Seq(experiment, tokens_bos_eos_pad_unk)
+    model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
     print(model)
 
     model = model.to(experiment.get_device())
@@ -80,7 +80,7 @@ def main():
                                                                                                vars(scheduler), model),
                stdout=False)
 
-    logger.log('Trainable parameters: {count_parameters(model):,}')
+    logger.log(f'Trainable parameters: {count_parameters(model):,}')
 
     results_logger = Logger(experiment_path, file_name="results.log")
     start_time = time.time()
