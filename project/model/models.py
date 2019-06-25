@@ -14,6 +14,13 @@ GRU = "gru"
 VALID_CELLS = [LSTM, GRU]
 VALID_MODELS = ["custom", "s", "c", "attn"]
 
+"""
+Parameters:
+- Maxout (500 units): 73,303,508
+- 4 layers, 500, 500: 57,270,504
+- 4 layers, 1000, 1000: 146,511,004
+"""
+
 class Seq2Seq(nn.Module):
     def __init__(self, experiment_config:Experiment, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
@@ -104,6 +111,16 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
+class ContextSeq2Seq(Seq2Seq):
+    def __init__(self, experiment_config, tokens_bos_eos_pad_unk, maxout_units=None):
+        super(ContextSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
+
+
+        if maxout_units > 0:
+            self.output = MaxoutLinearLayer(input_dim=self.emb_size * 2, hidden_units=maxout_units,
+                                         output_dim=self.trg_vocab_size, k=2)
+        else:
+            self.output = nn.ReLU(nn.Linear(self.hid_dim , self.trg_vocab_size))
 
 
 class AttentionSeq2Seq(Seq2Seq):
