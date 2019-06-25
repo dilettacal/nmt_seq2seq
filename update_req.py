@@ -1,6 +1,6 @@
 import subprocess
 
-def update_requirements(mode="pipreqs"):
+def update_requirements(mode=""):
     if mode == "pipreqs":
         try:
             import pipreqs

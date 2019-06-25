@@ -7,8 +7,6 @@ import math
 import torch
 import numpy as np
 from nltk.translate.bleu_score import corpus_bleu, sentence_bleu, SmoothingFunction
-from sacrebleu import corpus_bleu as cb
-from sacrebleu import sentence_bleu as sb
 from torchtext import data
 from torchtext.data import Field
 from torchtext.datasets import TranslationDataset
