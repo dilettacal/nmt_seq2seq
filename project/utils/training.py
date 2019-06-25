@@ -69,7 +69,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
             norm_range = [10,25]
             grad_norm = check_gradient_norm(model)
             logger.log("Gradient Norm: {}".format(grad_norm))
-            if not (grad_norm >= norm_range[0] and grad_norm <=norm_range[1]):
+            if grad_norm > 5:
                 customized_clip_value(model.parameters(), norm_range)
 
         else:
@@ -85,37 +85,38 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 2):
     losses = AverageMeter()
     sent_candidates = []
     sent_references = []
-    for i, batch in enumerate(val_iter):
-        src = batch.src.to(device)
-        tgt = batch.trg.to(device)
-        ### compute normal scores
-        scores = model(src, tgt)
+    with torch.no_grad():
+        for i, batch in enumerate(val_iter):
+            src = batch.src.to(device)
+            tgt = batch.trg.to(device)
+            ### compute normal scores
+            scores = model(src, tgt)
 
-        scores = scores[:-1]
-        tgt = tgt[1:]
+            scores = scores[:-1]
+            tgt = tgt[1:]
 
-        # Reshape for loss function
-        scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
-        tgt = tgt.view(scores.size(0))
+            # Reshape for loss function
+            scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
+            tgt = tgt.view(scores.size(0))
 
-        # Calculate loss
-        loss = criterion(scores, tgt)
-        losses.update(loss.item())
+            # Calculate loss
+            loss = criterion(scores, tgt)
+            losses.update(loss.item())
 
-        #### BLEU
-        # compute scores with greedy search
-        out = model.predict(src, beam_size=beam_size, trg_max_len=tgt.shape[0])  # out is a list
+            #### BLEU
+            # compute scores with greedy search
+            out = model.predict(src, beam_size=beam_size, trg_max_len=tgt.shape[0])  # out is a list
 
-        ## Prepare sentences for BLEU
-        ref = list(tgt.data.squeeze())
-        # Prepare sentence for bleu script
-        remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
-        out = [w for w in out if w not in remove_tokens]
-        ref = [w for w in ref if w not in remove_tokens]
-        sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
-        sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
-        sent_candidates.append(sent_out)
-        sent_references.append(sent_ref)
+            ## Prepare sentences for BLEU
+            ref = list(tgt.data.squeeze())
+            # Prepare sentence for bleu script
+            remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
+            out = [w for w in out if w not in remove_tokens]
+            ref = [w for w in ref if w not in remove_tokens]
+            sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
+            sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+            sent_candidates.append(sent_out)
+            sent_references.append(sent_ref)
 
     smooth = SmoothingFunction()
     nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references], hypotheses=[hyp.split() for hyp in sent_candidates], smoothing_function=smooth.method4) *100
@@ -146,13 +147,16 @@ def check_gradient_norm(m):
     total_norm = total_norm ** (1. / 2)
     return total_norm
 
-def customized_clip_value(parameters, values):
+def customized_clip_value(parameters, values, norm_value):
     if isinstance(parameters, torch.Tensor):
         parameters = [parameters]
 
-    clip_value = [float(v) for v in values]
+    #clip_value = [float(v) for v in values]
     for p in filter(lambda p: p.grad is not None, parameters):
-        p.grad.data.clamp_(min=clip_value[0], max=clip_value[1])
+        #p.grad.data.clamp_(min=clip_value[0], max=clip_value[1])
+        p.grad = (5*p.grad)/norm_value
+
+
 
 def get_gradient_statistics(model):
     parameters = list(filter(lambda p: p.grad is not None, model.parameters()))
