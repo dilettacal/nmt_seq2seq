@@ -7,7 +7,7 @@ import torchtext.data as data
 from torchtext.data import Dataset
 from torchtext.datasets import TranslationDataset
 
-from TMX2Corpus.tmx2corpus import FileOutput
+from tmx2corpus import FileOutput
 import os
 
 from project.utils.constants import PAD_TOKEN, UNK_TOKEN, SOS_TOKEN, EOS_TOKEN
