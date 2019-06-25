@@ -60,8 +60,14 @@ class Seq2Seq(nn.Module):
 
         # Encode
         out_e, final_e = self.encoder(src)
-        # Decode
-        out_d, _ = self.decoder(trg, final_e)
+        if self.model_type == "c" or self.decoder_type == "context":
+            context = final_e
+            # Decode
+            out_d, _ = self.decoder(trg, final_e, context)
+        else:
+            # Decode
+            out_d, _ = self.decoder(trg, final_e)
+
         x = self.dropout(torch.tanh(out_d))
         x = self.output(x)
         return x
