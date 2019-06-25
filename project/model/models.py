@@ -69,14 +69,14 @@ class Seq2Seq(nn.Module):
         x = self.output(x)
         return x
 
-    def predict(self, src, beam_size=1, max_len=30, remove_tokens=[], trg_max_len=None):
+    def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
         beam_outputs = self.beam_search(src, beam_size, max_len=max_len,
-                                        remove_tokens=remove_tokens, trg_max_len=trg_max_len)  # returns top beam_size options (as list of tuples)
+                                        remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
         top1 = beam_outputs[0][1]  # a list of word indices (as ints)
         return top1
 
-    def beam_search(self, src, beam_size, max_len, remove_tokens=[], trg_max_len=None):
+    def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'''
         src = src.to(self.device)
         # Encode
@@ -94,10 +94,7 @@ class Seq2Seq(nn.Module):
                 last_word = sentence[-1]
                 if last_word != self.eos_token:
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
-                    # Decode
-                    if trg_max_len:
-                        for i in range(1,trg_max_len):
-                            outputs_d, new_state = self.decoder(last_word_input, current_state)
+                    outputs_d, new_state = self.decoder(last_word_input, current_state)
                     x = self.output(outputs_d)
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
@@ -165,8 +162,8 @@ class ContextSeq2Seq(Seq2Seq):
                 last_word = sentence[-1]
                 if last_word != self.eos_token:
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
-                    ##### Decode with context!
-                    outputs_d, new_state = self.decoder(last_word_input, current_state, context)
+                    # Decode with context!
+                    outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=True)
                     x = self.output(outputs_d)
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens

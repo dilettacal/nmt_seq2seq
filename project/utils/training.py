@@ -70,7 +70,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
             grad_norm = check_gradient_norm(model)
             logger.log("Gradient Norm: {}".format(grad_norm))
             if grad_norm > 5:
-                customized_clip_value(model.parameters(), norm_range)
+                customized_clip_value(model.parameters(), norm_range, grad_norm)
 
         else:
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -105,7 +105,8 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 2):
 
             #### BLEU
             # compute scores with greedy search
-            out = model.predict(src, beam_size=beam_size, trg_max_len=tgt.shape[0])  # out is a list
+            print("Prediction...")
+            out = model.predict(src, beam_size=beam_size)  # out is a list
 
             ## Prepare sentences for BLEU
             ref = list(tgt.data.squeeze())

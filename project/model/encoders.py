@@ -23,9 +23,9 @@ class Encoder(nn.Module):
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size)
 
         if rnn_cell.lower() == "lstm":
-            self.rnn = nn.LSTM(self.embedding_size, self.h_dim, num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=False, dropout=self.dropout_p)
+            self.rnn = nn.LSTM(self.embedding_size, self.h_dim, num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=False, dropout=self.dropout_p if self.num_layers > 1 else 0)
         elif rnn_cell.lower() == "gru":
-            self.rnn = nn.GRU(self.embedding_size, self.h_dim, num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=False,dropout=self.dropout_p)
+            self.rnn = nn.GRU(self.embedding_size, self.h_dim, num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=False,dropout=self.dropout_p if self.num_layers > 1 else 0)
         else: raise ValueError("Cell not supported!")
 
         self.rnn_type = rnn_cell
