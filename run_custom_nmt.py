@@ -45,7 +45,7 @@ def main():
     # Load and process data
     time_data = time.time()
     SRC, TRG, train_iter, val_iter, test_iter, train_data, val_data, test_data = \
-        get_vocabularies_iterators(src_lang, experiment)
+        get_vocabularies_iterators(src_lang, experiment, experiment_path)
 
     print('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab), convert(time.time() - time_data)))
 
@@ -82,7 +82,8 @@ def main():
 
     logger.log(f'Trainable parameters: {count_parameters(model):,}')
 
-    results_logger = Logger(experiment_path, file_name="results.log")
+    logger.save(experiment.get_dict())
+
     start_time = time.time()
 
     """
@@ -90,7 +91,8 @@ def main():
     
     """
     #train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, logger=None, device=DEFAULT_DEVICE
-    train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG, epochs=experiment.epochs, logger=logger, device=experiment.get_device())
+    train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG,
+                epochs=experiment.epochs, logger=logger, device=experiment.get_device(), model_type=model_type)
 
     """
     Validation on test set
@@ -98,6 +100,7 @@ def main():
     - Size 1, Greedy Search
     - Size 2, 5 and 12
     """
+
 
     ### Evaluation on test set
     beam_size = 1

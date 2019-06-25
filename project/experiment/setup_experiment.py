@@ -131,5 +131,8 @@ class Experiment(object):
     def get_device(self):
         return torch.device("cuda") if (self.cuda and torch.cuda.is_available()) else torch.device("cpu")
 
+    def get_dict(self):
+        return self.__dict__
+
 
 

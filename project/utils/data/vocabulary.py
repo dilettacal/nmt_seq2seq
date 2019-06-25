@@ -1,5 +1,7 @@
 import os
 import time
+
+import dill
 import numpy as np
 import torch
 from torchtext import data, datasets
@@ -13,7 +15,7 @@ from settings import DATA_DIR_PREPRO
 CHUNK_SIZES = {10: 10e2, 20: 10e3, 30:10e4, 50:10e4}
 
 
-def get_vocabularies_iterators(src_lang, experiment):
+def get_vocabularies_iterators(src_lang, experiment, experiment_path):
 
     device = experiment.get_device()
 
@@ -96,8 +98,6 @@ def get_vocabularies_iterators(src_lang, experiment):
                                      sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=True)
     val_iter = data.Iterator(val, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src), shuffle=False, sort_within_batch=True)
-
-    #print(next(iter(train_iter)))
 
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test
 
