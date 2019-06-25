@@ -12,11 +12,11 @@ from sacremoses import MosesTokenizer
 import unicodedata
 import re
 
-import TMX2Corpus.tokenizer as tokenizer
+import tokenizer ## from tmx2corpus
 from project.utils.data.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import Logger
 from settings import RAW_EUROPARL, DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED, DATA_DIR
-from TMX2Corpus.tmx2corpus import Converter
+from tmx2corpus import Converter
 
 ### Regex ###
 space_before_punct = r'\s([?.!"](?:\s|$))'

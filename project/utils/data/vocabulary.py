@@ -2,13 +2,10 @@ import os
 import time
 import numpy as np
 import torch
-import torchtext
 from torchtext import data, datasets
-from torchtext.data import Example
 
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
-from project.utils.data.preprocessing import generate_splits_from_datasets
 from project.utils.io import SrcField, Seq2SeqDataset
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO
