@@ -88,7 +88,6 @@ def main():
     logger.log('ARGS: {}\nOPTIMIZER: {}\nLEARNING RATE: {}\nSCHEDULER: {}\nMODEL: {}\n'.format(args, optimizer, args.lr,
                                                                                                vars(scheduler), model),
                stdout=False)
-    # Train, validate, or predict{math.exp(avg_val_loss):7.3f}
 
     results_logger = Logger(experiment_path, file_name="results.log")
     start_time = time.time()

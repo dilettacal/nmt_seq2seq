@@ -106,12 +106,8 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 1):
         sent_candidates.append(sent_out)
         sent_references.append(sent_ref)
 
-    bleu = get_moses_multi_bleu(references=sent_references, hypotheses=sent_candidates, lowercase=True)
-    print("Bleu Moses Script:", bleu)
-#    sacrebl = sacre_corpus_bleu(sys_stream=sent_references, ref_streams=sent_candidates, lowercase=True)
     smooth = SmoothingFunction()
     nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references], hypotheses=[hyp.split() for hyp in sent_candidates], smoothing_function=smooth.method4) *100
-    print("NLTK:", nlkt_bleu)
     return losses.avg, nlkt_bleu
 
 
