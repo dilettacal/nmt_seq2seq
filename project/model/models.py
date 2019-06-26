@@ -66,12 +66,9 @@ class Seq2Seq(nn.Module):
         self.output = nn.Linear(self.hid_dim, experiment_config.trg_vocab_size)
 
     def init_weights(self, func=None):
-        if self.model_type == "custom":
+        if not func:
             pass
-        elif self.model_type == "s":
-            self.apply(uniform_init_weights(self))
-        elif self.model_type == "c":
-            self.apply(normal_init_weights(self))
+        else: self.apply(func(self))
 
         ### create encoder and decoder
 
