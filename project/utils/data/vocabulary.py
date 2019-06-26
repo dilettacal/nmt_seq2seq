@@ -15,7 +15,7 @@ from settings import DATA_DIR_PREPRO
 CHUNK_SIZES = {10: 10e2, 20: 10e3, 30:10e4, 50:10e4}
 
 
-def get_vocabularies_iterators(src_lang, experiment, data_dir = None):
+def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30):
 
     device = experiment.get_device()
 
@@ -53,7 +53,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None):
         root = get_full_path(DATA_DIR_PREPRO)
         #print("Root:", root)
         if not data_dir:
-            data_dir = os.path.join(root, corpus, language_code, "splits") # local directory
+            data_dir = os.path.join(root, corpus, language_code, "splits", str(max_len)) # local directory
 
         print("Loading data...")
         start = time.time()

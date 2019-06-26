@@ -38,14 +38,12 @@ class Logger():
         if stdout:
             print(info)
 
-    def save_model(self, model_dict, type="sutskever"):
-        model_name = "{}-model.pkl".format(type)
-        self.log(">>>> Path to model: {}".format(os.path.join(self.path, model_name)))
+    def save_model(self, model_dict):
 
-        torch.save(model_dict, os.path.join(self.path, model_name))
+        torch.save(model_dict, os.path.join(self.path, "model.pkl"))
 
-    def save(self, obj_dict):
-        torch.save(obj_dict, os.path.join(self.path, "experiment.pkl"), pickle_module=dill)
+    def save(self, obj_dict, name):
+        torch.save(obj_dict, os.path.join(self.path, str(name + ".pkl")), pickle_module=dill)
 
     def load(self):
         if not os.path.isfile(os.path.join(self.path, self.file_name)): raise Exception("File does not exist!")
@@ -53,22 +51,37 @@ class Logger():
 
     def plot(self, metric, title, ylabel, file):
         import matplotlib.pyplot as plt
-
+        name = str(file + ".png")
+        save_path = os.path.join(self.path, name)
         if isinstance(metric, dict):
             plt.title(title)
             plt.ylabel(ylabel)
             plt.xlabel('epoch')
-            plt.legend(list(metric.keys()), loc='upper left')
-            plt.plot(list(metric.values()))
-            plt.savefig(os.path.join(self.path, file, ".png"),dpi=300)
+            keys = list(metric.keys())
+            print(keys)
+            labels = [keys[0], keys[1]]
+            values = list(metric.values())
+            assert len(values) == 2 # one array for train, one for validation
+            assert len(values[0]) == len(values[1])
+            x = np.arange(len(values[0]))
+            plt.plot(x, metric.get(labels[0]), 'ob-', color="r", label = labels[0])
+            plt.plot(x, metric.get(labels[1]),'sr-', color="b", label = labels[1])
+            plt.legend(loc='upper right')
+            plt.savefig(save_path, format="png", dpi=300)
+            plt.close()
+            self.log("Plot saved: {}".format(save_path))
 
         elif isinstance(metric, list):
             plt.title(title)
             plt.ylabel(ylabel)
             plt.xlabel('epoch')
-            plt.legend(ylabel, loc='upper left')
-            plt.plot(metric)
-            plt.savefig(os.path.join(self.path, file, ".png"), dpi=300)
+            plt.plot(metric, "sr-", label=ylabel, color="b")
+            plt.legend(loc='upper right')
+            plt.savefig(save_path,  format="png", dpi=300)
+            plt.close()
+            self.log("Plot saved: {}".format(save_path))
+
+        else:raise Exception("Provide metric either as list or as dictionary.")
 
 
 

@@ -38,7 +38,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG)
 
         val_losses.append(avg_val_loss)
-        train_losses.append(avg_val_loss)
+        train_losses.append(avg_train_loss)
 
         bleus.append(avg_bleu_loss)
 
@@ -47,12 +47,12 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
         if avg_bleu_loss > best_bleu_value:
             best_bleu_value = avg_bleu_loss
-            logger.save_model(model.state_dict(), type=model_type)
+            logger.save_model(model.state_dict())
             logger.log('New best BLEU value: {:.3f}'.format(best_bleu_value))
 
         if avg_bleu_loss < best_valid_loss:
             best_valid_loss = avg_bleu_loss
-            logger.log('New best validation value: {:.3f}'.format(best_bleu_value))
+            logger.log('New best validation value: {:.3f}'.format(best_valid_loss))
 
         end_epoch_time = time.time()
         total_epoch = convert(end_epoch_time-start_time)

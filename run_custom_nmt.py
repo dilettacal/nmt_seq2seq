@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 from project.experiment.setup_experiment import experiment_parser, Experiment
-from project.model.models import Seq2Seq, count_parameters, get_nmt_model
+from project.model.models import Seq2Seq, count_parameters, get_nmt_model, uniform_init_weights, normal_init_weights
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import validate, train_model
@@ -61,7 +61,12 @@ def main():
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
     model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
     print(model)
-
+    if model_type == "c":
+        funct = normal_init_weights
+    elif model_type == "s":
+        funct = uniform_init_weights
+    else: funct = None
+    model.init_weights(funct)
     model = model.to(experiment.get_device())
 
     # Create weight to mask padding tokens for loss function
@@ -77,6 +82,7 @@ def main():
 
     # Create directory for logs, create logger, log hyperparameters
     logger = Logger(experiment_path)
+    logger.log(">>>> Path to model: {}".format(os.path.join(logger.path, "model.pkl")))
     logger.log('COMMAND ' + ' '.join(sys.argv), stdout=False)
     logger.log('ARGS: {}\nOPTIMIZER: {}\nLEARNING RATE: {}\nSCHEDULER: {}\nMODEL: {}\n'.format(experiment.get_args(), optimizer, experiment.lr,
                                                                                                vars(scheduler), model),
@@ -84,7 +90,7 @@ def main():
 
     logger.log(f'Trainable parameters: {count_parameters(model):,}')
 
-    logger.save(experiment.get_dict())
+    logger.save(experiment.get_dict(), "experiment")
 
     start_time = time.time()
 
@@ -96,9 +102,9 @@ def main():
     bleus, losses, ppl = train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG,
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(), model_type=model_type)
 
-    logger.plot(bleus, title="Validation BLEU/Epochs", ylabel="BLEU", file="bleu.png")
-    logger.plot(losses, title="Loss/Epochs", ylabel="losses", file="loss.png")
-    logger.plot(ppl, title="PPL/Epochs", ylabel="PPL", file="ppl.png")
+    logger.plot(bleus, title="Validation BLEU/Epochs", ylabel="BLEU", file="bleu")
+    logger.plot(losses, title="Loss/Epochs", ylabel="losses", file="loss")
+    logger.plot(ppl, title="PPL/Epochs", ylabel="PPL", file="ppl")
 
 
     """
