@@ -78,8 +78,8 @@ def main():
     # Create loss function and optimizer
     criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=30, factor=0.25, verbose=True,
-                                                           cooldown=6)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=20, factor=0.25, verbose=True,
+                                                           cooldown=6, min_lr=1e-5)
 
     # Create directory for logs, create logger, log hyperparameters
     logger = Logger(experiment_path)
