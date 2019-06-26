@@ -81,8 +81,8 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     if voc_limit > 0:
-        src_vocab.build_vocab(train.src, val.src, test.src, min_freq=2, max_size=voc_limit)
-        trg_vocab.build_vocab(train.trg, val.trg, test.src, min_freq=2, max_size=voc_limit)
+        src_vocab.build_vocab(train, val, test, min_freq=2, max_size=voc_limit)
+        trg_vocab.build_vocab(train, val, test, min_freq=2, max_size=voc_limit)
         print("Src vocabulary created!")
     else:
         src_vocab.build_vocab(train, val, test, min_freq=2)
