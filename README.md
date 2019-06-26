@@ -35,6 +35,8 @@ The base of this mechanism can be found in the above mentioned papers by Sutskev
 ## Code references
 **TODO**: Extend this part !!!!!!
 
+The code in this repository is partially based on this blog post by Luke Melas-Kyriazi: [Machine-Translation](https://lukemelas.github.io/machine-translation.html). 
+
 ## How to use the program
 
 ## Experiments
