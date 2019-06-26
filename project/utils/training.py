@@ -19,6 +19,15 @@ from settings import DEFAULT_DEVICE
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 
+## Truncated backpropagation
+def detach_states(states):
+    # https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/02-intermediate/language_model/main.py#L59
+    # a lighter implementation of 'repackage_hidden' from: https://github.com/pytorch/examples/blob/master/word_language_model/main.py#L103
+    if states is None:
+        return states
+    return [state.detach() for state in states]
+
+
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom"):
     best_valid_loss = float('inf')
     best_bleu_value = 0
@@ -88,7 +97,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
 
         # Forward, backprop, optimizer
         model.zero_grad()
-        scores = model(src, trg)
+        scores = model(src, trg.detach())
         # Remove <s> from trg and </s> from scores
         scores = scores[:-1]
         trg = trg[1:]

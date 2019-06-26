@@ -16,6 +16,7 @@ All these models can handle beam search.
 
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 
 from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
@@ -137,7 +138,7 @@ class Seq2Seq(nn.Module):
                 current_state.data.copy_(current_state.data.index_select(1, beam.get_current_origin()))
 
         tt = torch.cuda if self.device == "cuda" else torch
-        candidate = tt.LongTensor(beam.get_hyp(0))
+        candidate = Variable(tt.LongTensor(beam.get_hyp(0)))
         return candidate
 
 
@@ -204,7 +205,7 @@ class ContextSeq2Seq(Seq2Seq):
             current_state.data.copy_(current_state.data.index_select(1, beam.get_current_origin()))
 
         tt = torch.cuda if self.device == "cuda" else torch
-        candidate = tt.LongTensor(beam.get_hyp(0))
+        candidate =   Variable(tt.LongTensor(beam.get_hyp(0)))
         return candidate
 
 
