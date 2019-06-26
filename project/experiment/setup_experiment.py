@@ -85,12 +85,16 @@ class Experiment(object):
         self.corpus = self.args.corpus
         self.lang_code = self.args.lang_code
         self.reverse_lang_comb = self.args.reverse
+        #print("Reverse?", self.reverse_lang_comb)
         self.model_type = self.args.model_type
         self.truncate = self.args.max_len
         self.data_dir = self.args.data_dir
 
-        self.src_lang = self.lang_code if self.reverse_lang_comb else "en"
-        self.trg_lang = "en" if self.src_lang == self.lang_code else self.lang_code
+        self.src_lang = self.lang_code if self.reverse_lang_comb == True else "en"
+        self.trg_lang = self.lang_code if self.src_lang == "en" else "en"
+
+       # print("Src:", self.src_lang)
+        #print("Trg:", self.trg_lang)
 
         self.cuda = self.args.cuda
         self.lr = self.args.lr
