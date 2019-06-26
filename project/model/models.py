@@ -102,20 +102,15 @@ class Seq2Seq(nn.Module):
             h, c = states
             h = h.data.repeat(1,beam_size,1)
             c = c.data.repeat(1,beam_size,1)
+            print(h.shape)
             current_state = (h,c)
         else:
             h = states
-            h = h = h.data.repeat(1,beam_size,1)
+            h = h.data.repeat(1,beam_size,1)
             current_state = h
 
         for i in range(max_len):
             x = beam.get_current_state().to(self.device)
-            if isinstance(current_state, tuple):
-                h, c = current_state
-                h = h.squeeze(2)
-                c = c.squeeze(2)
-                current_state = (h, c)
-            else: current_state = current_state.squeeze(2)
             outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state)
             outputs_d = self.output(outputs_d)
             #### Log softmax to retrieve probabilities
