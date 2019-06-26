@@ -51,7 +51,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             logger.log('New best BLEU value: {:.3f}'.format(best_bleu_value))
 
         if avg_bleu_loss < best_valid_loss:
-            best_valid_loss = avg_bleu_loss
+            best_valid_loss = avg_val_loss
             logger.log('New best validation value: {:.3f}'.format(best_valid_loss))
 
         end_epoch_time = time.time()
