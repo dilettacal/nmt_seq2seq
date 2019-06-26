@@ -178,22 +178,22 @@ class ContextSeq2Seq(Seq2Seq):
         src = src.to(self.device)
         # print(src.size())
         outputs_e, states = self.encoder(src)
-        context = states
 
         h = states
         h = h.data.repeat(1, beam_size, 1)
         current_state = h
+        context = current_state
 
         for i in range(max_len):
             x = beam.get_current_state().to(self.device)  # shape: beam size [beam_size]
             ### first run: [2,1], sos, pad
             # x -> [1, beam_size]
-
-            outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state, context)
+            print(current_state.shape)
+            outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state, context, val=False)
             ## outputs_d: [1,2,500], hidden [2,2,500]
 
             outputs_d = self.output(outputs_d)
-            # print(outputs_d.shape) # shape: [1,2,trg_vocab_size]
+            # shape: [1,2,trg_vocab_size]
             #### Log softmax to retrieve probabilities
             dec_prob = torch.log(outputs_d.exp() / outputs_d.exp().sum())
 
@@ -201,16 +201,7 @@ class ContextSeq2Seq(Seq2Seq):
             if beam.advance(dec_prob.data.squeeze(0)):
                 break
 
-            if isinstance(current_state, tuple):
-                h, c = current_state
-                ###beam current origin is at the beginning a list of size beam_size
-                ###this contains a tensor [0,0]
-                # print(h.shape) #Target sizes: [2, 5, 500].  Tensor sizes: [5, 5, 500]
-                h.data.copy_(h.data.index_select(1, beam.get_current_origin()))
-                c.data.copy_(c.data.index_select(1, beam.get_current_origin()))
-                current_state = (h, c)
-            else:
-                current_state.data.copy_(current_state.data.index_select(1, beam.get_current_origin()))
+            current_state.data.copy_(current_state.data.index_select(1, beam.get_current_origin()))
 
         tt = torch.cuda if self.device == "cuda" else torch
         candidate = tt.LongTensor(beam.get_hyp(0))

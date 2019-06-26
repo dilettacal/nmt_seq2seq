@@ -57,6 +57,7 @@ class Beam(object):
         return self.prevKs[-1]
 
     def advance(self, workd_lk):
+        print(workd_lk.shape)
         """Advance the beam."""
         num_words = workd_lk.size(1)
 
