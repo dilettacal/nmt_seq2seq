@@ -105,12 +105,11 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
 
         ### Sutskever gradient clipping type
         if model_type == "s":
-            norm_range = [10,25]
-            grad_norm = check_gradient_norm(model)
-            print(grad_norm)
-            logger.log("Gradient Norm: {}".format(grad_norm))
+            ### this should clip the norm to the range [10, 25] as in the paper
+            grad_norm = get_gradient_norm(model)
             if grad_norm > 5:
-                customized_clip_value(model.parameters(), norm_range, grad_norm)
+                logger.log("Gradient Norm: {}".format(grad_norm))
+                customized_clip_value(model.parameters(), grad_norm)
 
         else:
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -179,7 +178,7 @@ def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
     return
 
 
-def check_gradient_norm(m):
+def get_gradient_norm(m):
     total_norm = 0
     for p in m.parameters():
         param_norm = p.grad.data.norm(2)
@@ -187,11 +186,9 @@ def check_gradient_norm(m):
     total_norm = total_norm ** (1. / 2)
     return total_norm
 
-def customized_clip_value(parameters, values, norm_value):
+def customized_clip_value(parameters, norm_value):
     if isinstance(parameters, torch.Tensor):
         parameters = [parameters]
-
-    #clip_value = [float(v) for v in values]
     for p in filter(lambda p: p.grad is not None, parameters):
         #p.grad.data.clamp_(min=clip_value[0], max=clip_value[1])
         p.grad = (5*p.grad)/norm_value

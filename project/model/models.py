@@ -140,7 +140,7 @@ class ContextSeq2Seq(Seq2Seq):
 
         self.output = nn.Linear(self.emb_size + self.hid_dim*2, experiment_config.trg_vocab_size)
 
-    def forward(self, src, trg, val=False):
+    def forward(self, src, trg):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
@@ -152,7 +152,7 @@ class ContextSeq2Seq(Seq2Seq):
         context = final_e
         for i in range(1, seq_len):
             # Decode
-            out_d, _ = self.decoder(x=input, h0=final_e, context=context, val=val)
+            out_d, _ = self.decoder(x=input, h0=final_e, context=context)
             outputs[i] = out_d
             input = trg[i]
 
@@ -184,7 +184,7 @@ class ContextSeq2Seq(Seq2Seq):
                 if last_word != self.eos_token:
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
                     # Decode with context!
-                    outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=True)
+                    outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=False)
                     x = self.output(outputs_d)
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
@@ -236,7 +236,11 @@ def count_parameters(model):
 
 def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
-    assert model_type in ["custom", "s", "c"]
+    decoder_type = experiment_config.decoder_type
+
+    if decoder_type == "context":
+        model_type = "c"
+        experiment_config.model_type = model_type
 
     if model_type == "custom":
         if experiment_config.bi and experiment_config.reverse_input:
@@ -245,10 +249,12 @@ def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
 
     elif model_type == "c":
         #### This returns a model like in Cho et al. #####
+        #experiment_config.bi = False
         if experiment_config.bi and experiment_config.reverse_input:
             experiment_config.reverse_input = False
         experiment_config.rnn_type = "gru"
         experiment_config.decoder_type = "context"
+        experiment_config.nlayers = 1
         return ContextSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
     elif model_type == "s":

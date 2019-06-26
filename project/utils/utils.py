@@ -58,7 +58,7 @@ class Logger():
             plt.ylabel(ylabel)
             plt.xlabel('epoch')
             keys = list(metric.keys())
-            print(keys)
+          #  print(keys)
             labels = [keys[0], keys[1]]
             values = list(metric.values())
             assert len(values) == 2 # one array for train, one for validation
