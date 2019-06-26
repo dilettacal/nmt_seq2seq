@@ -68,7 +68,8 @@ class Seq2Seq(nn.Module):
     def init_weights(self, func=None):
         if not func:
             pass
-        else: self.apply(func(self))
+        else:
+            self.apply(func)
 
         ### create encoder and decoder
 
@@ -139,7 +140,7 @@ class ContextSeq2Seq(Seq2Seq):
 
         self.output = nn.Linear(self.emb_size + self.hid_dim*2, experiment_config.trg_vocab_size)
 
-    def forward(self, src, trg):
+    def forward(self, src, trg, val=False):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
@@ -151,7 +152,7 @@ class ContextSeq2Seq(Seq2Seq):
         context = final_e
         for i in range(1, seq_len):
             # Decode
-            out_d, _ = self.decoder(x=input, h0=final_e, context=context)
+            out_d, _ = self.decoder(x=input, h0=final_e, context=context, val=val)
             outputs[i] = out_d
             input = trg[i]
 

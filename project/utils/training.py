@@ -33,7 +33,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
     for epoch in range(epochs):
         start_time = time.time()
-        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type)
+        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
         #val_iter, model, criterion, device, TRG,
         avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG)
 
@@ -107,6 +107,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
         if model_type == "s":
             norm_range = [10,25]
             grad_norm = check_gradient_norm(model)
+            print(grad_norm)
             logger.log("Gradient Norm: {}".format(grad_norm))
             if grad_norm > 5:
                 customized_clip_value(model.parameters(), norm_range, grad_norm)

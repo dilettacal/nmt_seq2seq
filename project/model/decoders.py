@@ -51,11 +51,15 @@ class ContextDecoder(Decoder):
 
         self.dropout = nn.Dropout(dropout_p)
 
-    def forward(self, x, h0, context=None, val=False):
-        if not val:
-            x = x.unsqueeze(0)
+    def forward(self, x, h0, context=None, val=True):
 
+        print(context.size())
+
+        if val:
+            x = x.unsqueeze(0)
+        print(x.size())
         embedded = self.dropout(self.embedding(x))  # [1,64,500] - seq_len, bs, emb_size, 1,1,emb_size
+        print(embedded.size())
 
         emb_con = torch.cat((embedded, context), dim=2)
 

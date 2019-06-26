@@ -24,6 +24,7 @@ def main():
     print("Running experiment on:", experiment.get_device())
    # args.corpus = "europarl"
     model_type = experiment.model_type
+    print("Model Type", model_type)
     src_lang = experiment.get_src_lang()
     trg_lang = experiment.get_trg_lang()
 
@@ -62,9 +63,9 @@ def main():
     model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
     print(model)
     if model_type == "c":
-        funct = normal_init_weights
+        funct = normal_init_weights(model)
     elif model_type == "s":
-        funct = uniform_init_weights
+        funct = uniform_init_weights(model)
     else: funct = None
     model.init_weights(funct)
     model = model.to(experiment.get_device())
