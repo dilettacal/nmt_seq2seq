@@ -86,7 +86,9 @@ class Beam(object):
         """Get hypotheses."""
         hyp = []
         # print(len(self.prevKs), len(self.nextYs), len(self.attn))
+        ### right to left
         for j in range(len(self.prevKs) - 1, -1, -1):
+            #### navigate nextYs till the second element (index 1) in the list
             hyp.append(self.nextYs[j + 1][k])
             k = self.prevKs[j][k]
         return hyp[::-1]
