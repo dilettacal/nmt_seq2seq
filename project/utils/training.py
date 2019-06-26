@@ -21,19 +21,24 @@ from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom"):
     best_valid_loss = float('inf')
+    best_bleu_value = 0
 
     for epoch in range(epochs):
         start_time = time.time()
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type)
         #val_iter, model, criterion, device, TRG,
         avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG)
-        #print(avg_bleu_loss)
-        scheduler.step(avg_val_loss)  # input bleu score
+        ### scheduler monitors BLEU value
+        scheduler.step(avg_bleu_loss)  # input bleu score
 
-        if avg_val_loss < best_valid_loss:
-            best_valid_loss = avg_val_loss
+        if avg_bleu_loss > best_bleu_value:
+            best_bleu_value = avg_bleu_loss
             logger.save_model(model.state_dict(), type=model_type)
-            logger.log('New best loss: {:.3f}'.format(best_valid_loss))
+            logger.log('New best BLEU value: {:.3f}'.format(best_bleu_value))
+
+        if avg_bleu_loss < best_valid_loss:
+            best_valid_loss = avg_bleu_loss
+            logger.log('New best validation value: {:.3f}'.format(best_bleu_value))
 
         end_epoch_time = time.time()
         total_epoch = convert(end_epoch_time-start_time)
