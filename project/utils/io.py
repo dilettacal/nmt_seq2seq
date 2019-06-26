@@ -127,6 +127,7 @@ class Seq2SeqDataset(Dataset):
             for i, (src_line, trg_line) in enumerate(zip(src_file, trg_file)):
                 if reduce > 0 and i == reduce:
                     break
+
                 src_line, trg_line = src_line.strip(), trg_line.strip()
                 if src_line != '' and trg_line != '':
                     if truncate > 0:
@@ -137,11 +138,11 @@ class Seq2SeqDataset(Dataset):
                         src_line = ' '.join(src_line)
                         trg_line = ' '.join(trg_line)
 
-                if reverse_input:
-                    src_line = src_line.split(" ")[::-1]
-                    src_line = ' '.join(src_line)
-                    if i < 2:
-                        print("Source inputs reversed:\t", src_line)
+                    if reverse_input:
+                        src_line = src_line.split(" ")[::-1]
+                        src_line = ' '.join(src_line)
+                        if i < 2:
+                            print("Source inputs reversed:\t", src_line)
 
                     examples.append(data.Example.fromlist(
                         [src_line, trg_line], fields))
