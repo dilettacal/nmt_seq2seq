@@ -108,7 +108,8 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
             ### this should clip the norm to the range [10, 25] as in the paper
             grad_norm = get_gradient_norm(model)
             if grad_norm > 5:
-                logger.log("Gradient Norm: {}".format(grad_norm))
+                if i % 100000 == 0:
+                    logger.log("Gradient Norm: {}".format(grad_norm))
                 customized_clip_value(model.parameters(), grad_norm)
 
         else:
