@@ -58,7 +58,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         print("Loading data...")
         start = time.time()
        # exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
-        exts = ("."+experiment.src_lang, "."+experiment.trg_lang)
+        exts = ("."+experiment.get_src_lang(), "."+experiment.get_trg_lang())
         train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
                                                  exts=exts, train="train", validation="val", test="test",
                                                  path=data_dir, reduce=reduce, reverse_input=reverse_input, truncate=experiment.truncate)

@@ -56,7 +56,7 @@ def experiment_parser():
     parser.add_argument('-lang_code', metavar='STR', default="de",
                         help="Provide language code, e.g. 'de'. This is the source or target language.")
 
-    parser.add_argument('--reverse', metavar="STR", default=False,
+    parser.add_argument('--reverse', type=str2bool, default=False,
                         help="Reverse language combination. Standard: EN > <lang>, if reverse, then <lang> > EN")
 
     parser.add_argument('--cuda', type=str2bool, default="True")
