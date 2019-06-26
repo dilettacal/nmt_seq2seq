@@ -93,8 +93,13 @@ def main():
     
     """
     #train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, logger=None, device=DEFAULT_DEVICE
-    train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG,
+    bleus, losses, ppl = train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG,
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(), model_type=model_type)
+
+    logger.plot(bleus, title="Validation BLEU/Epochs", ylabel="BLEU", file="bleu.png")
+    logger.plot(losses, title="Loss/Epochs", ylabel="losses", file="loss.png")
+    logger.plot(ppl, title="PPL/Epochs", ylabel="PPL", file="ppl.png")
+
 
     """
     Validation on test set

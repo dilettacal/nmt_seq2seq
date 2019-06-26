@@ -23,11 +23,25 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     best_valid_loss = float('inf')
     best_bleu_value = 0
 
+    bleus = []
+    losses = dict()
+    train_losses = []
+    val_losses = []
+    ppl = dict()
+    train_ppls = []
+    val_ppls = []
+
     for epoch in range(epochs):
         start_time = time.time()
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type)
         #val_iter, model, criterion, device, TRG,
         avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG)
+
+        val_losses.append(avg_val_loss)
+        train_losses.append(avg_val_loss)
+
+        bleus.append(avg_bleu_loss)
+
         ### scheduler monitors BLEU value
         scheduler.step(avg_bleu_loss)  # input bleu score
 
@@ -43,9 +57,21 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         end_epoch_time = time.time()
         total_epoch = convert(end_epoch_time-start_time)
 
+        val_ppl = math.exp(avg_val_loss)
+        train_ppl = math.exp(avg_train_loss)
+
+        val_ppls.append(val_ppl)
+        train_ppls.append(train_ppl)
+
         logger.log('Epoch: {} | Time: {}'.format(epoch+1, total_epoch))
-        logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {math.exp(avg_train_loss):7.3f}')
-        logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {math.exp(avg_val_loss):7.3f} | Val. BLEU: {avg_bleu_loss:.3f}')
+        logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
+        logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f} | Val. BLEU: {avg_bleu_loss:.3f}')
+
+    losses.update({"train": train_losses, "val": val_losses})
+    ppl.update({"train": train_ppls, "val": val_ppls})
+
+    return bleus, losses, ppl
+
 
 
 def train(train_iter, model, criterion, optimizer, device="cuda", model_type="custom", logger=None):

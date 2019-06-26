@@ -51,6 +51,26 @@ class Logger():
         if not os.path.isfile(os.path.join(self.path, self.file_name)): raise Exception("File does not exist!")
         return open(os.path.join(self.path, self.file_name)).read().split("\n")
 
+    def plot(self, metric, title, ylabel, file):
+        import matplotlib.pyplot as plt
+
+        if isinstance(metric, dict):
+            plt.title(title)
+            plt.ylabel(ylabel)
+            plt.xlabel('epoch')
+            plt.legend(list(metric.keys()), loc='upper left')
+            plt.plot(list(metric.values()))
+            plt.savefig(os.path.join(self.path, file, ".png"),dpi=300)
+
+        elif isinstance(metric, list):
+            plt.title(title)
+            plt.ylabel(ylabel)
+            plt.xlabel('epoch')
+            plt.legend(ylabel, loc='upper left')
+            plt.plot(metric)
+            plt.savefig(os.path.join(self.path, file, ".png"), dpi=300)
+
+
 
 class Plotter():
     def __init__(self, path, file_name):
