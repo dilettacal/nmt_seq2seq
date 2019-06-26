@@ -23,7 +23,7 @@ def main():
     experiment = Experiment()
     print("Running experiment on:", experiment.get_device())
    # args.corpus = "europarl"
-    model_type = "custom"
+    model_type = experiment.model_type
     src_lang = experiment.get_src_lang()
     trg_lang = experiment.get_trg_lang()
 
