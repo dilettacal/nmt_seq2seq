@@ -182,13 +182,13 @@ class ContextSeq2Seq(Seq2Seq):
         h = states
         h = h.data.repeat(1, beam_size, 1)
         current_state = h
-        context = current_state
+        context = current_state.clone()
 
         for i in range(max_len):
             x = beam.get_current_state().to(self.device)  # shape: beam size [beam_size]
             ### first run: [2,1], sos, pad
             # x -> [1, beam_size]
-            print(current_state.shape)
+          #  print(current_state.shape) # [n_layers, beam, hid]
             outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state, context, val=False)
             ## outputs_d: [1,2,500], hidden [2,2,500]
 
@@ -206,47 +206,6 @@ class ContextSeq2Seq(Seq2Seq):
         tt = torch.cuda if self.device == "cuda" else torch
         candidate = tt.LongTensor(beam.get_hyp(0))
         return candidate
-
-
-    def old_beam_search(self, src, beam_size, max_len, remove_tokens=[]):
-        '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'
-         Slightly modified from: https://lukemelas.github.io/machine-translation.html, to handle context
-        '''
-        src = src.to(self.device)
-        # Encode
-        outputs_e, states = self.encoder(src)  # batch size = 1
-        ##### get context
-        context = states
-        # Start with '<s>'
-        init_lprob = -1e10
-        init_sent = [self.bos_token]
-        best_options = [(init_lprob, init_sent, states)]  # beam
-        # Beam search
-        k = beam_size  # store best k options
-        for length in range(max_len):  # maximum target length
-            options = []  # candidates
-            for lprob, sentence, current_state in best_options:
-                # Prepare last word
-                last_word = sentence[-1]
-                if last_word != self.eos_token:
-                    last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
-                    # Decode with context!
-                    outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=False)
-                    x = self.output(outputs_d)
-                    x = x.squeeze().data.clone()
-                    # Block predictions of tokens in remove_tokens
-                    for t in remove_tokens: x[t] = -10e10
-                    lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
-                    # Add top k candidates to options list for next word
-                    for index in torch.topk(lprobs, k)[1]:
-                        option = (float(lprobs[index]) + lprob, sentence + [index], new_state)
-                        options.append(option)
-                else:  # keep sentences ending in '</s>' as candidates
-                    options.append((lprob, sentence, current_state))
-            options.sort(key=lambda x: x[0], reverse=True)  # sort by lprob
-            best_options = options[:k]  # place top candidates in beam
-        best_options.sort(key=lambda x: x[0], reverse=True)
-        return best_options
 
 
 class AttentionSeq2Seq(Seq2Seq):

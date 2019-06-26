@@ -57,8 +57,11 @@ class Beam(object):
         return self.prevKs[-1]
 
     def advance(self, workd_lk):
-        print(workd_lk.shape)
+       # print(workd_lk.shape)
         """Advance the beam."""
+        if len(list(workd_lk.size()))== 1:
+            workd_lk = workd_lk.unsqueeze(0)
+
         num_words = workd_lk.size(1)
 
         # Sum the previous scores.
