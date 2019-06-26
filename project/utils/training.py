@@ -76,7 +76,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
 def train(train_iter, model, criterion, optimizer, device="cuda", model_type="custom", logger=None):
    # print(device)
-
+    norm_changes = 0
     # Train model
     model.train()
     losses = AverageMeter()
@@ -108,14 +108,15 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
             ### this should clip the norm to the range [10, 25] as in the paper
             grad_norm = get_gradient_norm(model)
             if grad_norm > 5:
-                if i % 100000 == 0:
-                    logger.log("Gradient Norm: {}".format(grad_norm))
+                norm_changes += 1
                 customized_clip_value(model.parameters(), grad_norm)
 
         else:
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
 
+
+    logger.log("Gradient Norm Changes: {}".format(norm_changes))
     return losses.avg
 
 
