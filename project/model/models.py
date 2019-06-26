@@ -20,6 +20,7 @@ import torch.nn as nn
 from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
+from project.model.utils import Beam
 from settings import VALID_CELLS
 
 
@@ -52,6 +53,7 @@ class Seq2Seq(nn.Module):
         self.unk_token = tokens_bos_eos_pad_unk[3]
         self.device = experiment_config.get_device()
         rnn_type = experiment_config.rnn_type
+        self.cell = rnn_type
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
@@ -86,14 +88,62 @@ class Seq2Seq(nn.Module):
         x = self.output(x)
         return x
 
-    def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
+    def predict(self, src, beam_size=1, max_len=30, sos_eos_pad=[2,3,1]):
+        return self.beam_search(src=src, beam_size=beam_size, max_len=max_len, sos_eos_pad=sos_eos_pad)
+
+    def beam_search(self, src, beam_size, max_len, sos_eos_pad=[]):
+        beam = Beam(size=beam_size, bos=sos_eos_pad[0], eos=sos_eos_pad[1], pad=sos_eos_pad[2], cuda=True if self.device == "cuda" else False)
+
+        src = src.to(self.device)
+       # print(src.size())
+        outputs_e, states = self.encoder(src)
+
+        if isinstance(states, tuple):
+            h, c = states
+            h = h.data.repeat(1,beam_size,1)
+            c = c.data.repeat(1,beam_size,1)
+            current_state = (h,c)
+        else:
+            h = states
+            h = h = h.data.repeat(1,beam_size,1)
+            current_state = h
+
+        for i in range(max_len):
+            x = beam.get_current_state().to(self.device)
+            if isinstance(current_state, tuple):
+                h, c = current_state
+                h = h.squeeze(2)
+                c = c.squeeze(2)
+                current_state = (h, c)
+            else: current_state = current_state.squeeze(2)
+            outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state)
+            outputs_d = self.output(outputs_d)
+            #### Log softmax to retrieve probabilities
+            dec_prob = torch.log(outputs_d.exp() / outputs_d.exp().sum())
+
+            if beam.advance(dec_prob.data.squeeze(0)):
+                break
+
+            if isinstance(current_state, tuple):
+                h, c = current_state
+                h.data.copy_(h.data.index_select(0, beam.get_current_origin()))
+                c.data.copy_(c.data.index_select(0, beam.get_current_origin()))
+                current_state = (h,c)
+            else:
+                current_state.data.copy_(current_state.data.index_select(0, beam.get_current_origin()))
+
+        tt = torch.cuda if self.device == "cuda" else torch
+        return tt.LongTensor(beam.get_hyp(0))
+
+
+    def old_predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
-        beam_outputs = self.beam_search(src, beam_size, max_len=max_len,
-                                        remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
+        beam_outputs = self.old_beam_search(src, beam_size, max_len=max_len,
+                                            remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
         top1 = beam_outputs[0][1]  # a list of word indices (as ints)
         return top1
 
-    def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
+    def old_beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.
         Slightly modified from: https://lukemelas.github.io/machine-translation.html
         '''
@@ -161,7 +211,7 @@ class ContextSeq2Seq(Seq2Seq):
         return x
 
 
-    def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
+    def old_beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.'
          Slightly modified from: https://lukemelas.github.io/machine-translation.html, to handle context
         '''
@@ -207,7 +257,7 @@ class AttentionSeq2Seq(Seq2Seq):
         super().__init__(experiment_config, token_bos_eos_pad_unk)
         ### add attention stuff
 
-    def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
+    def old_beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         ## modifiy with attention stuff
         pass
 

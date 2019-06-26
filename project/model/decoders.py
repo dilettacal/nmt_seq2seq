@@ -34,7 +34,7 @@ class Decoder(nn.Module):
 
         self.dropout = nn.Dropout(self.dropout_p)
 
-    def forward(self, x, h0, context=None):
+    def forward(self, x, h0):
         # Embed text and pass through GRU
         x = self.embedding(x)
         x = self.dropout(x)
