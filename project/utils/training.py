@@ -130,7 +130,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
 
 
 
-def validate(val_iter, model, criterion, device, TRG, beam_size = 2, max_len=30):
+def validate(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30):
     model.eval()
     losses = AverageMeter()
     sent_candidates = []
