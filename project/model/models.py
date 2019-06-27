@@ -172,7 +172,7 @@ class ContextSeq2Seq(Seq2Seq):
         x = self.output(x)
         return x
 
-    def beam_search(self, src, beam_size, max_len, sos_eos_pad=[]):
+    def beam_search(self, src, beam_size, max_len=30, sos_eos_pad=[]):
         beam = Beam(size=beam_size, bos=sos_eos_pad[0], eos=sos_eos_pad[1], pad=sos_eos_pad[2],
                     cuda=True if self.device == "cuda" else False)
 
