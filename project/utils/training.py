@@ -28,7 +28,7 @@ def detach_states(states):
     return [state.detach() for state in states]
 
 
-def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom"):
+def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom", max_len=30):
     best_valid_loss = float('inf')
     best_bleu_value = 0
 
@@ -44,7 +44,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         start_time = time.time()
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
         #val_iter, model, criterion, device, TRG,
-        avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG)
+        avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG, max_len)
 
         val_losses.append(avg_val_loss)
         train_losses.append(avg_train_loss)
@@ -130,7 +130,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
 
 
 
-def validate(val_iter, model, criterion, device, TRG, beam_size = 2):
+def validate(val_iter, model, criterion, device, TRG, beam_size = 2, max_len=30):
     model.eval()
     losses = AverageMeter()
     sent_candidates = []
@@ -155,7 +155,7 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 2):
 
             #### BLEU
             # compute scores with greedy search
-            out = model.predict(src, beam_size=beam_size)  # out is a list
+            out = model.predict(src, beam_size=beam_size, max_len=max_len)  # out is a list
 
             ## Prepare sentences for BLEU
             ref = list(tgt.data.squeeze())
