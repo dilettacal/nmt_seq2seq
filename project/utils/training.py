@@ -44,7 +44,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         start_time = time.time()
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
         #val_iter, model, criterion, device, TRG,
-        avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG, max_len)
+        avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG, max_len=max_len)
 
         val_losses.append(avg_val_loss)
         train_losses.append(avg_train_loss)
