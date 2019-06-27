@@ -41,7 +41,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     for epoch in range(epochs):
         start_time = time.time()
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
-        avg_val_loss = validate(val_iter, model, criterion, device, TRG, max_len=max_len)
+        avg_val_loss = validate(val_iter, model, criterion, device)
 
         val_losses.append(avg_val_loss)
         train_losses.append(avg_train_loss)
@@ -136,7 +136,6 @@ def validate(val_iter, model, criterion, device):
             scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
 
             tgt = tgt.view(scores.size(0))
-
             # Calculate loss
             loss = criterion(scores, tgt)
             losses.update(loss.item())
