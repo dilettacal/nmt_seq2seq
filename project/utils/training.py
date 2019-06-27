@@ -30,9 +30,7 @@ def detach_states(states):
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom", max_len=30):
     best_valid_loss = float('inf')
-    best_bleu_value = 0
 
-    bleus = []
     losses = dict()
     train_losses = []
     val_losses = []
@@ -43,24 +41,17 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     for epoch in range(epochs):
         start_time = time.time()
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
-        #val_iter, model, criterion, device, TRG,
-        avg_val_loss, avg_bleu_loss = validate(val_iter, model, criterion, device, TRG, max_len=max_len)
+        avg_val_loss = validate(val_iter, model, criterion, device, TRG, max_len=max_len)
 
         val_losses.append(avg_val_loss)
         train_losses.append(avg_train_loss)
 
-        bleus.append(avg_bleu_loss)
+        ### scheduler monitors val loss value
+        scheduler.step(avg_val_loss)  # input bleu score
 
-        ### scheduler monitors BLEU value
-        scheduler.step(avg_bleu_loss)  # input bleu score
-
-        if avg_bleu_loss > best_bleu_value:
-            best_bleu_value = avg_bleu_loss
-            logger.save_model(model.state_dict())
-            logger.log('New best BLEU value: {:.3f}'.format(best_bleu_value))
-
-        if avg_bleu_loss < best_valid_loss:
+        if avg_val_loss < best_valid_loss:
             best_valid_loss = avg_val_loss
+            logger.save_model(model.state_dict())
             logger.log('New best validation value: {:.3f}'.format(best_valid_loss))
 
         end_epoch_time = time.time()
@@ -74,12 +65,12 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
         logger.log('Epoch: {} | Time: {}'.format(epoch+1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
-        logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f} | Val. BLEU: {avg_bleu_loss:.3f}')
+        logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f}')
 
     losses.update({"train": train_losses, "val": val_losses})
     ppl.update({"train": train_ppls, "val": val_ppls})
 
-    return bleus, losses, ppl
+    return losses, ppl
 
 
 
@@ -130,7 +121,30 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
 
 
 
-def validate(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30):
+def validate(val_iter, model, criterion, device):
+    model.eval()
+    losses = AverageMeter()
+    with torch.no_grad():
+        for i, batch in enumerate(val_iter):
+            src = batch.src.to(device)
+            tgt = batch.trg.to(device)
+            ### compute normal scores
+            scores = model(src, tgt)
+            scores = scores[:-1]
+            tgt = tgt[1:]
+            # Reshape for loss function
+            scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
+
+            tgt = tgt.view(scores.size(0))
+
+            # Calculate loss
+            loss = criterion(scores, tgt)
+            losses.update(loss.item())
+
+    return losses.avg
+
+
+def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30):
     model.eval()
     losses = AverageMeter()
     sent_candidates = []
@@ -147,6 +161,8 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30)
 
             # Reshape for loss function
             scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
+
+            ##### top1 = output.max(1)[1]
             tgt = tgt.view(scores.size(0))
 
             # Calculate loss
@@ -169,7 +185,10 @@ def validate(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30)
             sent_references.append(sent_ref)
 
     smooth = SmoothingFunction()
-    nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references], hypotheses=[hyp.split() for hyp in sent_candidates], smoothing_function=smooth.method4) *100
+    nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
+                            hypotheses=[hyp.split() for hyp in sent_candidates],
+                            smoothing_function=smooth.method4) * 100
+
     return losses.avg, nlkt_bleu
 
 
@@ -205,7 +224,6 @@ def customized_clip_value(parameters, norm_value):
         p.grad = (5*p.grad)/norm_value
 
 
-
 def get_gradient_statistics(model):
     parameters = list(filter(lambda p: p.grad is not None, model.parameters()))
     min_stats = min(p.grad.data.min() for p in parameters)
@@ -214,7 +232,3 @@ def get_gradient_statistics(model):
 
     return {"min": min_stats, "max": max_stats, "mean": mean_stats}
 
-def flatten_tensor(t):
-    t = t.reshape(1, -1)
-    t = t.squeeze()
-    return t

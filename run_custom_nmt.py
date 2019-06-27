@@ -12,7 +12,7 @@ from project.experiment.setup_experiment import experiment_parser, Experiment
 from project.model.models import Seq2Seq, count_parameters, get_nmt_model, uniform_init_weights, normal_init_weights
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
-from project.utils.training import validate, train_model
+from project.utils.training import validate, train_model, validate_test_set
 from project.utils.utils import convert, Logger
 from settings import MODEL_STORE
 import math
@@ -80,7 +80,7 @@ def main():
     # Create loss function and optimizer
     criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=10, factor=0.25, verbose=True,
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10, factor=0.25, verbose=True,
                                                            cooldown=6, min_lr=1e-5)
 
     # Create directory for logs, create logger, log hyperparameters
@@ -105,7 +105,6 @@ def main():
     bleus, losses, ppl = train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG,
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(), model_type=model_type, max_len=MAX_LEN)
 
-    logger.plot(bleus, title="Validation BLEU/Epochs", ylabel="BLEU", file="bleu")
     logger.plot(losses, title="Loss/Epochs", ylabel="losses", file="loss")
     logger.plot(ppl, title="PPL/Epochs", ylabel="PPL", file="ppl")
 
@@ -121,29 +120,30 @@ def main():
     ### Evaluation on test set
     beam_size = 1
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    val_loss, bleu= validate(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    val_loss, bleu= validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
     logger.log(
-        f'\t Val. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Val. BLEU: {bleu:.3f}')
+        f'\t Test. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Test. BLEU: {bleu:.3f}')
+
 
     beam_size = 2
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    val_loss, bleu = validate(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(),
+    val_loss, bleu = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(),
                               TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
     logger.log(
-        f'\t Val. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Val. BLEU: {bleu:.3f}')
+        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. BLEU: {bleu:.3f}')
 
 
     beam_size = 5
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    val_loss, bleu = validate(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    val_loss, bleu = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
     logger.log(
-        f'\t Val. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Val. BLEU: {bleu:.3f}')
+        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. BLEU: {bleu:.3f}')
 
     beam_size = 12
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    val_loss, bleu = validate(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    val_loss, bleu = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
     logger.log(
-        f'\t Val. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Val. BLEU: {bleu:.3f}')
+        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. BLEU: {bleu:.3f}')
 
     logger.log('Finished in {}'.format(convert(time.time() - start_time)))
     return
