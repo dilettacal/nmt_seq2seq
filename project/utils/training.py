@@ -214,7 +214,7 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
             src = batch.src.to(device)
             tgt = batch.trg.to(device)
             ### compute normal scores
-            scores = model(src, tgt)
+            scores = model(src, tgt.detach())
 
             scores = scores[:-1]
             tgt = tgt[1:]

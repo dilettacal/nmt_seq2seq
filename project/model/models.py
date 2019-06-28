@@ -22,7 +22,7 @@ from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
 from project.model.utils import Beam
-from settings import VALID_CELLS, SEED
+from settings import VALID_CELLS, SEED, TEACHER_RATIO
 
 """
 Parameters:
@@ -75,7 +75,7 @@ class Seq2Seq(nn.Module):
 
         ### create encoder and decoder
 
-    def forward(self, src, trg, teacher_forcing_ratio=0.8):
+    def forward(self, src, trg, teacher_forcing_ratio=TEACHER_RATIO):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
@@ -170,7 +170,7 @@ class ContextSeq2Seq(Seq2Seq):
         self.output = nn.Linear(self.emb_size + self.hid_dim*2,
                                 experiment_config.trg_vocab_size)
 
-    def forward(self, src, trg,  teacher_forcing_ratio=0.8):
+    def forward(self, src, trg,  teacher_forcing_ratio=TEACHER_RATIO):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
@@ -182,7 +182,7 @@ class ContextSeq2Seq(Seq2Seq):
         input = trg[0, :]
 
         for t in range(1, seq_len):
-            out_d, states = self.decoder(input, states, context)
+            out_d, states = self.decoder(input, states, context, val=True)
             x = self.dropout(torch.tanh(out_d))
             x = self.output(x)
             outputs[t] = x
