@@ -93,7 +93,7 @@ def main():
 
     logger.log(f'Trainable parameters: {count_parameters(model):,}')
 
-    logger.save(experiment.get_dict(), "experiment")
+    logger.pickle_obj(experiment.get_dict(), "experiment")
 
     start_time = time.time()
 
@@ -105,6 +105,7 @@ def main():
     bleus, losses, ppl = train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG,
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(), model_type=model_type, max_len=MAX_LEN)
 
+    logger.plot(bleus, title="Validation BLEU/Epochs", ylabel="BLEU", file="bleu")
     logger.plot(losses, title="Loss/Epochs", ylabel="losses", file="loss")
     logger.plot(ppl, title="PPL/Epochs", ylabel="PPL", file="ppl")
 

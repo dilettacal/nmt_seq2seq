@@ -2,7 +2,6 @@
 This script contains methods to train the model and to modify gradients.
 
 Code inspirations:
-- Luke Melas: https://lukemelas.github.io/machine-translation.html
 - Ben Trevett 2018: https://github.com/bentrevett/pytorch-seq2seq/
 
 """
@@ -19,15 +18,6 @@ from settings import DEFAULT_DEVICE
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 
-## Truncated backpropagation
-def detach_states(states):
-    # https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/02-intermediate/language_model/main.py#L59
-    # a lighter implementation of 'repackage_hidden' from: https://github.com/pytorch/examples/blob/master/word_language_model/main.py#L103
-    if states is None:
-        return states
-    return [state.detach() for state in states]
-
-
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom", max_len=30):
     best_valid_loss = float('inf')
 
@@ -41,13 +31,11 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     for epoch in range(epochs):
         start_time = time.time()
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
-        avg_val_loss = validate(val_iter, model, criterion, device)
+        bleu_val, avg_val_loss = validate(val_iter, model, criterion, device, TRG)
 
         val_losses.append(avg_val_loss)
         train_losses.append(avg_train_loss)
 
-        ### scheduler monitors val loss value
-        scheduler.step(avg_val_loss)  # input bleu score
 
         if avg_val_loss < best_valid_loss:
             best_valid_loss = avg_val_loss
@@ -60,12 +48,15 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         val_ppl = math.exp(avg_val_loss)
         train_ppl = math.exp(avg_train_loss)
 
+        ### scheduler monitors val loss value
+        scheduler.step(val_ppl)  # input bleu score
+
         val_ppls.append(val_ppl)
         train_ppls.append(train_ppl)
 
         logger.log('Epoch: {} | Time: {}'.format(epoch+1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
-        logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f}')
+        logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f} | Val. BLEU: {bleu_val:.3f}')
 
     losses.update({"train": train_losses, "val": val_losses})
     ppl.update({"train": train_ppls, "val": val_ppls})
@@ -121,26 +112,80 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
 
 
 
-def validate(val_iter, model, criterion, device):
+def validate(val_iter, model, criterion, device, TRG):
     model.eval()
     losses = AverageMeter()
+    sent_candidates = []
+    sent_references = []
+
     with torch.no_grad():
         for i, batch in enumerate(val_iter):
             src = batch.src.to(device)
-            tgt = batch.trg.to(device)
-            ### compute normal scores
-            scores = model(src, tgt)
+            trg = batch.trg.to(device)
+            #### compute model scores
+            ### These are still raw computations from the linear output layer from the model
+            ### As CrossEntropyLoss wrapper was used for loss computation
+            ### the log softmax operation is done by this object internally
+            scores = model(src, trg)
             scores = scores[:-1]
-            tgt = tgt[1:]
+            trg = trg[1:]
+
+            #### Greedy selection #####
+            probs, maxwords = torch.max(scores.data.select(1, 0), dim=1) ## 0 because validation is with bs = 1
+            out = [TRG.vocab.itos[x] for x in maxwords]
+
             # Reshape for loss function
             scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
 
-            tgt = tgt.view(scores.size(0))
+            trg = trg.view(scores.size(0))
+
             # Calculate loss
-            loss = criterion(scores, tgt)
+            loss = criterion(scores, trg)
             losses.update(loss.item())
 
-    return losses.avg
+            #### BLEU
+            ## Prepare sentences for BLEU
+            ref = list(trg.data.squeeze())
+
+            ### Special tokens are not included in the bleu comparison (UNK is not removed)
+            remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
+
+            ### cleaning the prediction
+            out = [w for w in out if w not in remove_tokens]
+
+            ### cleaning here the reference
+            ref = [w for w in ref if w not in remove_tokens]
+
+            sent_out = ' '.join(out)
+            sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+            sent_candidates.append(sent_out)
+            sent_references.append(sent_ref)
+
+        smooth = SmoothingFunction()
+        nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
+                                hypotheses=[hyp.split() for hyp in sent_candidates],
+                                smoothing_function=smooth.method4) * 100
+
+    return losses.avg, nlkt_bleu
+
+
+"""
+def check_translation():
+    for k in range(src.size(1)):
+        src_bs1 = src.select(1, k).unsqueeze(1)  # bs1 means batch size 1
+        trg_bs1 = trg.select(1, k).unsqueeze(1)
+        model.eval()  # predict mode
+        predictions = model.predict(src_bs1, beam_size=1)
+        predictions_beam = model.predict(src_bs1, beam_size=2)
+        model.train()  # test mode
+        probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
+        logger.log('Source: ', ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data))
+        logger.log('Target: ', ' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data))
+        logger.log('Training Pred: ', ' '.join(TRG.vocab.itos[x] for x in maxwords))
+        logger.log('Validation Greedy Pred: ', ' '.join(TRG.vocab.itos[x] for x in predictions))
+        logger.log('Validation Beam Pred: ', ' '.join(TRG.vocab.itos[x] for x in predictions_beam))
+"""
+
 
 
 def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30):
@@ -170,7 +215,7 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
 
             #### BLEU
             # compute scores with greedy search
-            out = model.predict(src, beam_size=beam_size, max_len=max_len)  # out is a list
+            out = model.predict_sequence(src, beam_size=beam_size, max_len=max_len)  # out is a list
 
             ## Prepare sentences for BLEU
             ref = list(tgt.data.squeeze())

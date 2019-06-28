@@ -1,20 +1,5 @@
-from __future__ import absolute_import
-
-import os
-import time
-
-import math
 import torch
 import numpy as np
-from nltk.translate.bleu_score import corpus_bleu, sentence_bleu, SmoothingFunction
-from torchtext import data
-from torchtext.data import Field
-from torchtext.datasets import TranslationDataset
-
-from project.utils.bleu import get_moses_multi_bleu
-from project.utils.io import Seq2SeqDataset, SrcField, TrgField
-from project.utils.utils import convert
-from settings import DATA_DIR, DATA_DIR_RAW, DATA_DIR_PREPRO
 
 SEED = 1234
 torch.manual_seed(SEED)
@@ -56,88 +41,39 @@ def beam_search_decoder(data, k):
 
 if __name__ == '__main__':
 
-	#### multubleu tests
+	words = dict({0: 'the', 1:'big', 2:'house', 3:'red', 4:'yellow'})
+
+	data = [[0.1, 0.2, 0.3, 0.4, 0.5],
+			[0.5, 0.4, 0.3, 0.2, 0.1],
+			[0.1, 0.2, 0.3, 0.4, 0.5],
+			[0.5, 0.4, 0.3, 0.2, 0.1],
+			[0.1, 0.2, 0.3, 0.4, 0.5],
+			[0.5, 0.4, 0.3, 0.2, 0.1],
+			[0.1, 0.2, 0.3, 0.4, 0.5],
+			[0.5, 0.4, 0.3, 0.2, 0.1],
+			[0.1, 0.2, 0.3, 0.4, 0.5],
+			[0.5, 0.4, 0.3, 0.2, 0.1]]
+	data = torch.tensor(data)
+	# decode sequence
+	result = beam_search_decoder(data, 3)
+	# print result
+	for seq in result:
+		print(seq)
+		sentence = seq[0]
+		sentence = [words.get(idx, "unk") for idx in sentence]
+		print(sentence)
 
 
-	refernces = ["Hallo, ich bin eine Referenz", "Ich bin die zweite Refi", "Wie geht es dir?", "Ansonsten alles gut?"]
-	candidates = ["Hallo, ich bin eine Referenz", "Ich bin die zweite Refi", "Laeuft alles gut?", "Ansonsten alles gut?"]
-
-	bleu = get_moses_multi_bleu(references=refernces, hypotheses=candidates, lowercase=True)
-	#    sacrebl = sacre_corpus_bleu(sys_stream=sent_references, ref_streams=sent_candidates, lowercase=True)
-	nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in refernces],
-							hypotheses=[hyp.split() for hyp in candidates], smoothing_function=SmoothingFunction().method4)
-
-	nltk_sent_bleu = [[sentence_bleu(ref, hyp, smoothing_function=SmoothingFunction().method4)*100] for (ref, hyp) in zip([[sent] for sent in refernces], candidates)]
+"""
+[[4, 0, 4, 0, 4, 0, 4, 0, 4, 0], 0.025600863289563108]
+[[4, 0, 4, 0, 4, 0, 4, 0, 4, 1], 0.03384250043584397]
+[[4, 0, 4, 0, 4, 0, 4, 0, 3, 0], 0.03384250043584397]
 
 
-	sacre_corpus = [[cb(sys_stream=hyp, ref_streams=ref)] for (ref, hyp) in zip(refernces, candidates)]
-
-	sacre_corpus = list(x[0].score for x in sacre_corpus)
-	print(bleu)
-	print("NLTK corpus", nlkt_bleu*100)
-	print(np.mean(nltk_sent_bleu))
-	print(np.mean(sacre_corpus))
-
-	print("Mean of all the computations:")
-
-
-	exit()
-
-    ### test datase
-	SRC = SrcField()
-	TRG = TrgField()
-	start = time.time()
-	train, val, test = Seq2SeqDataset.splits(path=os.path.join(DATA_DIR_PREPRO, "europarl", "de", "splits"), root="", exts=(".en", ".de"),
-											 train="train", validation="val", test="test", fields=(SRC, TRG), reduce= [500000,100000,10000])
-	print("Duration:", convert(time.time()-start))
-
-	### 802919 382342 89213
-	print(len(train))
-	print(len(val))
-	print(len(test))
-
-	SRC.build_vocab(train, val, max_size=30000, min_freq=2)
-	TRG.build_vocab(train, val, max_size=50000,  min_freq=2)
-	# 50981 EN
-#	# 146288 DE
-	print(len(SRC.vocab))
-	print(len(TRG.vocab))
-
-	# Create iterators to process text in batches of approx. the same length
-	train_iter = data.BucketIterator(train, batch_size=10, device="cuda", repeat=False,
-									 sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=True)
-	val_iter = data.Iterator(val, batch_size=1, device="cuda", repeat=False, sort_key=lambda x: len(x.src))
-	test_iter = data.Iterator(test, batch_size=1, device="cuda", repeat=False, sort_key=lambda x: len(x.src))
-
-
-	first_train_batch = next(iter(train_iter))
-	first_val_batch = next(iter(val_iter))
-	first_test_batch = next(iter(test_iter))
-
-	print("Train batch...")
-	srcs = [' '.join([SRC.vocab.itos[i] for i in sent]) for sent in first_train_batch.src.t()]
-	trgs = [' '.join([TRG.vocab.itos[i] for i in sent]) for sent in first_train_batch.trg.t()]
-
-	print("First train batch:")
-	all_togheter = list(zip(srcs, trgs))
-	for elem in all_togheter:
-		print(elem)
-
-	print(SRC.reverse(first_train_batch.src))
-	print(TRG.reverse(first_train_batch.trg))
-
-	print("Val batch...")
-	srcs = [' '.join([SRC.vocab.itos[i] for i in sent]) for sent in first_val_batch.src.t()]
-	trgs = [' '.join([TRG.vocab.itos[i] for i in sent]) for sent in first_val_batch.trg.t()]
-
-	print("First val batch:")
-	all_togheter = list(zip(srcs, trgs))
-	for elem in all_togheter:
-		print(elem)
-
-
-
-
-
+My:
+[[4, 0, 4, 0, 4, 0, 4, 0, 4, 0], tensor(0.0256)]
+[[4, 0, 4, 0, 4, 0, 4, 0, 4, 1], tensor(0.0338)]
+[[4, 0, 4, 0, 4, 0, 4, 0, 3, 0], tensor(0.0338)]
+"""
 
 

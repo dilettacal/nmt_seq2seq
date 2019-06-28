@@ -39,11 +39,13 @@ class Logger():
             print(info)
 
     def save_model(self, model_dict):
-
         torch.save(model_dict, os.path.join(self.path, "model.pkl"))
 
-    def save(self, obj_dict, name):
+    def pickle_obj(self, obj_dict, name):
         torch.save(obj_dict, os.path.join(self.path, str(name + ".pkl")), pickle_module=dill)
+
+    def persist_translations(self, src, trg, preds):
+        pass
 
     def load(self):
         if not os.path.isfile(os.path.join(self.path, self.file_name)): raise Exception("File does not exist!")

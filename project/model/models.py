@@ -89,7 +89,7 @@ class Seq2Seq(nn.Module):
         x = self.output(x)
         return x
 
-    def predict(self, src, beam_size=1, max_len=30, sos_eos_pad=[2,3,1]):
+    def predict_sequence(self, src, beam_size=1, max_len=30, sos_eos_pad=[2, 3, 1]):
         return self.beam_search(src=src, beam_size=beam_size, max_len=max_len, sos_eos_pad=sos_eos_pad)
 
     def beam_search(self, src, beam_size, max_len, sos_eos_pad=[]):
