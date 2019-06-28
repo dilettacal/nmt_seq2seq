@@ -97,8 +97,8 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
 
     # Create iterators to process text in batches of approx. the same length
     train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False,
-                                     sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=True)
-    val_iter = data.Iterator(val, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src))
+                                     sort_key=lambda x: len(x.src), sort_within_batch=True, shuffle=True)
+    val_iter = data.BucketIterator(val, batch_size=experiment.batch_size//2, device=device, repeat=False, sort_key=lambda x: len(x.src), sort_within_batch=True, shuffle=False)
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: len(x.src), shuffle=False, sort_within_batch=True)
 
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test
@@ -136,14 +136,5 @@ def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_fi
     logger.log("Number of source words (types): {}".format(len(src_field.vocab)))
     logger.log("Number of target words (types): {}".format(len(trg_field.vocab)))
 
-
-def load_embeddings(SRC, TRG, np_src_file, np_trg_file):
-    '''Load English and German embeddings from saved numpy files'''
-    if os.path.isfile(np_src_file) and os.path.isfile(np_trg_file):
-        emb_tr_src = torch.from_numpy(np.load(np_src_file))
-        emb_tr_trg = torch.from_numpy(np.load(np_trg_file))
-    else:
-        raise Exception('Vectors not available to load from numpy file')
-    return emb_tr_src, emb_tr_trg
 
 

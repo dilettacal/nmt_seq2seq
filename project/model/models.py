@@ -64,7 +64,8 @@ class Seq2Seq(nn.Module):
                                    dropout_p=self.dp)
 
         self.dropout = nn.Dropout(experiment_config.dp)
-        self.output = nn.Linear(self.hid_dim, experiment_config.trg_vocab_size)
+        self.output = nn.Linear(self.hid_dim,
+                                experiment_config.trg_vocab_size)
 
     def init_weights(self, func=None):
         if not func:
@@ -91,6 +92,8 @@ class Seq2Seq(nn.Module):
         # first input to the decoder is the <sos> tokens
         input = trg[0, :]
         ### unrolling the decoder word by word
+        #print("Max seq length:", max_len)
+        used_teacher = 0
         for t in range(1, max_len):
             out_d, states = self.decoder(input, states)
             x = self.dropout(torch.tanh(out_d))
@@ -98,10 +101,9 @@ class Seq2Seq(nn.Module):
             outputs[t] = x
             teacher_force = random.random() < teacher_forcing_ratio
             top1 = x.squeeze(0).max(1)[1] # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities
-            #print(x.size())
-            #print(trg[t].size())
+            used_teacher += 1 if teacher_force else 0
             input = (trg[t] if teacher_force else top1)
-
+        #print("Teacher forcing/max_len (%):", (used_teacher/max_len)*100)
         return outputs
 
     def predict_sequence(self, src, beam_size=1, max_len=30, sos_eos_pad=[2, 3, 1]):
@@ -129,7 +131,7 @@ class Seq2Seq(nn.Module):
             ### first run: [2,1], sos, pad
             # x -> [1, beam_size]
 
-            outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state)
+            outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state, val=False)
             ## outputs_d: [1,2,500], hidden [2,2,500]
 
             outputs_d = self.output(outputs_d)
@@ -165,37 +167,22 @@ class ContextSeq2Seq(Seq2Seq):
         self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
                                       self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
 
-        self.output = nn.Linear(self.emb_size + self.hid_dim*2, experiment_config.trg_vocab_size)
+        self.output = nn.Linear(self.emb_size + self.hid_dim*2,
+                                experiment_config.trg_vocab_size)
 
     def forward(self, src, trg,  teacher_forcing_ratio=0.8):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
         # Encode
-        out_e, final_e = self.encoder(src)
+        out_e, states = self.encoder(src)
         seq_len, batch_size = trg.size()
-        outputs = torch.zeros(seq_len, batch_size, self.emb_size + self.hid_dim * 2).to(self.device)
+        outputs = torch.zeros(seq_len, batch_size, self.trg_vocab_size).to(self.device)
+        context = states
         input = trg[0, :]
-        context = final_e
-
-        """
-                for t in range(1, max_len):
-            out_d, states = self.decoder(input, states)
-            x = self.dropout(torch.tanh(out_d))
-            x = self.output(x)
-            outputs[t] = x
-            teacher_force = random.random() < teacher_forcing_ratio
-            top1 = x.squeeze(0).max(1)[1] # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities
-            #print(x.size())
-            #print(trg[t].size())
-            input = (trg[t] if teacher_force else top1)
-
-        return outputs
-        
-        """
 
         for t in range(1, seq_len):
-            out_d, states = self.decoder(input, states)
+            out_d, states = self.decoder(input, states, context)
             x = self.dropout(torch.tanh(out_d))
             x = self.output(x)
             outputs[t] = x

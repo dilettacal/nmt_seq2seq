@@ -1,7 +1,4 @@
 import os
-import re
-import subprocess
-import tempfile
 import time
 
 import dill
@@ -87,22 +84,11 @@ class Logger():
 
 
 
-class Plotter():
-    def __init__(self, path, file_name):
-        if os.path.exists(path):
-            self.path = path
-            self.file_name = file_name
-        else:
-            raise Exception('path does not exist')
-
-    def plot(self, plt_object):
-        pass
-
-
 class AverageMeter():
-    '''Computes and stores the average and current value.
-       Taken from the PyTorch ImageNet tutorial'''
-
+    """
+    This object is used to keep track of the values for a given metric.
+    Adapted version from: https://github.com/pytorch/examples/blob/master/imagenet/main.py#L354
+    """
     def __init__(self):
         self.reset()
 
