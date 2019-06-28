@@ -87,6 +87,14 @@ class Experiment(object):
         self.reverse_lang_comb = self.args.reverse
         #print("Reverse?", self.reverse_lang_comb)
         self.model_type = self.args.model_type
+        self.bi = self.args.bi
+        if self.model_type == "s":
+            self.reverse_input = True
+            self.bi = False
+        else:
+            self.reverse_input = self.args.reverse_input
+
+
         self.truncate = self.args.max_len
         self.data_dir = self.args.data_dir
 
@@ -98,7 +106,7 @@ class Experiment(object):
 
         self.cuda = self.args.cuda
         self.lr = self.args.lr
-        self.reverse_input = self.args.reverse_input
+
         self.char_level = self.args.c
 
         self.src_vocab_size = None
@@ -118,7 +126,7 @@ class Experiment(object):
         self.rnn_type = self.args.rnn
         self.nlayers = self.args.nlayers
         self.dp = self.args.dp
-        self.bi = self.args.bi
+
 
         self.decoder_type = self.args.dec
         if self.decoder_type == "context":

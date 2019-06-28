@@ -286,8 +286,6 @@ def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
 
     elif model_type == "s":
         #### This returs a model like in Sutskever et al. ####
-        experiment_config.reverse_input = True
-        experiment_config.bi = False
         if experiment_config.hid_dim < 500: experiment_config.hid_dim = 500
         if experiment_config.emb_size < 500: experiment_config.emb_size = 500
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
