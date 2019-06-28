@@ -16,7 +16,7 @@ MAX_SUPPORTED_LENGTH = 30
 
 SEED = 42
 
-TEACHER_RATIO = 0.9
+TEACHER_RATIO = 0.95
 
 
 ##### Files ##############
