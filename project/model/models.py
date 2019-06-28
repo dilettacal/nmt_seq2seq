@@ -12,7 +12,7 @@ Classes:
 
 All these models can handle beam search.
 """
-
+import random
 
 import torch
 import torch.nn as nn
@@ -22,10 +22,7 @@ from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
 from project.model.utils import Beam
-from settings import VALID_CELLS
-
-
-
+from settings import VALID_CELLS, SEED
 
 """
 Parameters:
@@ -34,6 +31,7 @@ Parameters:
 - 4 layers, 1000, 1000: 146,511,004
 """
 
+random.seed(SEED)
 
 class Seq2Seq(nn.Module):
     def __init__(self, experiment_config: Experiment, tokens_bos_eos_pad_unk):
@@ -76,18 +74,35 @@ class Seq2Seq(nn.Module):
 
         ### create encoder and decoder
 
-    def forward(self, src, trg):
+    def forward(self, src, trg, teacher_forcing_ratio=0.8):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
+        batch_size = trg.shape[1]
+        max_len = trg.shape[0]
+        trg_vocab_size = self.trg_vocab_size
+
+        # tensor to store decoder outputs
+        outputs = torch.zeros(max_len, batch_size, trg_vocab_size).to(self.device)
+
         # Encode
-        out_e, final_e = self.encoder(src)
+        out_e, states = self.encoder(src)
 
-        out_d, _ = self.decoder(trg, final_e)
+        # first input to the decoder is the <sos> tokens
+        input = trg[0, :]
+        ### unrolling the decoder word by word
+        for t in range(1, max_len):
+            out_d, states = self.decoder(input, states)
+            x = self.dropout(torch.tanh(out_d))
+            x = self.output(x)
+            outputs[t] = x
+            teacher_force = random.random() < teacher_forcing_ratio
+            top1 = x.squeeze(0).max(1)[1] # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities
+            #print(x.size())
+            #print(trg[t].size())
+            input = (trg[t] if teacher_force else top1)
 
-        x = self.dropout(torch.tanh(out_d))
-        x = self.output(x)
-        return x
+        return outputs
 
     def predict_sequence(self, src, beam_size=1, max_len=30, sos_eos_pad=[2, 3, 1]):
         return self.beam_search(src=src, beam_size=beam_size, max_len=max_len, sos_eos_pad=sos_eos_pad)
@@ -152,7 +167,7 @@ class ContextSeq2Seq(Seq2Seq):
 
         self.output = nn.Linear(self.emb_size + self.hid_dim*2, experiment_config.trg_vocab_size)
 
-    def forward(self, src, trg):
+    def forward(self, src, trg,  teacher_forcing_ratio=0.8):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
@@ -162,15 +177,33 @@ class ContextSeq2Seq(Seq2Seq):
         outputs = torch.zeros(seq_len, batch_size, self.emb_size + self.hid_dim * 2).to(self.device)
         input = trg[0, :]
         context = final_e
-        for i in range(1, seq_len):
-            # Decode
-            out_d, _ = self.decoder(x=input, h0=final_e, context=context)
-            outputs[i] = out_d
-            input = trg[i]
 
-        x = self.dropout(torch.tanh(outputs))
-        x = self.output(x)
-        return x
+        """
+                for t in range(1, max_len):
+            out_d, states = self.decoder(input, states)
+            x = self.dropout(torch.tanh(out_d))
+            x = self.output(x)
+            outputs[t] = x
+            teacher_force = random.random() < teacher_forcing_ratio
+            top1 = x.squeeze(0).max(1)[1] # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities
+            #print(x.size())
+            #print(trg[t].size())
+            input = (trg[t] if teacher_force else top1)
+
+        return outputs
+        
+        """
+
+        for t in range(1, seq_len):
+            out_d, states = self.decoder(input, states)
+            x = self.dropout(torch.tanh(out_d))
+            x = self.output(x)
+            outputs[t] = x
+            teacher_force = random.random() < teacher_forcing_ratio
+            top1 = x.squeeze(0).max(1)[1]  # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities
+            input = (trg[t] if teacher_force else top1)
+
+        return outputs
 
     def beam_search(self, src, beam_size, max_len=30, sos_eos_pad=[]):
         beam = Beam(size=beam_size, bos=sos_eos_pad[0], eos=sos_eos_pad[1], pad=sos_eos_pad[2],

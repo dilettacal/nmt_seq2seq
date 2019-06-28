@@ -36,6 +36,7 @@ class Decoder(nn.Module):
 
     def forward(self, x, h0):
         # Embed text and pass through GRU
+        x = x.unsqueeze(0)
         x = self.embedding(x)
         x = self.dropout(x)
         out, h = self.rnn(x, h0)

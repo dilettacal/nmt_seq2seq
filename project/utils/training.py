@@ -79,7 +79,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
 
         # Forward, backprop, optimizer
         model.zero_grad()
-        scores = model(src, trg.detach())
+        scores = model(src, trg.detach(),teacher_forcing_ratio=1) #teacher forcing during training
         # Remove <s> from trg and </s> from scores
         scores = scores[:-1]
         trg = trg[1:]
