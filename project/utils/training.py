@@ -30,15 +30,19 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     val_ppls = []
 
     bleus = []
+    prev_avg_bleu_val = 0
 
     for epoch in range(epochs):
         start_time = time.time()
+        compute_bleu = True if epoch % 10 == 0 else False
+        print(compute_bleu)
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
-        avg_bleu_val, avg_val_loss = validate(val_iter, model, criterion, device, TRG)
+        avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=compute_bleu)
 
         val_losses.append(avg_val_loss)
         train_losses.append(avg_train_loss)
-        bleus.append(avg_bleu_val)
+        if compute_bleu:
+            bleus.append(avg_bleu_val)
 
         val_ppl = math.exp(avg_val_loss)
 
@@ -61,7 +65,10 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
         logger.log('Epoch: {} | Time: {}'.format(epoch+1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
-        logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f} | Val. BLEU: {avg_bleu_val:.3f}')
+        if compute_bleu:
+            logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f} | Val. BLEU: {avg_bleu_val:.3f}')
+        else:
+            logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f}')
 
     losses.update({"train": train_losses, "val": val_losses})
     ppl.update({"train": train_ppls, "val": val_ppls})
@@ -117,7 +124,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
 
 
 
-def validate(val_iter, model, criterion, device, TRG):
+def validate(val_iter, model, criterion, device, TRG, bleu=False):
     model.eval()
     losses = AverageMeter()
     bleus = AverageMeter()
@@ -153,55 +160,61 @@ def validate(val_iter, model, criterion, device, TRG):
 
             #### check the BLEU value for the batch ####
 
-            for seq_idx in range(batch_size):
+            if bleu:
+                print("Berechne Bleu...")
+                for seq_idx in range(batch_size):
 
-                ### raw_trg = [seq_len, batch_size]
-                ### with select(1, seq_idx), we get at each step the sequence at seq_idx in the batch, thus trg_seq = [seq_len]
-                trg_seq = raw_trg.select(1, seq_idx)  ### adding a dimension at index 1
+                    ### raw_trg = [seq_len, batch_size]
+                    ### with select(1, seq_idx), we get at each step the sequence at seq_idx in the batch, thus trg_seq = [seq_len]
+                    trg_seq = raw_trg.select(1, seq_idx)  ### adding a dimension at index 1
 
-                #### Greedy selection #####
+                    #### Greedy selection #####
 
-                ### For each sequence in the batch, the model delivers a probability distribution over the trg vocabulary
-                ### We select the probabilities for each sequence (seq_idx) and computes the max, thus we get a sequence of word idx (as they are stored in the voc)
-                ### max_idx = [seq_len]
+                    ### For each sequence in the batch, the model delivers a probability distribution over the trg vocabulary
+                    ### We select the probabilities for each sequence (seq_idx) and computes the max, thus we get a sequence of word idx (as they are stored in the voc)
+                    ### max_idx = [seq_len]
 
-                probs, max_idx = torch.max(raw_scores.data.select(1, seq_idx), dim=1)
+                    probs, max_idx = torch.max(raw_scores.data.select(1, seq_idx), dim=1)
 
-                ### Convert each index to a string
-                candidate = [TRG.vocab.itos[x] for x in max_idx]
+                    ### Convert each index to a string
+                    candidate = [TRG.vocab.itos[x] for x in max_idx]
 
-                #### BLEU ####
+                    #### BLEU ####
 
-                ### References are the real target sequences
-                ### To pass them the NLTK function "corpus_bleu" they need to be bidimensional, thus we add a dimension to trg_seq and convert them to a list
+                    ### References are the real target sequences
+                    ### To pass them the NLTK function "corpus_bleu" they need to be bidimensional, thus we add a dimension to trg_seq and convert them to a list
 
-                reference = list(trg_seq.data)
+                    reference = list(trg_seq.data)
 
-                ### For the BLEU computation we do not want to consider special tokens (SOS, EOS and PAD)
-                clean_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
+                    ### For the BLEU computation we do not want to consider special tokens (SOS, EOS and PAD)
+                    clean_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
 
-                ### cleaning the prediction
-                candidate = [w for w in candidate if w not in clean_tokens]
+                    ### cleaning the prediction
+                    candidate = [w for w in candidate if w not in clean_tokens]
 
-                ### cleaning here the reference
-                reference = [w for w in reference if w not in clean_tokens]
+                    ### cleaning here the reference
+                    reference = [w for w in reference if w not in clean_tokens]
 
-                sent_out = ' '.join(candidate)
-                sent_ref = ' '.join(TRG.vocab.itos[j] for j in reference)
-                sent_candidates.append(sent_out)
-                sent_references.append(sent_ref)
+                    sent_out = ' '.join(candidate)
+                    sent_ref = ' '.join(TRG.vocab.itos[j] for j in reference)
+                    sent_candidates.append(sent_out)
+                    sent_references.append(sent_ref)
 
-                smooth = SmoothingFunction()
+                    smooth = SmoothingFunction()
 
-                ### Computing corpus bleu for this batch
-                batch_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
-                                        hypotheses=[hyp.split() for hyp in sent_candidates],
-                                        smoothing_function=smooth.method4) * 100
+                    ### Computing corpus bleu for this batch
+                    batch_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
+                                            hypotheses=[hyp.split() for hyp in sent_candidates],
+                                            smoothing_function=smooth.method4) * 100
 
-               # print("BLEU", batch_bleu)
-                bleus.update(batch_bleu)
+                   # print("BLEU", batch_bleu)
+                    bleus.update(batch_bleu)
+                    return losses.avg, bleus.avg
 
-    return losses.avg, bleus.avg
+            else:
+                return losses.avg, -1
+
+
 
 
 def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30):
