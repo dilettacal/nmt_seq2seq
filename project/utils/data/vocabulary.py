@@ -35,23 +35,26 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
 
     ### Define tokenizers ####
     if char_level:
-        tokenizer = lambda s: list(s)
+        src_tokenizer = lambda s: list(s)
+        trg_tokenizer = lambda s: list(s)
     else:
         if reverse_input:
-            tokenizer = lambda s: s.split()[::-1]
-        else: tokenizer = lambda s: s.split()
+            src_tokenizer = lambda s: s.split()[::-1]
+            trg_tokenizer = lambda s: s.split()
 
+        else:
+            src_tokenizer = lambda s: s.split()
+            trg_tokenizer = lambda s: s.split()
 
     SRC_sos_eos_pad_unk = [None, None, PAD_TOKEN, UNK_TOKEN]
     TRGsos_eos_pad_unk = [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN]
 
     if reverse_input:
-
-        src_vocab = SrcField(tokenize=tokenizer, include_lengths=False,sos_eos_pad_unk=SRC_sos_eos_pad_unk, pad_first=True)
+        src_vocab = SrcField(tokenize=src_tokenizer, include_lengths=False,sos_eos_pad_unk=SRC_sos_eos_pad_unk, pad_first=True)
     else:
-        src_vocab = SrcField(tokenize=tokenizer, include_lengths=False, sos_eos_pad_unk=SRC_sos_eos_pad_unk)
+        src_vocab = SrcField(tokenize=src_tokenizer, include_lengths=False, sos_eos_pad_unk=SRC_sos_eos_pad_unk)
 
-    trg_vocab = SrcField(tokenize=tokenizer, include_lengths=False, sos_eos_pad_unk=TRGsos_eos_pad_unk)
+    trg_vocab = SrcField(tokenize=trg_tokenizer, include_lengths=False, sos_eos_pad_unk=TRGsos_eos_pad_unk)
 
     print("Fields created!")
 
