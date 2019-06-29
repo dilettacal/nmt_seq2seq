@@ -10,16 +10,20 @@ import os
 import torch
 
 from project.experiment.setup_experiment import Experiment
-from settings import RESULTS_DIR
+from settings import RESULTS_DIR, ROOT
 
-path_to_model = os.path.join(RESULTS_DIR,"/results/en_de/custom/1/uni/2019-06-25-19-31-11/custom-model.pkl")
+path_to_model = os.path.join(RESULTS_DIR,"en_de/s/2/uni/2019-06-29-12-32-40/model.pkl")
 print(path_to_model)
 
 
-exp_path = "/home/dcal/Programming/python/nmt_project/nmt_thesis/nmt_seq2seq/results/en_de/custom/4/uni/2019-06-25-20-01-13"
+exp_path = os.path.join(RESULTS_DIR, "en_de/s/2/uni/2019-06-29-12-32-40/")
 
 experiment = Experiment()
 
 experiment = torch.load(os.path.join(exp_path, "experiment.pkl"))
 
-print(experiment)
+train_losses = torch.load(os.path.join(exp_path, "bleus.pkl"))
+
+print((train_losses["values"]))
+
+#print(experiment)

@@ -83,6 +83,13 @@ class Logger():
         else:raise Exception("Provide metric either as list or as dictionary.")
 
 
+class Metric(object):
+    def __init__(self, name, values):
+        self.name = name
+        self.values = values
+
+    def get_dict(self):
+        return dict({"name": self.name, "values": self.values})
 
 class AverageMeter():
     """

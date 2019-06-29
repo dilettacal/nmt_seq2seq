@@ -76,7 +76,7 @@ class TranslationReversibleField(torchtext.data.Field):
 
 class SrcField(TranslationReversibleField):
 
-    def __init__(self,sos_eos_pad_unk =[None, None, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True, tokenize=None):
+    def __init__(self,sos_eos_pad_unk =[None, None, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True, tokenize=None, pad_first=False):
         self.sos_token = sos_eos_pad_unk[0]
         self.eos_token = sos_eos_pad_unk[1]
         self.pad_token = sos_eos_pad_unk[2]

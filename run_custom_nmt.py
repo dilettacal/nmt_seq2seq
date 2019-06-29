@@ -13,7 +13,7 @@ from project.model.models import Seq2Seq, count_parameters, get_nmt_model, unifo
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import train_model, validate_test_set
-from project.utils.utils import convert, Logger
+from project.utils.utils import convert, Logger, Metric
 from settings import MODEL_STORE
 import math
 
@@ -101,13 +101,25 @@ def main():
     
     """
     #train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, logger=None, device=DEFAULT_DEVICE
-    bleus, losses, ppl = train_model(train_iter, val_iter, model, criterion, optimizer, scheduler,TRG=TRG,
+    bleus, losses, ppl = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion, optimizer=optimizer, scheduler=scheduler, SRC=SRC, TRG=TRG,
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(), model_type=model_type, max_len=MAX_LEN)
+
+    bleu_metric = Metric("bleu", bleus)
+    train_loss = Metric("train_loss", list(losses.values())[0])
+    val_loss = Metric("val_loss", list(losses.values())[1])
+    train_perpl = Metric("train_ppl", list(ppl.values())[0])
+    val_perpl = Metric("val_ppl", list(ppl.values())[1])
+
 
     logger.plot(bleus, title="Validation BLEU/Epochs", ylabel="BLEU", file="bleu")
     logger.plot(losses, title="Loss/Epochs", ylabel="losses", file="loss")
     logger.plot(ppl, title="PPL/Epochs", ylabel="PPL", file="ppl")
 
+    logger.pickle_obj(bleu_metric.get_dict(), "bleus")
+    logger.pickle_obj(train_loss.get_dict(), "train_losses")
+    logger.pickle_obj(val_loss.get_dict(), "val_losses")
+    logger.pickle_obj(train_perpl.get_dict(), "train_ppl")
+    logger.pickle_obj(val_perpl.get_dict(), "val_ppl")
 
     """
     Validation on test set

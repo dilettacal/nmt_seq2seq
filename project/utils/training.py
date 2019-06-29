@@ -14,11 +14,14 @@ import math
 
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert, AverageMeter
-from settings import DEFAULT_DEVICE
+from settings import DEFAULT_DEVICE, SEED, TEACHER_RATIO
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
+import random
+random.seed(SEED)
 
-def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom", max_len=30):
+
+def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom", max_len=30):
     best_valid_loss = float('inf')
     best_ppl_value = float('inf')
 
@@ -35,7 +38,9 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     for epoch in range(epochs):
         start_time = time.time()
         compute_bleu = True if epoch % 10 == 0 else False
-        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
+        check_tr = compute_bleu
+        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
+                               optimizer=optimizer,device=device, model_type=model_type, logger=logger, check_trans=check_tr, SRC=SRC, TRG=TRG,)
         avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=compute_bleu)
 
         val_losses.append(avg_val_loss)
@@ -76,21 +81,30 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
 
 
-def train(train_iter, model, criterion, optimizer, device="cuda", model_type="custom", logger=None):
+def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", model_type="custom", logger=None, check_trans=False):
    # print(device)
     norm_changes = 0
     # Train model
     model.train()
     losses = AverageMeter()
+
     for i, batch in enumerate(train_iter):
+
+        condition = i == 0 or i == len(train_iter)//2 or i == len(train_iter)
         #print(device)
         # Use GPU
         src = batch.src.to(device)
         trg = batch.trg.to(device)
+        if check_trans and condition:
+            src_copy = src.clone()
+            trg_copy = trg.clone()
 
         # Forward, backprop, optimizer
         model.zero_grad()
-        scores = model(src, trg.detach(),teacher_forcing_ratio=1) #teacher forcing during training
+        scores = model(src, trg,teacher_forcing_ratio=TEACHER_RATIO) #teacher forcing during training
+
+        if check_trans and condition:
+            raw_scores = scores.clone()
         # Remove <s> from trg and </s> from scores
         scores = scores[:-1]
         trg = trg[1:]
@@ -117,6 +131,11 @@ def train(train_iter, model, criterion, optimizer, device="cuda", model_type="cu
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         optimizer.step()
+        if check_trans and condition:
+            num_translation = 2
+            src_to_translate = src_copy[:, :num_translation]
+            trg_to_translate = trg_copy[:, :num_translation]
+            check_translation(src_to_translate, trg_to_translate, raw_scores,model,SRC=SRC, TRG=TRG, logger=logger)
 
     logger.log("Gradient Norm Changes: {}".format(norm_changes))
     return losses.avg
@@ -140,7 +159,7 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
             ### These are still raw computations from the linear output layer from the model
             ### As CrossEntropyLoss wrapper was used for loss computation
             ### the log softmax operation is done by this object internally
-            scores = model(src, trg.detach())
+            scores = model(src, trg)
             scores = scores[:-1]
             trg = trg[1:]
 
@@ -160,7 +179,7 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
             #### check the BLEU value for the batch ####
 
             if bleu:
-                print("Computing BLEU score for batch {}...".format(i))
+                #print("Computing BLEU score for batch {}...".format(i))
                 for seq_idx in range(batch_size):
 
                     ### raw_trg = [seq_len, batch_size]
@@ -226,7 +245,7 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
             src = batch.src.to(device)
             tgt = batch.trg.to(device)
             ### compute normal scores
-            scores = model(src, tgt.detach())
+            scores = model(src, tgt)
 
             scores = scores[:-1]
             tgt = tgt[1:]
@@ -262,6 +281,46 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
                             smoothing_function=smooth.method4) * 100
 
     return losses.avg, nlkt_bleu
+
+def check_translation(src, trg, scores, model, SRC, TRG, logger):
+    """
+    Readapted from Luke Melas Machine-Translation project:
+    https://github.com/lukemelas/Machine-Translation/blob/master/training/train.py#L50
+    :param src:
+    :param trg:
+    :param scores:
+    :param model:
+    :param SRC:
+    :param TRG:
+    :param logger:
+    :return:
+    """
+    remove_tokens = [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN]
+    logger.log("*" * 100,stdout=False)
+
+    samples = src.size(1)
+    for k in range(src.size(1)):
+        logger.log("Sequence {}".format(str(k)),stdout=False)
+        src_bs1 = src.select(1, k).unsqueeze(1)  # bs1 means batch size 1
+        trg_bs1 = trg.select(1, k).unsqueeze(1)
+        model.eval()  # predict mode
+        predictions = model.predict(src_bs1, beam_size=1)
+        predictions_beam = model.predict(src_bs1, beam_size=2)
+        predictions_beam5 = model.predict(src_bs1, beam_size=5)
+        predictions_beam12 = model.predict(src_bs1, beam_size=12)
+
+        model.train()  # test mode
+        probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
+
+        logger.log('Source: {}'.format(' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)), stdout=False)
+        logger.log('Target: {}'.format(' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)), stdout=False)
+        logger.log('Training Pred (Greedy): {}'.format(' '.join(TRG.vocab.itos[x] for x in maxwords)), stdout=False)
+        logger.log('Validation Greedy Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions)),stdout=False)
+        logger.log('Validation Beam (2) Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions_beam)),stdout=False)
+        logger.log('Validation Beam (5) Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions_beam5)),stdout=False)
+        logger.log('Validation Beam (12) Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions_beam12)),stdout=False)
+        logger.log("",stdout=False)
+    logger.log("*"*100, stdout=False)
 
 
 def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):

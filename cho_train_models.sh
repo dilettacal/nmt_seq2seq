@@ -32,5 +32,4 @@ echo "====================================="
 
 python3 run_custom_nmt.py --hs 1000 --emb 500 --nlayers 1 --dp 0.25 --reverse_input False --reverse True --model_type c --epochs 50 -v 30000 -b 128 --train 500000 --val 100000 --test 30000
 echo "====================================="
-
 echo "====================================="
