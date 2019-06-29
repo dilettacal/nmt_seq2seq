@@ -137,7 +137,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
 
         optimizer.step()
         if check_trans and condition:
-            num_translation = 2
+            num_translation = 5
             src_to_translate = src_copy[:, :num_translation]
             trg_to_translate = trg_copy[:, :num_translation]
             check_translation(src_to_translate, trg_to_translate, raw_scores,model,SRC=SRC, TRG=TRG, logger=logger)
