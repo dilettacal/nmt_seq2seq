@@ -84,7 +84,7 @@ class SrcField(TranslationReversibleField):
         super().__init__(lower=False, pad_token=self.pad_token,
                          eos_token=self.eos_token, init_token=self.sos_token,
                          unk_token=self.unk_token, include_lengths=include_lengths,
-                         sequential=sequential, tokenize=tokenize)
+                         sequential=sequential, tokenize=tokenize, pad_first=pad_first)
 
 
 class TrgField(TranslationReversibleField):
@@ -137,13 +137,6 @@ class Seq2SeqDataset(Dataset):
                         assert (len(src_line) <= truncate) and (len(trg_line) <= truncate)
                         src_line = ' '.join(src_line)
                         trg_line = ' '.join(trg_line)
-
-                    if reverse_input:
-                        src_line = src_line.split(" ")[::-1]
-                        src_line = ' '.join(src_line)
-                        if i < 2:
-                            print("Source inputs reversed:\t", src_line)
-
                     examples.append(data.Example.fromlist(
                         [src_line, trg_line], fields))
         return examples

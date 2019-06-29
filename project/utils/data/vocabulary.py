@@ -33,17 +33,23 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     reverse_input = experiment.reverse_input
     print("Source reversed:", reverse_input)
 
+    ### Define tokenizers ####
+    if char_level:
+        tokenizer = lambda s: list(s)
+    else:
+        if reverse_input:
+            tokenizer = lambda s: s.split()[::-1]
+        else: tokenizer = lambda s: s.split()
 
-
-    tokenizer = lambda s: s.split() if char_level == False else lambda s: list(s)
 
     SRC_sos_eos_pad_unk = [None, None, PAD_TOKEN, UNK_TOKEN]
     TRGsos_eos_pad_unk = [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN]
 
     if reverse_input:
-        pass
+
+        src_vocab = SrcField(tokenize=tokenizer, include_lengths=False,sos_eos_pad_unk=SRC_sos_eos_pad_unk, pad_first=True)
     else:
-        src_vocab = SrcField(tokenize=tokenizer, include_lengths=False,sos_eos_pad_unk=SRC_sos_eos_pad_unk)
+        src_vocab = SrcField(tokenize=tokenizer, include_lengths=False, sos_eos_pad_unk=SRC_sos_eos_pad_unk)
 
     trg_vocab = SrcField(tokenize=tokenizer, include_lengths=False, sos_eos_pad_unk=TRGsos_eos_pad_unk)
 
@@ -64,7 +70,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         exts = ("."+experiment.get_src_lang(), "."+experiment.get_trg_lang())
         train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
                                                  exts=exts, train="train", validation="val", test="test",
-                                                 path=data_dir, reduce=reduce, reverse_input=reverse_input, truncate=experiment.truncate)
+                                                 path=data_dir, reduce=reduce, reverse_input=False, truncate=experiment.truncate)
 
 
         end = time.time()
@@ -101,6 +107,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     # Create iterators to process text in batches of approx. the same length
     train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False,
                                      sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=True)
+
     val_batch_size = experiment.batch_size//2 if experiment.batch_size >=2 else experiment.batch_size
     val_iter = data.BucketIterator(val, val_batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)), sort_within_batch=True, shuffle=False)
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)), shuffle=False, sort_within_batch=True)
