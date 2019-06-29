@@ -16,4 +16,4 @@ def update_requirements(mode=""):
 
 
 if __name__ == '__main__':
-    update_requirements()
+    update_requirements("")
