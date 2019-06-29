@@ -226,17 +226,16 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
 
                     smooth = SmoothingFunction()
 
-                    ### Computing corpus bleu for this batch
-                    batch_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
+                ### Computing corpus bleu for this batch
+                batch_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
                                             hypotheses=[hyp.split() for hyp in sent_candidates],
                                             smoothing_function=smooth.method4) * 100
 
-                    perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
+                perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
 
-                   # print("BLEU", batch_bleu)
-                    bleus.update(batch_bleu)
-                    perl_bleus.update(perl_bleu)
-                    return losses.avg, [bleus.avg, perl_bleus.avg]
+                bleus.update(batch_bleu)
+                perl_bleus.update(perl_bleu)
+                return losses.avg, [bleus.avg, perl_bleus.avg]
 
             else:
                 return losses.avg, -1
