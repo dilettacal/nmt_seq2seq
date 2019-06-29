@@ -35,7 +35,6 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     for epoch in range(epochs):
         start_time = time.time()
         compute_bleu = True if epoch % 10 == 0 else False
-        print(compute_bleu)
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,device=device, model_type=model_type, logger=logger)
         avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=compute_bleu)
 
@@ -161,7 +160,7 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
             #### check the BLEU value for the batch ####
 
             if bleu:
-                print("Berechne Bleu...")
+                print("Computing BLEU score for batch {}...".format(i))
                 for seq_idx in range(batch_size):
 
                     ### raw_trg = [seq_len, batch_size]
@@ -244,7 +243,7 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
 
             #### BLEU
             # compute scores with greedy search
-            out = model.predict_sequence(src, beam_size=beam_size, max_len=max_len)  # out is a list
+            out = model.predict(src, beam_size=beam_size, max_len=max_len)  # out is a list
 
             ## Prepare sentences for BLEU
             ref = list(tgt.data.squeeze())

@@ -63,7 +63,12 @@ class ContextDecoder(Decoder):
 
         output, h = self.rnn(emb_con, h0)  # 1,64,500
 
+        ### output shape [batch_size, trg_vocab]
+
         output = torch.cat((embedded.squeeze(0), h.squeeze(0), context.squeeze(0)),
                            dim=1)
+
+        ### output shape consistent with the shape of the normal decoder: [1, batch_size, trg_vocab]
+        output = output.unsqueeze(0)
 
         return output, h

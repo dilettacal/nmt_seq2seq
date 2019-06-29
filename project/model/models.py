@@ -53,6 +53,8 @@ class Seq2Seq(nn.Module):
         self.device = experiment_config.get_device()
         rnn_type = experiment_config.rnn_type
         self.cell = rnn_type
+        self.context_model = False
+        self.attn = False
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
@@ -89,80 +91,92 @@ class Seq2Seq(nn.Module):
         # Encode
         out_e, states = self.encoder(src)
 
+        if self.context_model:
+            context = states
+
+        else: context = None
+
         # first input to the decoder is the <sos> tokens
         input = trg[0, :]
         ### unrolling the decoder word by word
-        #print("Max seq length:", max_len)
         used_teacher = 0
         for t in range(1, max_len):
-            out_d, states = self.decoder(input, states)
+            if self.context_model:
+                out_d, states = self.decoder(input, states, context, val=True)
+            else:
+                out_d, states = self.decoder(input, states, val=True) #[1,64,500]
+            #print("OUT size:", out_d.size())
             x = self.dropout(torch.tanh(out_d))
-            x = self.output(x)
+            x = self.output(x) #[1,64,trg_vocab_size]
+            #print("Final:", x.size())
             outputs[t] = x
             teacher_force = random.random() < teacher_forcing_ratio
-            top1 = x.squeeze(0).max(1)[1] # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities
+            top1 = x.squeeze(0).max(1)[1] # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities --> [batch_size]
+           # print("Target:", trg[t].size(), "Top1:", top1.size()) #during validation: [batch_size], during test [1], [1]
             used_teacher += 1 if teacher_force else 0
             input = (trg[t] if teacher_force else top1)
-        #print("Teacher forcing/max_len (%):", (used_teacher/max_len)*100)
         return outputs
 
-    def predict_sequence(self, src, beam_size=1, max_len=30, sos_eos_pad=[2, 3, 1]):
-        return self.beam_search(src=src, beam_size=beam_size, max_len=max_len, sos_eos_pad=sos_eos_pad)
+    def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
+        '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
+        assert src.size(1) == 1, "Predicting with beam search only works with batch size 1!"
+        beam_outputs = self.beam_search(src, beam_size, max_len=max_len, remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
+        top1 = beam_outputs[0][1]  # a list of word indices (as ints)
+        return top1
 
-    def beam_search(self, src, beam_size, max_len, sos_eos_pad=[]):
-        beam = Beam(size=beam_size, bos=sos_eos_pad[0], eos=sos_eos_pad[1], pad=sos_eos_pad[2], cuda=True if self.device == "cuda" else False)
-
+    def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
+        '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.
+        Slightly modified from: https://lukemelas.github.io/machine-translation.html
+        '''
         src = src.to(self.device)
-       # print(src.size())
-        outputs_e, states = self.encoder(src)
+        # Encode
+        outputs_e, states = self.encoder(src)  # batch size = 1
+        if self.context_model:
+            context = states
+        else: context = None
+        # Start with '<s>'
+        init_lprob = -1e10
+        init_sent = [self.bos_token]
+        best_options = [(init_lprob, init_sent, states)]  # beam
+        # Beam search
+        k = beam_size  # store best k options
+        for length in range(max_len):  # maximum target length
+            options = []  # candidates
+            for lprob, sentence, current_state in best_options:
+                # Prepare last word
+                last_word = sentence[-1]
+                if last_word != self.eos_token:
+                    ### shape: [1] --> [1,1], needed as we are unrolling the decoder with bs 1
+                    last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
+                    if self.context_model:
+                        outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=False)
+                    else:
+                        outputs_d, new_state = self.decoder(last_word_input, current_state, val=False)
+                    x = self.output(outputs_d)
+                    x = x.squeeze().data.clone()
+                    # Block predictions of tokens in remove_tokens
+                    for t in remove_tokens: x[t] = -10e10
+                    lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
+                    # Add top k candidates to options list for next word
+                    for index in torch.topk(lprobs, k)[1]:
+                        option = (float(lprobs[index]) + lprob, sentence + [index], new_state)
+                        options.append(option)
+                else:  # keep sentences ending in '</s>' as candidates
+                    options.append((lprob, sentence, current_state))
+            options.sort(key=lambda x: x[0], reverse=True)  # sort by lprob
+            best_options = options[:k]  # place top candidates in beam
+        best_options.sort(key=lambda x: x[0], reverse=True)
+        return best_options
 
-        if isinstance(states, tuple):
-            h, c = states
-            h = h.data.repeat(1,beam_size,1)
-            c = c.data.repeat(1,beam_size,1) #num_layers, beam_size, hid_dim
-            current_state = (h,c)
-        else:
-            h = states
-            h = h.data.repeat(1,beam_size,1)
-            current_state = h
-
-        for i in range(max_len):
-            x = beam.get_current_state().to(self.device) #shape: beam size [beam_size]
-            ### first run: [2,1], sos, pad
-            # x -> [1, beam_size]
-
-            outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state, val=False)
-            ## outputs_d: [1,2,500], hidden [2,2,500]
-
-            outputs_d = self.output(outputs_d)
-            #print(outputs_d.shape) # shape: [1,2,trg_vocab_size]
-            #### Log softmax to retrieve probabilities
-            dec_prob = torch.log(outputs_d.exp() / outputs_d.exp().sum())
-
-            # dec_prob.data.shape: [1,beam_size,trg_vocab] -> [beam_size, trg_vocab]
-            if beam.advance(dec_prob.data.squeeze(0)):
-                break
-
-            if isinstance(current_state, tuple):
-                h, c = current_state
-                ###beam current origin is at the beginning a list of size beam_size
-                ###this contains a tensor [0,0]
-                #print(h.shape) #Target sizes: [2, 5, 500].  Tensor sizes: [5, 5, 500]
-                h.data.copy_(h.data.index_select(1, beam.get_current_origin()))
-                c.data.copy_(c.data.index_select(1, beam.get_current_origin()))
-                current_state = (h,c)
-            else:
-                current_state.data.copy_(current_state.data.index_select(1, beam.get_current_origin()))
-
-        tt = torch.cuda if self.device == "cuda" else torch
-        candidate = Variable(tt.LongTensor(beam.get_hyp(0)))
-        return candidate
 
 
 
 class ContextSeq2Seq(Seq2Seq):
+    """This is inspired by the "context model" as proposed by Cho et al. (2014) """
     def __init__(self, experiment_config, token_bos_eos_pad_unk):
         super().__init__(experiment_config, token_bos_eos_pad_unk)
+
+        self.context_model = True
 
         self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
                                       self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
@@ -170,73 +184,13 @@ class ContextSeq2Seq(Seq2Seq):
         self.output = nn.Linear(self.emb_size + self.hid_dim*2,
                                 experiment_config.trg_vocab_size)
 
-    def forward(self, src, trg,  teacher_forcing_ratio=TEACHER_RATIO):
-        src = src.to(self.device)
-        trg = trg.to(self.device)
-
-        # Encode
-        out_e, states = self.encoder(src)
-        seq_len, batch_size = trg.size()
-        outputs = torch.zeros(seq_len, batch_size, self.trg_vocab_size).to(self.device)
-        context = states
-        input = trg[0, :]
-
-        for t in range(1, seq_len):
-            out_d, states = self.decoder(input, states, context, val=True)
-            x = self.dropout(torch.tanh(out_d))
-            x = self.output(x)
-            outputs[t] = x
-            teacher_force = random.random() < teacher_forcing_ratio
-            top1 = x.squeeze(0).max(1)[1]  # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities
-            input = (trg[t] if teacher_force else top1)
-
-        return outputs
-
-    def beam_search(self, src, beam_size, max_len=30, sos_eos_pad=[]):
-        beam = Beam(size=beam_size, bos=sos_eos_pad[0], eos=sos_eos_pad[1], pad=sos_eos_pad[2],
-                    cuda=True if self.device == "cuda" else False)
-
-        src = src.to(self.device)
-        # print(src.size())
-        outputs_e, states = self.encoder(src)
-
-        h = states
-        h = h.data.repeat(1, beam_size, 1)
-        current_state = h
-        context = current_state.clone()
-
-        for i in range(max_len):
-            x = beam.get_current_state().to(self.device)  # shape: beam size [beam_size]
-            ### first run: [2,1], sos, pad
-            # x -> [1, beam_size]
-          #  print(current_state.shape) # [n_layers, beam, hid]
-            outputs_d, current_state = self.decoder(x.unsqueeze(0), current_state, context, val=False)
-            ## outputs_d: [1,2,500], hidden [2,2,500]
-
-            outputs_d = self.output(outputs_d)
-            # shape: [1,2,trg_vocab_size]
-            #### Log softmax to retrieve probabilities
-            dec_prob = torch.log(outputs_d.exp() / outputs_d.exp().sum())
-
-            # dec_prob.data.shape: [1,beam_size,trg_vocab] -> [beam_size, trg_vocab]
-            if beam.advance(dec_prob.data.squeeze(0)):
-                break
-
-            current_state.data.copy_(current_state.data.index_select(1, beam.get_current_origin()))
-
-        tt = torch.cuda if self.device == "cuda" else torch
-        candidate =   Variable(tt.LongTensor(beam.get_hyp(0)))
-        return candidate
-
 
 class AttentionSeq2Seq(Seq2Seq):
     def __init__(self, experiment_config, token_bos_eos_pad_unk):
         super().__init__(experiment_config, token_bos_eos_pad_unk)
-        ### add attention stuff
+        self.attn = True
+        self.context_model = False
 
-    def old_beam_search(self, src, beam_size, max_len, remove_tokens=[]):
-        ## modifiy with attention stuff
-        pass
 
 
 def uniform_init_weights(m):
