@@ -38,8 +38,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
     for epoch in range(epochs):
         start_time = time.time()
-        compute_bleu = True if epoch % 10 == 0 else False
-        check_tr = compute_bleu
+        compute_bleu = True if epoch % 5 == 0 else False
+        check_tr = True if epoch % 10 == 0 else False
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
                                optimizer=optimizer,device=device, model_type=model_type, logger=logger, check_trans=check_tr, SRC=SRC, TRG=TRG,)
         avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=compute_bleu)
