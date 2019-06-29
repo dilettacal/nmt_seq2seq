@@ -224,7 +224,8 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
                     sent_candidates.append(sent_out)
                     sent_references.append(sent_ref)
 
-                    smooth = SmoothingFunction()
+
+                smooth = SmoothingFunction()
 
                 ### Computing corpus bleu for this batch
                 batch_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
