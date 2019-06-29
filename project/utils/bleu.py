@@ -42,8 +42,7 @@ def get_moses_multi_bleu(hypotheses, references, lowercase=False):
     The python computation is taken from the Google seq2seq implementation.
     The download part has been removed, as it is not needed within this project.
 
-    See license above and the original code at: https://github.com/google/seq2seq/blob/master/seq2seq/metrics/bleu.py
-    for further details.
+    See original code at: https://github.com/google/seq2seq/blob/master/seq2seq/metrics/bleu.py
 
     :param hypotheses:
     :param references:
@@ -59,8 +58,10 @@ def get_moses_multi_bleu(hypotheses, references, lowercase=False):
     if np.size(hypotheses) == 0:
         return np.float32(0.0)
 
-    multi_bleu_path = os.path.join(os.path.abspath(ROOT), "scripts", "multi-bleu.perl")
 
+    multi_bleu_path = os.path.join(os.path.abspath(ROOT), "scripts")
+    os.makedirs(multi_bleu_path, exist_ok=True)
+    multi_bleu_path = os.path.join(multi_bleu_path, "multi-bleu.perl")
     # Dump hypotheses and references to tempfiles
     hypothesis_file = tempfile.NamedTemporaryFile()
     hypothesis_file.write("\n".join(hypotheses).encode("utf-8"))

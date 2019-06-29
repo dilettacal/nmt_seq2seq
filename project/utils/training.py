@@ -12,6 +12,7 @@ import torch
 import numpy as np
 import math
 
+from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert, AverageMeter
 from settings import DEFAULT_DEVICE, SEED, TEACHER_RATIO
@@ -32,8 +33,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     train_ppls = []
     val_ppls = []
 
-    bleus = []
-    prev_avg_bleu_val = 0
+    nltk_bleus, perl_bleus = [], []
+    bleus = dict()
 
     for epoch in range(epochs):
         start_time = time.time()
@@ -46,7 +47,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         val_losses.append(avg_val_loss)
         train_losses.append(avg_train_loss)
         if compute_bleu:
-            bleus.append(avg_bleu_val)
+            nltk_bleus.append(avg_bleu_val[0])
+            perl_bleus.append(avg_bleu_val[1])
 
         val_ppl = math.exp(avg_val_loss)
 
@@ -70,12 +72,15 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         logger.log('Epoch: {} | Time: {}'.format(epoch+1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
         if compute_bleu:
-            logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f} | Val. BLEU: {avg_bleu_val:.3f}')
+            nlkt_b = avg_bleu_val[0]
+            perl_b = avg_bleu_val[1]
+            logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f}\n\tVal. (nlkt) BLEU: {nlkt_b:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
         else:
             logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f}')
 
     losses.update({"train": train_losses, "val": val_losses})
     ppl.update({"train": train_ppls, "val": val_ppls})
+    bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
 
     return bleus, losses, ppl
 
@@ -101,7 +106,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
 
         # Forward, backprop, optimizer
         model.zero_grad()
-        scores = model(src, trg,teacher_forcing_ratio=TEACHER_RATIO) #teacher forcing during training
+        scores = model(src, trg,teacher_forcing_ratio=1.0) #teacher forcing during training.
 
         if check_trans and condition:
             raw_scores = scores.clone()
@@ -146,6 +151,7 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
     model.eval()
     losses = AverageMeter()
     bleus = AverageMeter()
+    perl_bleus = AverageMeter()
     sent_candidates = []
     sent_references = []
 
@@ -186,7 +192,7 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
                     ### with select(1, seq_idx), we get at each step the sequence at seq_idx in the batch, thus trg_seq = [seq_len]
                     trg_seq = raw_trg.select(1, seq_idx)  ### adding a dimension at index 1
 
-                    #### Greedy selection #####
+                    #### Greedy search - the max value for each candidate is chosen #####
 
                     ### For each sequence in the batch, the model delivers a probability distribution over the trg vocabulary
                     ### We select the probabilities for each sequence (seq_idx) and computes the max, thus we get a sequence of word idx (as they are stored in the voc)
@@ -225,9 +231,12 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
                                             hypotheses=[hyp.split() for hyp in sent_candidates],
                                             smoothing_function=smooth.method4) * 100
 
+                    perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
+
                    # print("BLEU", batch_bleu)
                     bleus.update(batch_bleu)
-                    return losses.avg, bleus.avg
+                    perl_bleus.update(perl_bleu)
+                    return losses.avg, [bleus.avg, perl_bleus.avg]
 
             else:
                 return losses.avg, -1
@@ -275,12 +284,14 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
             sent_candidates.append(sent_out)
             sent_references.append(sent_ref)
 
-    smooth = SmoothingFunction()
+    smooth = SmoothingFunction() #if there are less than 4 ngrams
     nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
                             hypotheses=[hyp.split() for hyp in sent_candidates],
-                            smoothing_function=smooth.method4) * 100
+                            smoothing_function=smooth.method4)*100
+    perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
 
-    return losses.avg, nlkt_bleu
+    # print("BLEU", batch_bleu)
+    return losses.avg, [nlkt_bleu, perl_bleu]
 
 def check_translation(src, trg, scores, model, SRC, TRG, logger):
     """

@@ -5,7 +5,6 @@ import torch
 import torchtext
 import torchtext.data as data
 from torchtext.data import Dataset
-from torchtext.datasets import TranslationDataset
 
 from tmx2corpus import FileOutput
 import os

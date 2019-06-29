@@ -104,18 +104,21 @@ def main():
     bleus, losses, ppl = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion, optimizer=optimizer, scheduler=scheduler, SRC=SRC, TRG=TRG,
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(), model_type=model_type, max_len=MAX_LEN)
 
-    bleu_metric = Metric("bleu", bleus)
+    nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
+    perl_bleu_metric = Metric("bleu_perl", list(bleus.values())[1])
     train_loss = Metric("train_loss", list(losses.values())[0])
     val_loss = Metric("val_loss", list(losses.values())[1])
     train_perpl = Metric("train_ppl", list(ppl.values())[0])
     val_perpl = Metric("val_ppl", list(ppl.values())[1])
 
 
-    logger.plot(bleus, title="Validation BLEU/Epochs", ylabel="BLEU", file="bleu")
+    logger.plot(list(bleus.values())[0], title="Validation nltk BLEU/Epochs", ylabel="BLEU", file="nltk_bleu")
+    logger.plot(list(bleus.values())[1], title="Validation nltk BLEU/Epochs",ylabel="BLEU", file="perl_bleu")
     logger.plot(losses, title="Loss/Epochs", ylabel="losses", file="loss")
     logger.plot(ppl, title="PPL/Epochs", ylabel="PPL", file="ppl")
 
-    logger.pickle_obj(bleu_metric.get_dict(), "bleus")
+    logger.pickle_obj(nltk_bleu_metric.get_dict(), "nltk_bleus")
+    logger.pickle_obj(perl_bleu_metric.get_dict(), "perl_bleus")
     logger.pickle_obj(train_loss.get_dict(), "train_losses")
     logger.pickle_obj(val_loss.get_dict(), "val_losses")
     logger.pickle_obj(train_perpl.get_dict(), "train_ppl")
@@ -132,30 +135,34 @@ def main():
     ### Evaluation on test set
     beam_size = 1
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    val_loss, bleu= validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    val_loss, bleus = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    nltk_b, perl_b = bleus
     logger.log(
-        f'\t Test. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Test. BLEU: {bleu:.3f}')
+        f'\t Test. Loss: {val_loss:.3f} |  Val. PPL: {math.exp(val_loss):7.3f} | Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
 
     beam_size = 2
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    val_loss, bleu = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(),
+    val_loss, bleus = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(),
                               TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    nltk_b, perl_b = bleus
     logger.log(
-        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. BLEU: {bleu:.3f}')
+        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
 
     beam_size = 5
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    val_loss, bleu = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    val_loss, bleus = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    nltk_b, perl_b = bleus
     logger.log(
-        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. BLEU: {bleu:.3f}')
+        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
     beam_size = 12
     logger.log("Validation of test set - Beam size: {}".format(beam_size))
-    val_loss, bleu = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    val_loss, bleus = validate_test_set(val_iter=test_iter, model=model, criterion=criterion, device=experiment.get_device(), TRG=TRG, beam_size=beam_size, max_len=MAX_LEN)
+    nltk_b, perl_b = bleus
     logger.log(
-        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. BLEU: {bleu:.3f}')
+        f'\t Test. Loss: {val_loss:.3f} |  Test. PPL: {math.exp(val_loss):7.3f} | Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
     logger.log('Finished in {}'.format(convert(time.time() - start_time)))
     return
