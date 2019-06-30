@@ -80,7 +80,7 @@ def main():
     # Create loss function and optimizer
     criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10, verbose=True,min_lr=1e-5)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True,min_lr=1e-7, cooldown=1)
 
     # Create directory for logs, create logger, log hyperparameters
     logger = Logger(experiment_path)
@@ -105,7 +105,7 @@ def main():
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(), model_type=model_type, max_len=MAX_LEN)
 
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
-    perl_bleu_metric = Metric("bleu_perl", list(bleus.values())[1])
+   # perl_bleu_metric = Metric("bleu_perl", list(bleus.values())[1])
     train_loss = Metric("train_loss", list(losses.values())[0])
     val_loss = Metric("val_loss", list(losses.values())[1])
     train_perpl = Metric("train_ppl", list(ppl.values())[0])
@@ -113,12 +113,12 @@ def main():
 
 
     logger.plot(list(bleus.values())[0], title="Validation nltk BLEU/Epochs", ylabel="BLEU", file="nltk_bleu")
-    logger.plot(list(bleus.values())[1], title="Validation nltk BLEU/Epochs",ylabel="BLEU", file="perl_bleu")
+   # logger.plot(list(bleus.values())[1], title="Validation nltk BLEU/Epochs",ylabel="BLEU", file="perl_bleu")
     logger.plot(losses, title="Loss/Epochs", ylabel="losses", file="loss")
     logger.plot(ppl, title="PPL/Epochs", ylabel="PPL", file="ppl")
 
     logger.pickle_obj(nltk_bleu_metric.get_dict(), "nltk_bleus")
-    logger.pickle_obj(perl_bleu_metric.get_dict(), "perl_bleus")
+  #  logger.pickle_obj(perl_bleu_metric.get_dict(), "perl_bleus")
     logger.pickle_obj(train_loss.get_dict(), "train_losses")
     logger.pickle_obj(val_loss.get_dict(), "val_losses")
     logger.pickle_obj(train_perpl.get_dict(), "train_ppl")

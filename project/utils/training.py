@@ -48,7 +48,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         train_losses.append(avg_train_loss)
         if compute_bleu:
             nltk_bleus.append(avg_bleu_val[0])
-            perl_bleus.append(avg_bleu_val[1])
+            #perl_bleus.append(avg_bleu_val[1])
 
         val_ppl = math.exp(avg_val_loss)
 
@@ -73,8 +73,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
         if compute_bleu:
             nlkt_b = avg_bleu_val[0]
-            perl_b = avg_bleu_val[1]
-            logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f}\n\tVal. (nlkt) BLEU: {nlkt_b:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
+          #  perl_b = avg_bleu_val[1]
+            logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f} | Val. (nlkt) BLEU: {nlkt_b:.3f} |')
         else:
             logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f}')
 
