@@ -88,7 +88,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         exts = (".en", ".de") if src_lang == "en" else (".de", ".en")
         train, val, test = datasets.IWSLT.splits(root=path,
                                                  exts=exts, fields=(src_vocab, trg_vocab),
-                                                 filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= experiment.max_len)
+                                                 filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= experiment.truncate)
         end = time.time()
         print("Duration: {}".format(convert(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
