@@ -107,7 +107,7 @@ class Seq2Seq(nn.Module):
                 out_d, states = self.decoder(input, states, val=True) #[1,64,500]
             #print("OUT size:", out_d.size())
             x = self.dropout(torch.tanh(out_d))
-            x = self.output(x) #[1,64,trg_vocab_size]
+            x = self.output(x) #[1,batch_size,trg_vocab_size], with context dec --> [3, bs, trg]
             #print("Final:", x.size())
             outputs[t] = x
             teacher_force = random.random() < teacher_forcing_ratio
@@ -234,7 +234,7 @@ def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
             experiment_config.reverse_input = False
         experiment_config.rnn_type = "gru"
         experiment_config.decoder_type = "context"
-        experiment_config.nlayers = 1
+        #experiment_config.nlayers = 1
         return ContextSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
     elif model_type == "s":
