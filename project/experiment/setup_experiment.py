@@ -30,8 +30,8 @@ def str2array(s):
 def experiment_parser():
     parser = argparse.ArgumentParser(description='Neural Machine Translation')
     parser.add_argument('--lr', default=2e-3, type=float, metavar='N', help='learning rate, default: 2e-3')
-    parser.add_argument('--hs', default=500, type=int, metavar='N', help='size of hidden state, default: 300')
-    parser.add_argument('--emb', default=500, type=int, metavar='N', help='embedding size, default: 300')
+    parser.add_argument('--hs', default=512, type=int, metavar='N', help='size of hidden state, default: 300')
+    parser.add_argument('--emb', default=256, type=int, metavar='N', help='embedding size, default: 300')
     parser.add_argument('--nlayers', default=4, type=int, metavar='N', help='number of layers in rnn, default: 2')
     parser.add_argument('--dp', default=0.25, type=float, metavar='N', help='dropout probability, default: 0.30')
     parser.add_argument('--bi', type=str2bool, default=False,
