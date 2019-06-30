@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-cd ../..
 
 echo "DE_EN"
 

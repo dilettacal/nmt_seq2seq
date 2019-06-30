@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-cd ../..
-
 echo "Starting script.........."
 
 echo "EN_DE"
