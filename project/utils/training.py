@@ -236,10 +236,13 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
 
                 bleus.update(batch_bleu)
                 perl_bleus.update(perl_bleu)
-                return losses.avg, [bleus.avg, perl_bleus.avg]
 
-            else:
-                return losses.avg, -1
+
+        if bleu:
+           return losses.avg, [bleus.avg, perl_bleus.avg]
+
+        else:
+           return losses.avg, -1
 
 
 
