@@ -42,7 +42,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         check_tr = True if epoch % 10 == 0 else False
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
                                optimizer=optimizer,device=device, model_type=model_type, logger=logger, check_trans=check_tr, SRC=SRC, TRG=TRG,)
-        avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=True)
+        avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=compute_bleu)
 
         val_losses.append(avg_val_loss)
         train_losses.append(avg_train_loss)
