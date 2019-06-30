@@ -2,6 +2,8 @@
 # run: sudo bash create_env.sh env_name
 # This script creates the environment: <project_dir>/env_name
 
+cd ..
+
 if [ $# -eq 0 ]
   then
     echo "Provide environment name as argument!"
