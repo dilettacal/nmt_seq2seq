@@ -224,7 +224,7 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
                     sent_candidates.append(sent_out)
                     sent_references.append(sent_ref)
 
-
+                ### smoothing functions allow to avoid the problem of missing n-gram overlappings
                 smooth = SmoothingFunction()
 
                 ### Computing corpus bleu for this batch
