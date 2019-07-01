@@ -106,6 +106,7 @@ class AverageMeter():
         self.count = 0
 
     def update(self, val, n=1):
+        if val is None: val = 0
         self.val = val
         self.sum = self.sum + val * n
         self.count = self.count + n
