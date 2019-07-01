@@ -34,11 +34,12 @@ class Decoder(nn.Module):
 
         self.dropout = nn.Dropout(self.dropout_p)
 
-    def forward(self, x, h0, val=True):
+    def forward(self, x, h0, val=False):
         # Embed text and pass through GRU
         if val:
             x = x.unsqueeze(0)
-        x = self.embedding(x)
+        x = self.embedding(x) #1,1,256
+        print(x.size())
         x = self.dropout(x)
         out, h = self.rnn(x, h0)
         return out, h
@@ -53,7 +54,7 @@ class ContextDecoder(Decoder):
 
         self.dropout = nn.Dropout(dropout_p)
 
-    def forward(self, x, h0, context=None, val=True):
+    def forward(self, x, h0, context=None, val=False):
 
         ### context: [1,batch_size, hid_dim], 1 is the number of layers
 
@@ -62,27 +63,16 @@ class ContextDecoder(Decoder):
         # x: [1, batch_size] or [batch_size]
         embedded = self.dropout(self.embedding(x))  # [1,batch_size,emb_dim] - seq_len, bs, emb_size, 1,1,emb_size
 
+        print(embedded.size())
+        print(context.size())
 
-        if context.size(0) > 1:
-            repeat_vals = [context.shape[0] // embedded.shape[0]] + [-1]*(len(embedded.shape) -1)
-            emb_con = torch.cat((embedded.expand(*repeat_vals), context), dim=2)
-            output, h = self.rnn(emb_con, h0)  # 1,64,500
-            ### output shape [batch_size, trg_vocab]
-            ## tensors: [num_layers, bs,emb_dim or hid_dim]
-            output = torch.cat((embedded.expand(*repeat_vals).squeeze(0), h.squeeze(0), context.squeeze(0)),
-                               dim=2)
-           ### size: [num_layers, bs, final]
-            ### this is needed if model is trained bidirectional encoder or with more than one layer
-            output = output[:1, :, :] # we do not want the stacked results, but only the last --> [1, bs, final_dim]
-        else:
-            emb_con = torch.cat((embedded, context), dim=2)
-            output, h = self.rnn(emb_con, h0)  # 1,64,500
-            ### output shape [batch_size, trg_vocab]
-            # squeeze --> tensor: [1, emb_dim] or [1, hid_dim]
-            output = torch.cat((embedded.squeeze(0), h.squeeze(0), context.squeeze(0)),
-                               dim=1)
-            output = output[:1,:,:]
-            ### output shape consistent with the shape of the normal decoder: [1, batch_size, fina_dim]
-            output = output.unsqueeze(0)
+        emb_con = torch.cat((embedded, context), dim=2)
+        output, h = self.rnn(emb_con, h0)  # 1,64,500
+        ### output shape [batch_size, trg_vocab]
+        # squeeze --> tensor: [1, emb_dim] or [1, hid_dim]
+        output = torch.cat((embedded.squeeze(0), h.squeeze(0), context.squeeze(0)),
+                           dim=1)
+        output = output.unsqueeze(0)
 
         return output, h
+

@@ -77,7 +77,28 @@ class Seq2Seq(nn.Module):
 
         ### create encoder and decoder
 
-    def forward(self, src, trg, teacher_forcing_ratio=TEACHER_RATIO):
+    def forward(self, src, trg):
+        src = src.to(self.device)
+        trg = trg.to(self.device)
+
+        # Encode
+        out_e, final_e = self.encoder(src)
+
+        if self.context_model:
+            context = final_e
+            out_d, _ = self.decoder(trg, final_e, context)
+
+        else:
+            context = None
+            out_d, _ = self.decoder(trg, final_e)
+
+        x = self.dropout(torch.tanh(out_d))
+        x = self.output(x)
+
+        return x
+
+    """
+        def forward(self, src, trg, teacher_forcing_ratio=TEACHER_RATIO):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
@@ -100,6 +121,8 @@ class Seq2Seq(nn.Module):
         input = trg[0, :]
         ### unrolling the decoder word by word
         used_teacher = 0
+        ### TODO: without unroll!
+        
         for t in range(1, max_len):
             if self.context_model:
                 out_d, states = self.decoder(input, states, context, val=True)
@@ -116,6 +139,9 @@ class Seq2Seq(nn.Module):
             used_teacher += 1 if teacher_force else 0
             input = (trg[t] if teacher_force else top1)
         return outputs
+    
+    """
+
 
     def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
