@@ -68,6 +68,7 @@ def experiment_parser():
     parser.add_argument('--val', default=20000, type=int, help="Number of validation examples")
     parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
     parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
+    parser.add_argument('--val_bs', default=12, type=int, help="Validation batch size")
 
     return parser
 
@@ -85,6 +86,7 @@ class Experiment(object):
         self.corpus = self.args.corpus
         self.lang_code = self.args.lang_code
         self.reverse_lang_comb = self.args.reverse
+        self.val_batch_size = self.args.val_bs
         #print("Reverse?", self.reverse_lang_comb)
         self.model_type = self.args.model_type
         self.bi = self.args.bi

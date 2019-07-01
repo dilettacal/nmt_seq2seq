@@ -94,12 +94,12 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     if voc_limit > 0:
-        src_vocab.build_vocab(train, val, test, min_freq=2, max_size=voc_limit)
-        trg_vocab.build_vocab(train, val, test, min_freq=2, max_size=voc_limit)
+        src_vocab.build_vocab(train, val, test, min_freq=5, max_size=voc_limit)
+        trg_vocab.build_vocab(train, val, test, min_freq=5, max_size=voc_limit)
         print("Src vocabulary created!")
     else:
-        src_vocab.build_vocab(train, val, test, min_freq=2)
-        trg_vocab.build_vocab(train, val, test, min_freq=2)
+        src_vocab.build_vocab(train, val, test, min_freq=5)
+        trg_vocab.build_vocab(train, val, test, min_freq=5)
         print("Src vocabulary created!")
 
 
@@ -111,8 +111,8 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src)))
 
    # val_batch_size = experiment.batch_size//2 if experiment.batch_size >=2 else experiment.batch_size
-    val_batch_size = 1
-    val_iter = data.BucketIterator(val, val_batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
+    val_iter = data.BucketIterator(val, experiment.val_batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
+    print(val_iter.batch_size)
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
 
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test
