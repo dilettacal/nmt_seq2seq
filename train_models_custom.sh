@@ -10,7 +10,7 @@ echo "Sutskever"
 
 echo "====================================="
 
-python3 run_custom_nmt.py --hs 512 --emb 300 --nlayers 2 --dp 0.5 --reverse_input True --reverse True --model_type s --epochs 50 -v 30000 -b 64 --train 170000 --val 1000 --test 1000  --lr 0.001
+python3 run_custom_nmt.py --hs 512 --emb 300 --nlayers 2 --dp 0.5 --reverse_input True --reverse True --model_type s --epochs 50 -v 30000 -b 64 --train 170000 --val 1000 --test 1000   --lr 0.0003 --val_bs 12
 
 echo "====================================="
 
@@ -18,7 +18,7 @@ echo "====================================="
 
 echo "====================================="
 
-python3 run_custom_nmt.py --hs 512 --emb 300 --nlayers 2 --dp 0.25 --reverse_input True --reverse True --model_type s --epochs 50 -v 30000 -b 64 --train 170000 --val 1000 --test 1000 --lr 0.001
+python3 run_custom_nmt.py --hs 512 --emb 300 --nlayers 2 --dp 0.25 --reverse_input True --reverse True --model_type s --epochs 50 -v 30000 -b 64 --train 170000 --val 1000 --test 1000  --lr 0.0003 --val_bs 12
 
 echo "====================================="
 
