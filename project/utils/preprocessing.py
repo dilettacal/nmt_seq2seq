@@ -3,18 +3,12 @@ import os
 import random
 import string
 from datetime import datetime
-
-import numpy as np
-import pandas as pd
-import unidecode as unidecode
-from sacremoses import MosesTokenizer
-import unicodedata
 import re
 
-import tokenizer ## from tmx2corpus
-from project.utils.data.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
+import tokenizer ## from tmx2corpus!!!!!
+from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import Logger
-from settings import RAW_EUROPARL, DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED, DATA_DIR
+from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED
 from tmx2corpus import Converter
 
 ### Regex ###
@@ -47,6 +41,8 @@ class MinLenFilter(object):
 class SequenceTokenizer(tokenizer.Tokenizer):
     def __init__(self, lang):
         #self.custom_tokenizer = custom_tokenizer
+        self.only_tokenize = True
+        self.type = "standard"
         super(SequenceTokenizer, self).__init__(lang.lower())
 
     def _tokenize(self, text):
@@ -57,6 +53,12 @@ class SequenceTokenizer(tokenizer.Tokenizer):
     @abc.abstractmethod
     def _custom_tokenize(self, text):
         pass
+
+    def set_mode(self, only_tokenize=True):
+        self.only_tokenize = only_tokenize
+
+    def set_type(self, type="standard"):
+        self.type = type
 
     def _clean_text(self, text):
         text = re.sub(space_before_punct, r"\1", text)
@@ -72,6 +74,10 @@ class SequenceTokenizer(tokenizer.Tokenizer):
 
 class CharBasedTokenizer(SequenceTokenizer):
 
+    def __init__(self, lang):
+        super(SequenceTokenizer, self).__init__(lang)
+        self.type = "char"
+
     def _custom_tokenize(self, text):
         return list(text)
 
@@ -79,16 +85,20 @@ class SpacyTokenizer(SequenceTokenizer):
     def __init__(self, lang, model):
         self.nlp = model
         super(SpacyTokenizer, self).__init__(lang)
+        self.type = "spacy"
 
     def _custom_tokenize(self, text):
         doc = self.nlp(text)
-        ents = self.get_entities(text, doc)
-        tokens = [tok.text for tok in doc]
-        tokens = self.replace_text(tokens, ents)
-        tokens = [token if token.isupper() else token.lower() for token in tokens]
+        if self.only_tokenize:
+            return [tok.text for tok in doc]
+        else:
+            ents = self.get_entities(doc)
+            tokens = [tok.text for tok in doc]
+            tokens = self.replace_text(tokens, ents)
+            tokens = [token if token.isupper() else token.lower() for token in tokens]
         return tokens
 
-    def get_entities(self, text, doc):
+    def get_entities(self, doc):
         text_ents = [(str(ent), "PERSON") for ent in doc.ents if ent.label_ in ["PER", "PERSON"]]
         return text_ents
 
@@ -115,24 +125,27 @@ class StandardSplitTokenizer(SequenceTokenizer):
             i = m.end()
         return tokens
 
-def get_custom_tokenizer(lang, mode, fast=False):
 
+
+def get_custom_tokenizer(lang, mode, fast=False):
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
+    tokenizer = None
     if mode == "c":
-        return CharBasedTokenizer(lang)
+        tokenizer = CharBasedTokenizer(lang)
     else:
         if fast:
-            return StandardSplitTokenizer(lang)
+            tokenizer = StandardSplitTokenizer(lang)
         else:
             ## this may last more than 1 hour
             if lang in SUPPORTED_LANGS.keys():
                 try:
                     import spacy
                     nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"]) #makes it faster
-                    return SpacyTokenizer(lang, nlp)
+                    tokenizer = SpacyTokenizer(lang, nlp)
                 except ImportError:
                     print("Spacy not installed. Standard tokenization is used")
-                    return StandardSplitTokenizer(lang)
+                    tokenizer = StandardSplitTokenizer(lang)
+    return tokenizer
 
 
 
@@ -228,119 +241,8 @@ def split_data(src_sents, trg_sents, test_ratio=0.3, seed=SEED):
     return train_set, val_set, test_set
 
 
-############### REMOVE ###############
-
-def char_filter(string):
-    valid = re.compile('[a-zA-Z0-9]+')
-    for char in unicodedata.normalize('NFC', string):
-        decoded = unidecode.unidecode(char)
-        if valid.match(decoded):
-            yield char
-        else:
-            yield decoded
-
-def clean_string(string):
-    return "".join(char_filter(string))
-
-
-def clearup(s, chars, replacee):
-    s = re.sub('[%s]' % chars, replacee, s)
-    if replacee == '':
-        s = re.sub(' +', ' ', s)
-    return s
-
-#TODO: REMOVE
-def perform_refinements(sent):
-    if isinstance(sent, list):
-        sent = ' '.join(sent)
-
-    sent = clean_string(sent)
-
-    sent = clearup(sent, string.digits, "*")
-    sent = re.sub('\*+', 'NUM', sent)
-
-    sent = sent.strip().split(" ")
-    sent = ' '.join(sent)
-    return sent
-
-def basic_preprocess_sentence(sent, lang):
-   # print("Raw sentence:", sent)
-    copy = str(sent)+""
-
-    if lang == "en":
-        sent = expand_contraction(sent, ENG_CONTRACTIONS_MAP)
-    ### Regex ###
-    space_before_mark = r"\s+([.?!])"
-
-    before_apos = r"\s+(['])"
-    after_apos = r"(['])\s+([\w])"
-    ## remove extra spaces --> the normalize function would output 'house \?' instead of 'house ?"
-    sent = re.sub(space_before_mark, r"\1", sent)
-
-        ## Remove hyphens
-    sent = sent.replace('-', '')
-    ### remove extra spaces before apostroph, if any
-    sent = re.sub(before_apos, r"\1", sent)
-    sent = re.sub(after_apos, r"\1\2", sent)
-
-    tokenizer = MosesTokenizer(lang)
-    sent = tokenizer.tokenize(sent.strip())
-
-    sent = ' '.join(sent)
-    return sent
-
-
-
-def preprocess_corpus(src_sents, trg_sents, language_code, max_len=30):
-    for src_sent, trg_sent in zip(src_sents, trg_sents):
-        src_sent = basic_preprocess_sentence(src_sent, "en")
-        trg_sent = basic_preprocess_sentence(trg_sent, language_code)
-        if src_sent and trg_sent:
-            src_splits = src_sent.split(" ")
-            trg_splits = trg_sent.split(" ")
-            if (len(src_splits) <= max_len and len(trg_splits) <= max_len):
-                yield (src_sent, trg_sent)
-
 
 flatten = lambda l: [item for sublist in l for item in sublist]
-
-
-def convert_txt_to_tsv(root_path, src_data, trg_data):
-
-    raw_data = {'src': [line for line in src_data], 'trg': [line for line in trg_data]}
-
-    df = pd.DataFrame(raw_data, columns=["src", "trg"])
-
-    df['src_len'] = df['src'].str.count(' ')
-    df['trg_len'] = df['trg'].str.count(' ')
-  #  df = df.query('src_len < 80 & trg_len < 80')
-   # df = df.query('src_len < trg_len * 1.5 & src_len * 1.5 > trg_len')
-
-    df.to_csv(os.path.join(root_path, RAW_EUROPARL), sep="\t", encoding="utf-8", index=False)
-    print("Total sentences:", len(df))
-    print(pd.read_csv(os.path.join(root_path, RAW_EUROPARL), sep="\t").head())
-
-def read_from_tsv(path):
-    return pd.read_csv(path, encoding="utf-8", sep="\t")
-
-
-def tokenize_input(text, lang ="en", char_level=False, reversed=False):
-    """
-    Tokenization method
-    :param text:
-    :param lang:
-    :param char_level:
-    :param reversed:
-    :return:
-    """
-
-    if not char_level:
-        tokenized = basic_preprocess_sentence(text, lang=lang)
-    else: tokenized = list(text)
-    if reversed:
-        tokenized = tokenized[::-1]
-    return tokenized
-
 
 
 def generate_splits_from_plain_text(root=os.path.join(DATA_DIR_PREPRO, "europarl"), language_code="de", max_len=30, filename="europarl"):

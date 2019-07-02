@@ -64,13 +64,14 @@ def experiment_parser():
     parser.add_argument('--cuda', type=str2bool, default="True")
 
     parser.add_argument('--rnn', metavar="STR", default="lstm")
-    parser.add_argument('--maxout', type=int, default=0, help="Maxout units")
+    parser.add_argument('--maxout', type=int, default=0, help="Maxout units") #not used
 
     parser.add_argument('--train', default=200000, type=int, help="Number of training examples")
     parser.add_argument('--val', default=20000, type=int, help="Number of validation examples")
     parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
     parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
     parser.add_argument('--val_bs', default=12, type=int, help="Validation batch size")
+    parser.add_argument('--tok', default="tok", type=str, help="tok files or clean files")
 
     return parser
 
@@ -135,6 +136,8 @@ class Experiment(object):
         self.nlayers = self.args.nlayers
         self.dp = self.args.dp
 
+
+        self.tok = self.args.tok
 
         self.decoder_type = self.args.dec
         if self.decoder_type == "context":

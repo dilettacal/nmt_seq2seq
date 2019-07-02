@@ -1,22 +1,11 @@
 import io
-import time
-
 import torch
 import torchtext
 import torchtext.data as data
 from torchtext.data import Dataset
-
-from tmx2corpus import FileOutput
 import os
-
 from project.utils.constants import PAD_TOKEN, UNK_TOKEN, SOS_TOKEN, EOS_TOKEN
-from settings import DATA_DIR, DATA_DIR_RAW, DATA_DIR_PREPRO
-from project.utils.data.preprocessing import MaxLenFilter, MinLenFilter, TMXConverter, get_custom_tokenizer
-from project.utils.utils import convert
 
-
-def read_file(path):
-    pass
 
 class TranslationReversibleField(torchtext.data.Field):
 
