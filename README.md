@@ -24,12 +24,7 @@ For other requirements, please see the `requirements.txt` file.
 
 ## Goals
 
-The primary goal of this Bachelor Thesis is to gain a basic overview about Encoder-Decoder architectures. 
-State-of-the-Art systems are based on the newest Google Architecture, the Transformer Model, which is a sophisticated architecture made up by many components, which delivers by the time of writing the best results.
-
-Pre-State-of-the-Art systems adopted an Attention-Mechanism which allowed to focus on the relevant part of the source sentences, and which were taken into consideration during the decoding phase.
-
-The base of this mechanism can be found in the above mentioned papers by Sutskever and Cho. 
+TODO: bla bla bla
 
 ## Code references
 **TODO**: Extend this part !!!!!!
