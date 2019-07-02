@@ -1,5 +1,5 @@
 """
-This script runs a customized experiment.
+Main script to run nmt experiments
 
 """
 
