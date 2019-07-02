@@ -233,8 +233,11 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
                                             hypotheses=[hyp.split() for hyp in sent_candidates],
                                             smoothing_function=smooth.method4) * 100
 
-                perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
-
+                try:
+                    perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
+                except TypeError or Exception as e:
+                    print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
+                    perl_bleu = 0
                 bleus.update(batch_bleu)
                 perl_bleus.update(perl_bleu)
 
@@ -292,7 +295,11 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
     nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
                             hypotheses=[hyp.split() for hyp in sent_candidates],
                             smoothing_function=smooth.method4)*100
-    perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
+    try:
+        perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
+    except TypeError or Exception as e:
+        print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
+        perl_bleu = 0
 
     # print("BLEU", batch_bleu)
     return losses.avg, [nlkt_bleu, perl_bleu]
