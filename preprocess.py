@@ -11,6 +11,11 @@ Ex:
 
 python preprocess.py --lang_code de --type tmx --corpus europarl --max_len 30 --min_len 2 --path data/raw/europarl/de --file de-en.tmx
 
+Filtering by length...
+Total samples:  1053263
+1053263
+Reducing the vocabulary...
+Total samples:  1052761
 """
 import argparse
 import os
