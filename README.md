@@ -6,9 +6,8 @@ My Bachelor Thesis is about Neural Machine Translation.
 
 Main topics discussed are Encoder-Decoder architectures or Sequence-to-Sequence models in their simplest form. 
 
-As baseline models the implementations from following papers are proposed:
-- I. Sutskever et al. (2014), 
-- Y. Cho et al. (2014),
+
+##### TODO: model description
 
 
 Following frameworks and libraries are used:
