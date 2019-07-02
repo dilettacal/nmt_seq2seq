@@ -1,16 +1,18 @@
 """
-Credits for some parts of this source code to this blog post:
+Credits for some parts of this source code:
 
+Class Seq2Seq (with or w/o Attention):
 Author: Luke Melas
 Title: Machine Translation with Recurrent Neural Networks
 URL: https://lukemelas.github.io/machine-translation.html
 
-Classes:
-- Seq2Seq is a vanilla Seq2Seq model. This can handle LSTMs, GRUs and bidirectional Encoders
-- ContextSeq2Seq aims to replicate the model proposed by Cho et al. Learning Phrase Representations using RNN Encoder–Decoderfor Statistical Machine Translation (2014), (URL:https://arxiv.org/pdf/1406.1078.pdf)
-- AttSeq2Seq is a Seq2Seq model with attention, as implemented in the blog post of Luke Melas.
+Class ContextSeq2Seq:
 
-All these models can handle beam search.
+Author Ben Trevett:
+Title: 2 - Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation.ipynb
+Implements paper (Cho et al. 2014): https://arxiv.org/abs/1406.1078
+URL: https://github.com/bentrevett/pytorch-seq2seq/blob/master/2%20-%20Learning%20Phrase%20Representations%20using%20RNN%20Encoder-Decoder%20for%20Statistical%20Machine%20Translation.ipynb
+
 """
 import random
 
@@ -21,7 +23,7 @@ from torch.autograd import Variable
 from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
-from project.model.utils import Beam
+from project.model.layers import Attention
 from settings import VALID_CELLS, SEED, TEACHER_RATIO
 
 """
@@ -54,7 +56,7 @@ class Seq2Seq(nn.Module):
         rnn_type = experiment_config.rnn_type
         self.cell = rnn_type
         self.context_model = False
-        self.attn = False
+        self.att_type = experiment_config.attn
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
@@ -65,9 +67,16 @@ class Seq2Seq(nn.Module):
                                    self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=rnn_type,
                                    dropout_p=self.dp)
 
+        self.attention = Attention(pad_token=self.pad_token, bidirectional=self.enc_bi, attn_type=self.att_type, h_dim=self.hid_dim)
+
+        self.linear1 = nn.Linear(2*self.hid_dim, self.emb_size)
+        self.tanh = nn.Tanh()
         self.dropout = nn.Dropout(experiment_config.dp)
-        self.output = nn.Linear(self.hid_dim,
-                                experiment_config.trg_vocab_size)
+        self.linear2 = nn.Linear(self.emb_size, self.trg_vocab_size) #emb size of target
+
+        if False and self.decoder.embedding.weight.size() == self.linear2.weight.size():
+            print('Weight tying!')
+            self.linear2.weight = self.decoder.embedding.weight
 
     def init_weights(self, func=None):
         if not func:
@@ -77,45 +86,24 @@ class Seq2Seq(nn.Module):
 
         ### create encoder and decoder
 
-    def forward(self, src, trg, teacher_forcing_ratio=TEACHER_RATIO):
+    def forward(self, src, trg):
         src = src.to(self.device)
         trg = trg.to(self.device)
 
-        batch_size = trg.shape[1]
-        max_len = trg.shape[0]
-        trg_vocab_size = self.trg_vocab_size
-
-        # tensor to store decoder outputs
-        outputs = torch.zeros(max_len, batch_size, trg_vocab_size).to(self.device)
-
         # Encode
-        out_e, states = self.encoder(src)
+        out_e, final_e = self.encoder(src)
+        # Decode
+        out_d, final_d = self.decoder(trg, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
 
-        if self.context_model:
-            context = states
+        # Attend
+        context = self.attention(src, out_e, out_d) #seq_len, bs, hid_dim
+        out_cat = torch.cat((out_d, context), dim=2)
+        # Predict (returns probabilities)
+        x = self.linear1(out_cat)
+        x = self.dropout(self.tanh(x))
+        x = self.linear2(x)
+        return x
 
-        else: context = None
-
-        # first input to the decoder is the <sos> tokens
-        input = trg[0, :]
-        ### unrolling the decoder word by word
-        used_teacher = 0
-        for t in range(1, max_len):
-            if self.context_model:
-                out_d, states = self.decoder(input, states, context, val=True)
-            else:
-                out_d, states = self.decoder(input, states, val=True) #[1,64,500]
-            #print("OUT size:", out_d.size())
-            x = self.dropout(torch.tanh(out_d))
-            x = self.output(x) #[1,batch_size,trg_vocab_size], with context dec --> [3, bs, trg]
-            #print("Final:", x.size())
-            outputs[t] = x
-            teacher_force = random.random() < teacher_forcing_ratio
-            top1 = x.squeeze(0).max(1)[1] # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities --> [batch_size]
-           # print("Target:", trg[t].size(), "Top1:", top1.size()) #during validation: [batch_size], during test [1], [1]
-            used_teacher += 1 if teacher_force else 0
-            input = (trg[t] if teacher_force else top1)
-        return outputs
 
     def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
@@ -149,10 +137,18 @@ class Seq2Seq(nn.Module):
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
                     if self.context_model:
                         outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=False)
+                        x = self.linear1(outputs_d)
                     else:
-                        outputs_d, new_state = self.decoder(last_word_input, current_state, val=False)
-                    x = self.output(outputs_d)
+                        outputs_d, new_state = self.decoder(last_word_input, current_state)
+                        # Attend
+                        context = self.attention(src, outputs_e, outputs_d)
+                        out_cat = torch.cat((outputs_d, context), dim=2)
+                        x = self.linear1(out_cat)
+
+                    x = self.dropout(self.tanh(x))
+                    x = self.linear2(x)
                     x = x.squeeze().data.clone()
+
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
                     lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
@@ -176,22 +172,54 @@ class ContextSeq2Seq(Seq2Seq):
         super().__init__(experiment_config, token_bos_eos_pad_unk)
 
         self.context_model = True
+        self.attention = None
 
         self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
                                       self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
 
-        self.output = nn.Linear(self.emb_size + self.hid_dim*2,
-                                experiment_config.trg_vocab_size)
+
+        #### Additional linear transformation is added here to get better results representations
+        self.linear1 = nn.Linear(self.emb_size +2 * self.hid_dim, self.emb_size)
+        self.tanh = nn.Tanh()
+        self.dropout = nn.Dropout(experiment_config.dp)
+        self.linear2 = nn.Linear(self.emb_size, self.trg_vocab_size)  # emb size of target
 
 
-class AttentionSeq2Seq(Seq2Seq):
-    def __init__(self, experiment_config, token_bos_eos_pad_unk):
-        super().__init__(experiment_config, token_bos_eos_pad_unk)
-        self.attn = True
-        self.context_model = False
+    def forward(self, src, trg):
+        src = src.to(self.device)
+        trg = trg.to(self.device)
 
+        batch_size = trg.shape[1]
+        max_len = trg.shape[0]
+        trg_vocab_size = self.trg_vocab_size
 
+        # tensor to store decoder outputs
+        outputs = torch.zeros(max_len, batch_size, trg_vocab_size).to(self.device)
 
+        # Encode
+        out_e, states = self.encoder(src)
+
+        if self.context_model:
+            context = states
+
+        else:
+            context = None
+
+        # first input to the decoder is the <sos> tokens
+        input = trg[0, :]
+        ### unrolling the decoder word by word
+        for t in range(1, max_len):
+            out_d, states = self.decoder(input, states, context, val=True)
+            x = self.linear1(out_d)
+            x = self.dropout(self.tanh(x))
+            x = self.linear2(x)# [1,batch_size,trg_vocab_size], with context dec --> [3, bs, trg]
+            outputs[t] = x
+            input = trg[t]
+
+        return outputs
+
+#### Initializations methods based on initialization in the respecitve papers:
+#### See: https://github.com/bentrevett/pytorch-seq2seq (Notebook 1, 2 and 3)
 def uniform_init_weights(m):
     for name, param in m.named_parameters():
         nn.init.uniform_(param.data, -0.08, 0.08)
@@ -214,6 +242,9 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
+
+####### Use this function to set up a model from the main script #####
+#### Factory method to generate the model ####
 def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
     decoder_type = experiment_config.decoder_type
@@ -229,15 +260,19 @@ def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
 
     elif model_type == "c":
         #### This returns a model like in Cho et al. #####
-        #experiment_config.bi = False
+        if experiment_config.nlayers > 1: experiment_config.nlayers = 1
+
         if experiment_config.bi and experiment_config.reverse_input:
             experiment_config.reverse_input = False
+
         experiment_config.rnn_type = "gru"
+
         experiment_config.decoder_type = "context"
         #experiment_config.nlayers = 1
         return ContextSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
     elif model_type == "s":
         #### This returs a model like in Sutskever et al. ####
+        #### The architecture was multilayered, thus layers are automatically set to 2 and input sequences were reversed (this is handled in the vocabulary class)
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
         return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)

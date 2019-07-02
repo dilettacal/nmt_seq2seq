@@ -46,10 +46,12 @@ def experiment_parser():
     parser.add_argument('--predict_from_input', metavar='STR', default=None, help='Source sentence to translate')
     parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Sequence max length. Default 30 units.")
     parser.add_argument('--model_type', default="custom", metavar='STR', help="Model type (custom, cho, sutskever)")
-    parser.add_argument('--dec', type=str, default="standard", help="Decoder type: Standard, Context, attn")
+    parser.add_argument('--dec', type=str, default="standard", help="Decoder type: Standard, Context")
 
     parser.add_argument('--corpus', default="europarl", metavar='STR',
                         help="The corpus, where training should be performed. Possible values: \'europarl\' and \'simple'\ - the iwslt dataset from torchtext")
+
+    parser.add_argument('--attn', default="none", type=str, help="Attention type: dot, additive, none")
 
     parser.add_argument('-c', metavar='STR', default=False, help="Training at char level")
 
@@ -89,6 +91,10 @@ class Experiment(object):
         self.val_batch_size = self.args.val_bs
         #print("Reverse?", self.reverse_lang_comb)
         self.model_type = self.args.model_type
+
+        assert self.args.attn in ["none", "additive", "dot"]
+        self.attn = self.args.attn
+
         self.bi = self.args.bi
         if self.model_type == "s":
             self.reverse_input = True
