@@ -63,3 +63,5 @@ GRU = "gru"
 VALID_CELLS = [LSTM, GRU]
 VALID_MODELS = ["custom", "s", "c", "attn"]
 VALID_DEC = ["standard", "context", "attn"]
+
+TEST_TRANSLATIONS = [""] ### translations which are considered during the training phase, taken from the training set
