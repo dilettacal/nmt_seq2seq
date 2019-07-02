@@ -1,5 +1,5 @@
 """
-This script runs a customized experiment.
+Main script to run nmt experiments
 
 """
 
@@ -8,10 +8,10 @@ import os, datetime, time, sys
 import torch
 import torch.nn as nn
 
-from project.experiment.setup_experiment import experiment_parser, Experiment
-from project.model.models import Seq2Seq, count_parameters, get_nmt_model, uniform_init_weights, normal_init_weights
+from project.experiment.setup_experiment import Experiment
+from project.model.models import count_parameters, get_nmt_model, uniform_init_weights, normal_init_weights
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
-from project.utils.data.vocabulary import get_vocabularies_iterators, print_data_info
+from project.utils.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import train_model, validate_test_set
 from project.utils.utils import convert, Logger, Metric
 from settings import MODEL_STORE

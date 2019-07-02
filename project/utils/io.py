@@ -1,22 +1,11 @@
 import io
-import time
-
 import torch
 import torchtext
 import torchtext.data as data
 from torchtext.data import Dataset
-
-from tmx2corpus import FileOutput
 import os
-
 from project.utils.constants import PAD_TOKEN, UNK_TOKEN, SOS_TOKEN, EOS_TOKEN
-from settings import DATA_DIR, DATA_DIR_RAW, DATA_DIR_PREPRO
-from project.utils.data.preprocessing import MaxLenFilter, MinLenFilter, TMXConverter, get_custom_tokenizer
-from project.utils.utils import convert
 
-
-def read_file(path):
-    pass
 
 class TranslationReversibleField(torchtext.data.Field):
 
@@ -162,15 +151,3 @@ class Seq2SeqDataset(Dataset):
         return tuple(d for d in (train_data, val_data, test_data)
                      if d is not None)
 
-
-if __name__ == '__main__':
-    #### preprocessing pipeline for tmx files
-    start = time.time()
-    converter = TMXConverter(output=FileOutput(path=os.path.join(DATA_DIR_PREPRO,"europarl", "de")))
-    tokenizers = [get_custom_tokenizer("en", "w"), get_custom_tokenizer("de", "w")]
-    converter.add_tokenizers(tokenizers)
-    converter.add_filter(MaxLenFilter(30))
-    converter.add_filter(MinLenFilter(5))
-    converter.convert([os.path.join(DATA_DIR_RAW,"europarl", "de", "de-en.tmx")])
-    print("Total time:", convert(time.time() - start))
-    print(converter.output_lines)
