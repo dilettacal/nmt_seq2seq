@@ -162,15 +162,3 @@ class Seq2SeqDataset(Dataset):
         return tuple(d for d in (train_data, val_data, test_data)
                      if d is not None)
 
-
-if __name__ == '__main__':
-    #### preprocessing pipeline for tmx files
-    start = time.time()
-    converter = TMXConverter(output=FileOutput(path=os.path.join(DATA_DIR_PREPRO,"europarl", "de")))
-    tokenizers = [get_custom_tokenizer("en", "w"), get_custom_tokenizer("de", "w")]
-    converter.add_tokenizers(tokenizers)
-    converter.add_filter(MaxLenFilter(30))
-    converter.add_filter(MinLenFilter(5))
-    converter.convert([os.path.join(DATA_DIR_RAW,"europarl", "de", "de-en.tmx")])
-    print("Total time:", convert(time.time() - start))
-    print(converter.output_lines)
