@@ -39,7 +39,7 @@ class Decoder(nn.Module):
         if val:
             x = x.unsqueeze(0)
         x = self.embedding(x) #1,1,256
-        print(x.size())
+       # print(x.size())
         x = self.dropout(x)
         out, h = self.rnn(x, h0)
         return out, h
@@ -54,7 +54,7 @@ class ContextDecoder(Decoder):
 
         self.dropout = nn.Dropout(dropout_p)
 
-    def forward(self, x, h0, context=None, val=False):
+    def forward(self, x, h0, context=None, val=True):
 
         ### context: [1,batch_size, hid_dim], 1 is the number of layers
 
@@ -62,16 +62,22 @@ class ContextDecoder(Decoder):
             x = x.unsqueeze(0)
         # x: [1, batch_size] or [batch_size]
         embedded = self.dropout(self.embedding(x))  # [1,batch_size,emb_dim] - seq_len, bs, emb_size, 1,1,emb_size
-
-        print(embedded.size())
-        print(context.size())
-
-        emb_con = torch.cat((embedded, context), dim=2)
+       # context = context.sum(dim=0).unsqueeze(0)
+       # print(context.size())
+        context = context.sum(dim=0).unsqueeze(0)
+        emb_con = torch.cat((embedded,context), dim=2)
+        print("Emb and h0", emb_con.size(), h0.size())
         output, h = self.rnn(emb_con, h0)  # 1,64,500
         ### output shape [batch_size, trg_vocab]
         # squeeze --> tensor: [1, emb_dim] or [1, hid_dim]
+
+        h = h.sum(dim=0).unsqueeze(0)
+       # print(embedded.size(), h.size(), context.size())
         output = torch.cat((embedded.squeeze(0), h.squeeze(0), context.squeeze(0)),
                            dim=1)
+        output = output.sum(dim=0) if self.num_layers > 1 else output
+        ### output shape consistent with the shape of the normal decoder: [1, batch_size, fina_dim]
+        #print(output.size())
         output = output.unsqueeze(0)
 
         return output, h

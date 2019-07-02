@@ -33,6 +33,7 @@ Parameters:
 
 random.seed(SEED)
 
+
 class Seq2Seq(nn.Module):
     def __init__(self, experiment_config: Experiment, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
@@ -62,8 +63,8 @@ class Seq2Seq(nn.Module):
                                dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
 
         self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
-                                   self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=rnn_type,
-                                   dropout_p=self.dp)
+                               self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=rnn_type,
+                               dropout_p=self.dp)
 
         self.dropout = nn.Dropout(experiment_config.dp)
         self.output = nn.Linear(self.hid_dim,
@@ -84,68 +85,18 @@ class Seq2Seq(nn.Module):
         # Encode
         out_e, final_e = self.encoder(src)
 
-        if self.context_model:
-            context = final_e
-            out_d, _ = self.decoder(trg, final_e, context)
 
-        else:
-            context = None
-            out_d, _ = self.decoder(trg, final_e)
+        out_d, _ = self.decoder(trg, final_e)
 
         x = self.dropout(torch.tanh(out_d))
         x = self.output(x)
 
         return x
 
-    """
-        def forward(self, src, trg, teacher_forcing_ratio=TEACHER_RATIO):
-        src = src.to(self.device)
-        trg = trg.to(self.device)
-
-        batch_size = trg.shape[1]
-        max_len = trg.shape[0]
-        trg_vocab_size = self.trg_vocab_size
-
-        # tensor to store decoder outputs
-        outputs = torch.zeros(max_len, batch_size, trg_vocab_size).to(self.device)
-
-        # Encode
-        out_e, states = self.encoder(src)
-
-        if self.context_model:
-            context = states
-
-        else: context = None
-
-        # first input to the decoder is the <sos> tokens
-        input = trg[0, :]
-        ### unrolling the decoder word by word
-        used_teacher = 0
-        ### TODO: without unroll!
-        
-        for t in range(1, max_len):
-            if self.context_model:
-                out_d, states = self.decoder(input, states, context, val=True)
-            else:
-                out_d, states = self.decoder(input, states, val=True) #[1,64,500]
-            #print("OUT size:", out_d.size())
-            x = self.dropout(torch.tanh(out_d))
-            x = self.output(x) #[1,batch_size,trg_vocab_size], with context dec --> [3, bs, trg]
-            #print("Final:", x.size())
-            outputs[t] = x
-            teacher_force = random.random() < teacher_forcing_ratio
-            top1 = x.squeeze(0).max(1)[1] # x: 1, batch_size, trg_vocab_size --> [batch_size, trg_vocab_size], then select max over the probabilities --> [batch_size]
-           # print("Target:", trg[t].size(), "Top1:", top1.size()) #during validation: [batch_size], during test [1], [1]
-            used_teacher += 1 if teacher_force else 0
-            input = (trg[t] if teacher_force else top1)
-        return outputs
-    
-    """
-
-
     def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
-        beam_outputs = self.beam_search(src, beam_size, max_len=max_len, remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
+        beam_outputs = self.beam_search(src, beam_size, max_len=max_len,
+                                        remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
         top1 = beam_outputs[0][1]  # a list of word indices (as ints)
         return top1
 
@@ -158,7 +109,8 @@ class Seq2Seq(nn.Module):
         outputs_e, states = self.encoder(src)  # batch size = 1
         if self.context_model:
             context = states
-        else: context = None
+        else:
+            context = None
         # Start with '<s>'
         init_lprob = -1e10
         init_sent = [self.bos_token]
@@ -194,10 +146,9 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
-
-
 class ContextSeq2Seq(Seq2Seq):
     """This is inspired by the "context model" as proposed by Cho et al. (2014) """
+
     def __init__(self, experiment_config, token_bos_eos_pad_unk):
         super().__init__(experiment_config, token_bos_eos_pad_unk)
 
@@ -206,8 +157,46 @@ class ContextSeq2Seq(Seq2Seq):
         self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
                                       self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
 
-        self.output = nn.Linear(self.emb_size + self.hid_dim*2,
+        self.output = nn.Linear(self.emb_size + self.hid_dim * 2,
                                 experiment_config.trg_vocab_size)
+
+    def forward(self, src, trg):
+        src = src.to(self.device)
+        trg = trg.to(self.device)
+
+        batch_size = trg.shape[1]
+        max_len = trg.shape[0]
+        trg_vocab_size = self.trg_vocab_size
+
+        # tensor to store decoder outputs
+        outputs = torch.zeros(max_len, batch_size, trg_vocab_size).to(self.device)
+
+        # Encode
+        out_e, states = self.encoder(src)
+
+        if self.context_model:
+            context = states
+
+        else:
+            context = None
+
+        # first input to the decoder is the <sos> tokens
+        input = trg[0, :]
+        ### unrolling the decoder word by word
+        used_teacher = 0
+        for t in range(1, max_len):
+            if self.context_model:
+                out_d, states = self.decoder(input, states, context, val=True)
+            else:
+                out_d, states = self.decoder(input, states, val=True)  # [1,64,500]
+            # print("OUT size:", out_d.size())
+            x = self.dropout(torch.tanh(out_d))
+            x = self.output(x)  # [1,batch_size,trg_vocab_size], with context dec --> [3, bs, trg]
+            # print("Final:", x.size())
+            outputs[t] = x
+            input = trg[t]
+
+        return outputs
 
 
 class AttentionSeq2Seq(Seq2Seq):
@@ -215,7 +204,6 @@ class AttentionSeq2Seq(Seq2Seq):
         super().__init__(experiment_config, token_bos_eos_pad_unk)
         self.attn = True
         self.context_model = False
-
 
 
 def uniform_init_weights(m):
@@ -255,12 +243,12 @@ def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
 
     elif model_type == "c":
         #### This returns a model like in Cho et al. #####
-        #experiment_config.bi = False
+        # experiment_config.bi = False
         if experiment_config.bi and experiment_config.reverse_input:
             experiment_config.reverse_input = False
         experiment_config.rnn_type = "gru"
         experiment_config.decoder_type = "context"
-        #experiment_config.nlayers = 1
+        # experiment_config.nlayers = 1
         return ContextSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
     elif model_type == "s":

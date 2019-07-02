@@ -107,7 +107,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
 
         # Forward, backprop, optimizer
         model.zero_grad()
-        scores = model(src, trg,teacher_forcing_ratio=1.0) #teacher forcing during training.
+        scores = model(src, trg) #teacher forcing during training.
 
         if check_trans and condition:
             raw_scores = scores.clone()
