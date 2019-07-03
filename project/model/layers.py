@@ -57,6 +57,25 @@ class MaxoutLinearLayer(nn.Module):
             max_output = torch.max(max_output, layer(x))
         return max_output
 
+
+
+# https://github.com/pytorch/pytorch/issues/805 erogol
+class Maxout(nn.Module):
+    def __init__(self, d_in, d_out, pool_size):
+        super().__init__()
+        self.d_in, self.d_out, self.pool_size = d_in, d_out, pool_size
+        self.lin = nn.Linear(d_in, d_out * pool_size)
+
+    def forward(self, inputs):
+        shape = list(inputs.size()) # 1 B 3H+m
+        shape[-1] = self.d_out # 1 B maxoutsize
+        shape.append(self.pool_size) # 1 B maxoutsize 2
+        max_dim = len(shape) - 1 # 3
+        out = self.lin(inputs) # 1 B 2maxout
+        m, i = out.view(*shape).max(max_dim) # 1 B maxout
+        return m
+
+
 ### Attention: see https://lukemelas.github.io/machine-translation.html
 
 class Attention(nn.Module):

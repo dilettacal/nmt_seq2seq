@@ -47,53 +47,34 @@ class ContextDecoder(Decoder):
     """
     This decoder only works with the ContextSeq2Seq class.
     It works for a 1-layer GRU model and can propagate a fixed context from the encoder to both the embedding projects and raw outputs.
-
     The ContextDecoder is always unrolled  - slightly modified version of this Decoder:
     https://github.com/bentrevett/pytorch-seq2seq/blob/master/2%20-%20Learning%20Phrase%20Representations%20using%20RNN%20Encoder-Decoder%20for%20Statistical%20Machine%20Translation.ipynb
     """
-    def __init__(self, trg_vocab_size, emb_size, h_dim, num_layers, dropout_p=0.0, maxout_dim = 1000):
+    def __init__(self, trg_vocab_size, emb_size, h_dim, num_layers, dropout_p=0.0):
         super().__init__(trg_vocab_size, emb_size, h_dim, num_layers, dropout_p, rnn_cell="gru")
 
         self.rnn = nn.GRU(self.embedding.embedding_dim + h_dim, h_dim, num_layers=num_layers,
                           dropout=dropout_p if num_layers > 1 else 0)
 
         self.dropout = nn.Dropout(dropout_p)
-        self.maxout_dim = maxout_dim
-        ### Maxout ####
-        ### After Cho: the score at time step i is computed by addition of O_h h_t + O_y y_{t-1} + O_c C
-        ### as the decoder is unrolled in the ContextSeq2Seq, the input y is always y{t-1}
-        ### So sum is computed on the actual hidden state (forward pass in the rnn), the actual input and the fixed context C
-        self.w_o = nn.Linear(self.maxout_dim, self.vocab_size)
-        self.u_o = nn.Linear(self.h_dim, self.maxout_dim)
-        if self.embedding_size < self.h_dim:
-            self.pre_v_o = nn.Linear(self.embedding_size, self.h_dim)
-        else:
-            self.embedding_size = self.h_dim
-            self.pre_v_o = None
 
-        self.v_o = nn.Linear(self.h_dim, self.maxout_dim)
-        self.c_o = nn.Linear(self.h_dim, self.maxout_dim)
-
-    def forward(self, x, h0, context=None, val=False):
+    def forward(self, x, last_hidden, context=None, val=False):
         ### context: [1,batch_size, hid_dim], 1 is the number of layers
         #### This boolean check when decoder is unrolled during the beam search, as the input does not need to be unsqueezed
         if val:
             ### during the training and validation the input is unsqueezed to be concatenated with the context
             x = x.unsqueeze(0)
         embedded = self.dropout(self.embedding(x))
-               # x: [1, batch_size] or [batch_size]
+        # x: [1, batch_size] or [batch_size]
         emb_con = torch.cat((embedded, context), dim=2)
+        output, h = self.rnn(emb_con, last_hidden)  # 1,64,500
+        ### output shape [batch_size, trg_vocab]
+        # squeeze --> tensor: [1, emb_dim] or [1, hid_dim]
+        output = torch.cat((embedded.squeeze(0), h.squeeze(0), context.squeeze(0)),
+                           dim=1) # #batch_size, elf.emb_size +2 * self.hid_dim
 
-        _, h = self.rnn(emb_con, h0)  # 1,64,500
-
-        if self.pre_v_o:
-            embedded = self.pre_v_o(embedded.squeeze(0)).unsqueeze(0)
-
-        t_i = self.u_o(h0) + self.v_o(embedded) + self.c_o(context) #[1, batch_size, maxout_dim ]
-        t_i = t_i.view(-1, self.maxout_dim, x.size(1)) # [1, maxout_dim, batch_size]
-        t_i = torch.max(t_i, dim=-1)[0] #[1,1000]
-        out = self.w_o(t_i)
-        ### output shape consistent with the shape of the normal decoder: [1, fina_dim]
-        output = out.unsqueeze(0)
+        ### output shape consistent with the shape of the normal decoder: [1, batch_size, fina_dim]
+       # output = output.unsqueeze(-1)
+        #output = output.unsqueeze(0)
         return output, h
 

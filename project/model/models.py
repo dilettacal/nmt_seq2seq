@@ -23,7 +23,7 @@ from torch.autograd import Variable
 from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
-from project.model.layers import Attention
+from project.model.layers import Attention, Maxout
 from settings import VALID_CELLS, SEED
 
 """
@@ -146,19 +146,17 @@ class Seq2Seq(nn.Module):
                     #### handling of both models #####
                     if self.context_model:
                         outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=False)
-                        x = outputs_d
-                        x = x.squeeze().data.clone()
+                        x = self.linear1(outputs_d)
                     else:
                         outputs_d, new_state = self.decoder(last_word_input, current_state)
                         # Attend
                         context = self.attention(src, outputs_e, outputs_d)
                         out_cat = torch.cat((outputs_d, context), dim=2)
                         x = self.linear1(out_cat)
-                    ###########################################
+                        ###########################################
                         x = self.dropout(self.tanh(x))
                         x = self.linear2(x)
-                        x = x.squeeze().data.clone()
-
+                    x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
                     lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
@@ -188,11 +186,15 @@ class ContextSeq2Seq(Seq2Seq):
                                       self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
 
 
+        self.maxout = Maxout(self.hid_dim*2 + self.emb_size, maxout_dim, 2)
+
+        self.linear1 = nn.Linear(maxout_dim, self.trg_vocab_size)
+
         #### Additional linear transformation is added here to get better results representations
-        self.linear1 = nn.Linear(self.emb_size +2 * self.hid_dim, self.emb_size)
-        self.tanh = nn.Tanh()
-        self.dropout = nn.Dropout(experiment_config.dp)
-        self.linear2 = nn.Linear(self.emb_size, self.trg_vocab_size)  # emb size of target
+      #  self.linear1 = nn.Linear(self.emb_size +2 * self.hid_dim, self.emb_size)
+      #  self.tanh = nn.Tanh()
+      #  self.dropout = nn.Dropout(experiment_config.dp)
+      #  self.linear2 = nn.Linear(self.emb_size, self.trg_vocab_size)  # emb size of target
 
 
     def forward(self, src, trg):
@@ -221,6 +223,8 @@ class ContextSeq2Seq(Seq2Seq):
         ### unrolling the decoder word by word
         for t in range(1, max_len):
             out_d, states = self.decoder(input, states, context, val=True)
+            out_d = self.maxout(out_d)
+            out_d = self.linear1(out_d)
             outputs[t] = out_d
             input = trg[t]
 
