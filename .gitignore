@@ -130,6 +130,12 @@ bpe.*
 !*_functional_words.csv
 
 *.tmx
+*.png
+*.txt
+bitext*
+train.*
+val.*
+test.*
 
 # model extensions
 
