@@ -3,6 +3,8 @@ import torch
 import torch.nn.functional as F
 
 #### https://github.com/Usama113/Maxout-PyTorch/blob/master/Maxout.ipynb
+from torch.nn import Parameter
+
 
 class ListModule(object):
     def __init__(self, module, prefix, *args):
@@ -117,3 +119,4 @@ class Attention(nn.Module):
         '''Gives attention distribution for visualization'''
         context, attn = self.attention(in_e, out_e, out_d)
         return attn
+

@@ -146,7 +146,8 @@ class Seq2Seq(nn.Module):
                     #### handling of both models #####
                     if self.context_model:
                         outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=False)
-                        x = self.linear1(outputs_d)
+                        x = outputs_d
+                        x = x.squeeze().data.clone()
                     else:
                         outputs_d, new_state = self.decoder(last_word_input, current_state)
                         # Attend
@@ -154,9 +155,9 @@ class Seq2Seq(nn.Module):
                         out_cat = torch.cat((outputs_d, context), dim=2)
                         x = self.linear1(out_cat)
                     ###########################################
-                    x = self.dropout(self.tanh(x))
-                    x = self.linear2(x)
-                    x = x.squeeze().data.clone()
+                        x = self.dropout(self.tanh(x))
+                        x = self.linear2(x)
+                        x = x.squeeze().data.clone()
 
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
@@ -175,12 +176,13 @@ class Seq2Seq(nn.Module):
 
 class ContextSeq2Seq(Seq2Seq):
     """This is inspired by the "context model" as proposed by Cho et al. (2014) """
-    def __init__(self, experiment_config, token_bos_eos_pad_unk):
+    def __init__(self, experiment_config, token_bos_eos_pad_unk, maxout_dim = 1000):
         super().__init__(experiment_config, token_bos_eos_pad_unk)
 
         self.context_model = True
         self.attention = None
         self.reverse_input = False
+        self.maxout_dim = maxout_dim
 
         self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
                                       self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
@@ -219,10 +221,7 @@ class ContextSeq2Seq(Seq2Seq):
         ### unrolling the decoder word by word
         for t in range(1, max_len):
             out_d, states = self.decoder(input, states, context, val=True)
-            x = self.linear1(out_d)
-            x = self.dropout(self.tanh(x))
-            x = self.linear2(x)# [1,batch_size,trg_vocab_size], with context dec --> [3, bs, trg]
-            outputs[t] = x
+            outputs[t] = out_d
             input = trg[t]
 
         return outputs
