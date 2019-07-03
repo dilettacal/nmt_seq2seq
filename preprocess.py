@@ -27,6 +27,7 @@ from project.experiment.setup_experiment import str2bool
 from project.utils.preprocessing import TMXConverter, get_custom_tokenizer, split_data, persist_txt, TMXTokenizer
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
+import re
 
 
 def data_prepro_parser():
@@ -83,8 +84,6 @@ if __name__ == '__main__':
                      open(os.path.join(output_file_path, "bitext.tok.de"), mode="r",
                           encoding="utf-8").readlines() if line]
 
-
-
         if max_len > 0 or min_len > 0:
             files = ['.'.join(file.split(".")[:2]) for file in os.listdir(STORE_PATH) if file.endswith("tok.en") or file.endswith("tok."+lang_code)]
             if files:
@@ -93,9 +92,24 @@ if __name__ == '__main__':
                 print("Filtering by length...")
                 filtered_src_lines, filtered_trg_lines = [], []
                 for src_l, trg_l in zip(src_lines, trg_lines):
-                    if src_l != "" and trg_l != "":
-                        src_l_s, trg_l_s = src_l.split(" "), trg_l.split(" ")
-                        if (len(src_l_s) <= max_len and len(src_l_s) >= min_len) and (len(trg_l_s) <= max_len and len(trg_l_s) >= min_len):
+
+                    src_lang_tokenizer = get_custom_tokenizer("en", "w")
+                    trg_lang_tokenizer = get_custom_tokenizer(lang_code, "w")
+                    src_lang_tokenizer.set_mode(True)
+                    trg_lang_tokenizer.set_mode(True)
+
+                    tokenized_src_line = ' '.join(src_lang_tokenizer.tokenize(src_l))
+                    tokenized_trg_line = ' '.join(trg_lang_tokenizer.tokenize(trg_l))
+
+                    src_l_s = tokenized_src_line.strip()
+                    trg_l_s = tokenized_trg_line.strip()
+                    ### remove possible duplicate spaces
+                    src_l_s = re.sub(' +', ' ', src_l_s)
+                    trg_l_s = re.sub(' +', ' ', trg_l_s)
+
+                    if src_l_s != "" and trg_l_s != "":
+                        src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
+                        if (len(src_l_spl) <= max_len and len(src_l_spl) >= min_len) and (len(trg_l_spl) <= max_len and len(trg_l_spl) >= min_len):
                             filtered_src_lines.append(' '.join(src_l_s))
                             filtered_trg_lines.append(' '.join(trg_l_s))
                 assert len(filtered_src_lines) == len(filtered_trg_lines)
@@ -127,8 +141,17 @@ if __name__ == '__main__':
                     take_src_lines, take_trg_lines = [],[]
                     for src_l, trg_l in zip(src_lines, trg_lines):
                         if src_l != "" and trg_l != "":
-                            take_src_lines.append(src_l)
-                            take_trg_lines.append(trg_l)
+                            tokenized_src_line = ' '.join(src_lang_tokenizer.tokenize(src_l))
+                            tokenized_trg_line = ' '.join(trg_lang_tokenizer.tokenize(trg_l))
+
+                            tokenized_src_line = tokenized_src_line.strip()
+                            tokenized_trg_line = tokenized_trg_line.strip()
+                            ### remove possible duplicate spaces
+                            tokenized_src_line = re.sub(' +', ' ', tokenized_src_line)
+                            tokenized_trg_line = re.sub(' +', ' ', tokenized_trg_line)
+
+                            take_src_lines.append(tokenized_src_line)
+                            take_trg_lines.append(tokenized_trg_line)
                     assert len(take_trg_lines) == len(take_trg_lines)
                     train_data, val_data, test_data = split_data(take_src_lines, take_trg_lines)
                     persist_txt(train_data, STORE_PATH, "train.clean", exts=(".en", ".de"))
