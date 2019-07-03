@@ -125,9 +125,9 @@ def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_fi
     logger.log("trg: {}".format(" ".join(vars(train_data[0])['trg'])))
 
     logger.log("Most common words (src):")
-    logger.log("\n".join(["%10s %10d" % x for x in src_field.vocab.freqs.most_common(10)]))
+    logger.log("\n".join(["%20s %10d" % x for x in src_field.vocab.freqs.most_common(20)]))
     logger.log("Most common words (trg):")
-    logger.log("\n".join(["%10s %10d" % x for x in trg_field.vocab.freqs.most_common(10)]))
+    logger.log("\n".join(["%20s %10d" % x for x in trg_field.vocab.freqs.most_common(20)]))
 
     logger.log("First 10 words (src):")
     logger.log("\n".join(
@@ -136,11 +136,10 @@ def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_fi
     logger.log("\n".join(
         '%02d %s' % (i, t) for i, t in enumerate(trg_field.vocab.itos[:10])))
 
-    #print("Space SRC:", src_field.vocab.stoi[" "]) # not learned
-   # print("Space TRG:", trg_field.vocab.stoi[" "])
+    logger.log("Number of Vocabulary source words (types): {}".format(len(src_field.vocab)))
+    logger.log("Number of Vocabulary target words (types): {}".format(len(trg_field.vocab)))
 
-    logger.log("Number of source words (types): {}".format(len(src_field.vocab)))
-    logger.log("Number of target words (types): {}".format(len(trg_field.vocab)))
+
 
 
 

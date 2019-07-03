@@ -51,8 +51,8 @@ def main():
     time_data = time.time()
     SRC, TRG, train_iter, val_iter, test_iter, train_data, val_data, test_data = \
         get_vocabularies_iterators(src_lang, experiment, data_dir)
-
-    print('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab), convert(time.time() - time_data)))
+    
+    end_time_data = time.time()
 
     experiment.src_vocab_size = len(SRC.vocab)
     experiment.trg_vocab_size = len(TRG.vocab)
@@ -84,6 +84,8 @@ def main():
 
     # Create directory for logs, create logger, log hyperparameters
     logger = Logger(experiment_path)
+    logger.log('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),
+                                                                       convert(end_time_data - time_data)))
     logger.log(">>>> Path to model: {}".format(os.path.join(logger.path, "model.pkl")))
     logger.log('COMMAND ' + ' '.join(sys.argv), stdout=False)
     logger.log('ARGS: {}\nOPTIMIZER: {}\nLEARNING RATE: {}\nSCHEDULER: {}\nMODEL: {}\n'.format(experiment.get_args(), optimizer, experiment.lr,
