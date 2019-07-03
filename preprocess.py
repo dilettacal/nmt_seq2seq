@@ -156,8 +156,8 @@ if __name__ == '__main__':
                 if src_lang_tokenizer.type == "spacy" and trg_lang_tokenizer.type == "spacy":
                     src_lang_tokenizer.set_mode(False)
                     trg_lang_tokenizer.set_mode(False)
-                    src_lines = [src_lang_tokenizer.tokenize(line) for line in src_lines]
-                    trg_lines = [trg_lang_tokenizer.tokenize(line) for line in trg_lines]
+                    #src_lines = [src_lang_tokenizer.tokenize(line) for line in src_lines]
+                    #trg_lines = [trg_lang_tokenizer.tokenize(line) for line in trg_lines]
 
                     take_src_lines, take_trg_lines = [],[]
                     for src_l, trg_l in zip(src_lines, trg_lines):
