@@ -40,8 +40,10 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         start_time = time.time()
         compute_bleu = True if epoch % 5 == 0 else False
         check_tr = True if epoch % 10 == 0 and epoch > 0 else False
+        if epoch == epochs:
+            last = True
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
-                               optimizer=optimizer,device=device, model_type=model_type, logger=logger, check_trans=check_tr, SRC=SRC, TRG=TRG,)
+                               optimizer=optimizer,device=device, model_type=model_type, logger=logger, check_trans=check_tr, SRC=SRC, TRG=TRG,last=last)
         avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=compute_bleu)
 
         val_losses.append(avg_val_loss)
@@ -87,7 +89,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
 
 
-def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", model_type="custom", logger=None, check_trans=False):
+def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", model_type="custom", logger=None, check_trans=False, last=False):
    # print(device)
     norm_changes = 0
     # Train model
@@ -104,6 +106,8 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
         if check_trans and condition:
             src_copy = src.clone()
             trg_copy = trg.clone()
+        else:
+            src_copy, trg_copy = None, None
 
         # Forward, backprop, optimizer
         model.zero_grad()
@@ -111,6 +115,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
 
         if check_trans and condition:
             raw_scores = scores.clone()
+        else: raw_scores = None
         # Remove <s> from trg and </s> from scores
         scores = scores[:-1]
         trg = trg[1:]
@@ -138,10 +143,15 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
 
         optimizer.step()
         if check_trans and condition:
-            num_translation = 5
-            src_to_translate = src_copy[:, :num_translation]
-            trg_to_translate = trg_copy[:, :num_translation]
-            check_translation(src_to_translate, trg_to_translate, raw_scores,model,SRC=SRC, TRG=TRG, logger=logger)
+            if last:
+                num_translation = 30
+                src_to_translate = src_copy[:, :num_translation]
+                trg_to_translate = trg_copy[:, :num_translation]
+            else:
+                num_translation = 5
+                src_to_translate = src_copy[:, :num_translation]
+                trg_to_translate = trg_copy[:, :num_translation]
+            check_translation(src_to_translate, trg_to_translate, raw_scores, model,SRC=SRC, TRG=TRG, logger=logger)
 
     logger.log("Gradient Norm Changes: {}".format(norm_changes))
     return losses.avg
