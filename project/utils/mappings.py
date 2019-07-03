@@ -9,11 +9,6 @@ Other filters are used to filter out certain sentences and reduce the corpus siz
 """
 import string
 
-split_chars = lambda char: list(char.strip().split(" "))
-merge_chars = lambda char: char.strip().replace(" ", "|")
-group_chars = lambda char: char.strip().replace(" ", "")
-
-
 # Mapping for German language
 UMLAUT_MAP = {u'Ä': 'Ae',
                      u'Ö': 'Oe',
@@ -24,56 +19,8 @@ UMLAUT_MAP = {u'Ä': 'Ae',
                      u"ß": 'ss'
               }
 
-GER_CONTRACTIONS_MAP = {
-    "auf's": "auf das",
-    "find's": "finde es",
-    "für's" : "für das",
-    "gab's": "gab es",
-    "geht's": "geht es",
-    "gibt's": "gibt es",
-    "hab'" : "habe",
-    "hab's" : "habe es",
-    "hat's" : "hat es",
-    "ich's"  : "ich es",
-    "ist's" :"ist es",
-    "kann's" :"kann es",
-    "macht's" :"macht es",
-    "ob's": "ob es",
-    "sag's" : "sage es",
-    "schaut's" : "schaut es",
-    "sie's" : "sie es",
-    "sieht's": "sieht es",
-    "sind's"  : "sind es",
-    "spielt's": "spielt es",
-    "tut's"  :"tut es",
-    "war's"  : "war es",
-    "weil's" :"weil es",
-    "wenn's": "wenn es",
-    "wie's" : "wie es",
-    "wir's" : "wir es",
-    "wird's" :"wird es",
-    "wär's"  :"wäre es",
-    "'nem": "einem",
-    "'nen": "einen",
-    "'ner": "einer",
-    "aufm": "auf dem",
-    "aufn": "auf den",
-    "aufs": "auf das",
-    "ausm": "aus dem",
-    "drauf": "darauf",
-    "drum": "darum",
-    "fürn": "für einen",
-    "fürs": "für es",
-    "gibts": "gibt es",
-    "haste": "hast du",
-    "in's": "in das",
-    "ins": "in das",
-    "übers": "über das",
-    "untern": "unter den",
-    "unterm": "unter dem",
-    "vorn" : "vorne",
-    "vors" :"vor das",
-}
+
+
 # Contraction map for english - can be extended
 # Map mostly taken from: https://github.com/kootenpv/contractions/blob/master/contractions/__init__.py
 ENG_CONTRACTIONS_MAP = {
@@ -197,50 +144,3 @@ ENG_CONTRACTIONS_MAP = {
     u"'re": "are"
 }
 
-### See spacy
-
-_units = (
-    "h m/s km/h kmh km km² km³ m m² m³ dm dm² dm³ cm cm² cm³ mm mm² mm³ ha µm nm yd in ft"
-    "kg g mg µg t lb oz mph hPa Pa mbar mb MB kb KB gb GB tb"
-    "TB T G M K % км км² км³ м м² м³ дм дм² дм³ см см² см³ мм мм² мм³ нм "
-)
-
-_quotes = r'\' " ” “ ` ‘ ´ ’ ‚ , „ » « 「 」 『 』 （ ） 〔 〕 【 】 《 》 〈 〉'
-
-
-_hyphens = "- – — -- --- —— ~"
-
-_currency = r"\$ £ € ¥ ฿ US\$ C\$ A\$ ₽ ﷼ ₴ EUR"
-
-_punct = (
-    r"… …… , : ; \! \? ¿ ؟ ¡ \( \) \[ \] \{ \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪"
-)
-
-
-UNITS = merge_chars(_units)
-CURRENCY = merge_chars(_currency)
-PUNCT = merge_chars(_punct)
-HYPHENS = merge_chars(_hyphens)
-QUOTES = merge_chars(_quotes)
-
-
-LIST_UNITS = split_chars(_units)
-
-LIST_CURRENCY = split_chars(_currency)
-
-LIST_QUOTES = split_chars(_quotes)
-
-TEMP_LIST_PUNCT = split_chars(_punct)
-LIST_PUNCT = split_chars(_punct)
-
-LIST_HYPHENS = split_chars(_hyphens)
-LIST_ELLIPSES = [r"\.\.+", "…"]
-
-CONCAT_QUOTES = group_chars(_quotes)
-CONCAT_UNITS = group_chars(_units)
-CONCAT_PUNCT = group_chars(_punct)
-CONCAT_HYPHENS = group_chars(_hyphens)
-CONCAT_CURRENCY = group_chars(_currency)
-
-ALL_PUNCT = list(set(LIST_PUNCT).union(list(string.punctuation)))
-MERGED_ALL_PUNCT = ''.join(ALL_PUNCT)

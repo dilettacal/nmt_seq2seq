@@ -5,11 +5,17 @@ import string
 from datetime import datetime
 import re
 
-import tokenizer ## from tmx2corpus!!!!!
+try:
+    import tokenizer ## from tmx2corpus!!!!!
+    from tmx2corpus import Converter
+except ImportError or ModuleNotFoundError as e:
+    print(e, "Please install tmx2corpus")
+    pass
+
 from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import Logger
 from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED
-from tmx2corpus import Converter
+
 
 ### Regex ###
 space_before_punct = r'\s([?.!"](?:\s|$))'
@@ -43,24 +49,41 @@ class MinLenFilter(object):
     def filter(self, bitext):
         filtered_texts = list(filter(lambda item: len(item[1].split(" ")) >= self.len, bitext.items()))
         return bool(len(filtered_texts)==2) # both texts match the given predicate
+try:
+    class TMXTokenizer(tokenizer.Tokenizer):
+        def __init__(self, lang):
+            #self.custom_tokenizer = custom_tokenizer
+            super(TMXTokenizer, self).__init__(lang.lower())
 
-class TMXTokenizer(tokenizer.Tokenizer):
-    def __init__(self, lang):
-        #self.custom_tokenizer = custom_tokenizer
-        super(TMXTokenizer, self).__init__(lang.lower())
+        def _tokenize(self, text):
+            tokens = []
+            i = 0
+            for m in BOUNDARY_REGEX.finditer(text):
+                tokens.append(text[i:m.start()])
+                i = m.end()
+            ### The tokenization may include too much spaces
+            tokens = ' '.join(tokens)
+            tokens = tokens.strip()
+            ### remove possible duplicate spaces
+            tokens = re.sub(' +', ' ', tokens)
+            return tokens.split(" ")
 
-    def _tokenize(self, text):
-        tokens = []
-        i = 0
-        for m in BOUNDARY_REGEX.finditer(text):
-            tokens.append(text[i:m.start()])
-            i = m.end()
-        ### The tokenization may include too much spaces
-        tokens = ' '.join(tokens)
-        tokens = tokens.strip()
-        ### remove possible duplicate spaces
-        tokens = re.sub(' +', ' ', tokens)
-        return tokens.split(" ")
+
+    class TMXConverter(Converter):
+        def __init__(self, output):
+            super().__init__(output)
+
+
+    class TXTConverter(Converter):
+        def __init__(self, output):
+            super().__init__(output)
+
+        def convert(self, files: list):
+            pass
+
+except NameError as e:
+    print(e, "Please install tmx2corpus")
+    pass
 
 ########## Project custom tokenizers ###########
 
@@ -173,24 +196,13 @@ def get_custom_tokenizer(lang, mode, fast=False):
                     import spacy
                     nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"]) #makes it faster
                     tokenizer = SpacyTokenizer(lang, nlp)
-                except ImportError:
-                    print("Spacy not installed. Standard tokenization is used")
+                except ImportError or Exception:
+                    print("Spacy not installed or model for the requested language has not been downloaded.\nStandard tokenizer is used")
                     tokenizer = StandardSplitTokenizer(lang)
     return tokenizer
 
 
 
-class TMXConverter(Converter):
-    def __init__(self, output):
-        super().__init__(output)
-
-
-class TXTConverter(Converter):
-    def __init__(self, output):
-        super().__init__(output)
-
-    def convert(self, files:list):
-        pass
 
 
 def remove_adjacent_same_label(line):
@@ -274,28 +286,6 @@ def split_data(src_sents, trg_sents, test_ratio=0.3, seed=SEED):
 
 
 flatten = lambda l: [item for sublist in l for item in sublist]
-
-
-def generate_splits_from_plain_text(root=os.path.join(DATA_DIR_PREPRO, "europarl"), language_code="de", max_len=30, filename="europarl"):
-    FILES = sorted(["train.en", "val.en", "test.en",
-             "train.{}".format(language_code), "val.{}".format(language_code), "test.{}".format(language_code)])
-
-    store_path = os.path.join(DATA_DIR_PREPRO, "europarl", language_code, str(max_len))
-    os.makedirs(store_path, exist_ok=True)
-    files = os.listdir(store_path)
-    files = sorted([file.lower() for file in files if
-                    (file.endswith(".en") or file.endswith(".{}".format(language_code))) and (
-                            file.split(".")[0] in ["train", "test", "val"])])
-
-    if files == FILES:
-        print("Files already splitted!")
-    else:
-        split_logger = Logger(store_path, file_name="split.log")
-        split_logger.log("Splitting information - {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        en_file = filename+".en"
-        trg_file = filename+".{}".format(language_code)
-        path_to_en = os.path.join(root, language_code, en_file)
-        path_to_de = os.path.join(root, language_code, trg_file)
 
 
 def persist_txt(lines, store_path, file_name, exts):
