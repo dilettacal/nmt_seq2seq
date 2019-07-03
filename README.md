@@ -17,9 +17,9 @@ Following frameworks and libraries are used:
     - Models required: German, English. Others optionally
 - tmx2corpus: A library to convert tmx files to raw text files
 - nltk: `corpus_bleu` function is used to compute the corpus bleu
-- Datascience stack: numpy, pandas, matplotlib
+- numpy, pandas, matplotlib
 
-For other requirements, please see the `requirements.txt` file.
+See the `setup.sh` script or the `requirements.txt` file.
 
 
 ## Goals

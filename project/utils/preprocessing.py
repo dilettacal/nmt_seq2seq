@@ -38,17 +38,33 @@ class MinLenFilter(object):
         filtered_texts = list(filter(lambda item: len(item[1].split(" ")) >= self.len, bitext.items()))
         return bool(len(filtered_texts)==2) # both texts match the given predicate
 
-class SequenceTokenizer(tokenizer.Tokenizer):
+class TMXTokenizer(tokenizer.Tokenizer):
     def __init__(self, lang):
         #self.custom_tokenizer = custom_tokenizer
+        super(TMXTokenizer, self).__init__(lang.lower())
+
+    def _tokenize(self, text):
+        tokens = []
+        i = 0
+        for m in tokenizer.BOUNDARY_REGEX.finditer(text):
+            tokens.append(text[i:m.start()])
+            i = m.end()
+        return tokens
+
+
+class BaseSequenceTokenizer(object):
+    def __init__(self, lang):
+        self.lang = lang
         self.only_tokenize = True
         self.type = "standard"
-        super(SequenceTokenizer, self).__init__(lang.lower())
 
     def _tokenize(self, text):
         tokens = self._custom_tokenize(text)
         text = self._clean_text(' '.join(tokens))
         return text.split(" ")
+
+    def tokenize(self, text):
+        return self._custom_tokenize(text)
 
     @abc.abstractmethod
     def _custom_tokenize(self, text):
@@ -71,17 +87,16 @@ class SequenceTokenizer(tokenizer.Tokenizer):
         text = cleanup_digits(text)
         return text
 
-
-class CharBasedTokenizer(SequenceTokenizer):
+class CharBasedTokenizer(TMXTokenizer):
 
     def __init__(self, lang):
-        super(SequenceTokenizer, self).__init__(lang)
+        super(TMXTokenizer, self).__init__(lang)
         self.type = "char"
 
     def _custom_tokenize(self, text):
         return list(text)
 
-class SpacyTokenizer(SequenceTokenizer):
+class SpacyTokenizer(TMXTokenizer):
     def __init__(self, lang, model):
         self.nlp = model
         super(SpacyTokenizer, self).__init__(lang)
@@ -116,7 +131,7 @@ class SpacyTokenizer(SequenceTokenizer):
         return text.split(" ") if isinstance(text, str) else text
 
 
-class StandardSplitTokenizer(SequenceTokenizer):
+class StandardSplitTokenizer(TMXTokenizer):
     def _custom_tokenize(self, text):
         tokens = []
         i = 0
