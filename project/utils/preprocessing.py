@@ -196,8 +196,8 @@ def get_custom_tokenizer(lang, mode, fast=False):
                     import spacy
                     nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"]) #makes it faster
                     tokenizer = SpacyTokenizer(lang, nlp)
-                except ImportError:
-                    print("Spacy not installed. Standard tokenization is used")
+                except ImportError or Exception:
+                    print("Spacy not installed or model for the requested language has not been downloaded.\nStandard tokenizer is used")
                     tokenizer = StandardSplitTokenizer(lang)
     return tokenizer
 
@@ -286,28 +286,6 @@ def split_data(src_sents, trg_sents, test_ratio=0.3, seed=SEED):
 
 
 flatten = lambda l: [item for sublist in l for item in sublist]
-
-
-def generate_splits_from_plain_text(root=os.path.join(DATA_DIR_PREPRO, "europarl"), language_code="de", max_len=30, filename="europarl"):
-    FILES = sorted(["train.en", "val.en", "test.en",
-             "train.{}".format(language_code), "val.{}".format(language_code), "test.{}".format(language_code)])
-
-    store_path = os.path.join(DATA_DIR_PREPRO, "europarl", language_code, str(max_len))
-    os.makedirs(store_path, exist_ok=True)
-    files = os.listdir(store_path)
-    files = sorted([file.lower() for file in files if
-                    (file.endswith(".en") or file.endswith(".{}".format(language_code))) and (
-                            file.split(".")[0] in ["train", "test", "val"])])
-
-    if files == FILES:
-        print("Files already splitted!")
-    else:
-        split_logger = Logger(store_path, file_name="split.log")
-        split_logger.log("Splitting information - {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        en_file = filename+".en"
-        trg_file = filename+".{}".format(language_code)
-        path_to_en = os.path.join(root, language_code, en_file)
-        path_to_de = os.path.join(root, language_code, trg_file)
 
 
 def persist_txt(lines, store_path, file_name, exts):
