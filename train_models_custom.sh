@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-
+#### Old script for training
 
 echo "Starting script.........."
 
