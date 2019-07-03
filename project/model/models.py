@@ -24,7 +24,7 @@ from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, ContextDecoder
 from project.model.encoders import Encoder
 from project.model.layers import Attention
-from settings import VALID_CELLS, SEED, TEACHER_RATIO
+from settings import VALID_CELLS, SEED
 
 """
 Parameters:

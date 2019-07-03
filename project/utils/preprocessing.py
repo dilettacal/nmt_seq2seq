@@ -145,12 +145,18 @@ class SpacyTokenizer(BaseSequenceTokenizer):
 
 class StandardSplitTokenizer(BaseSequenceTokenizer):
     def _custom_tokenize(self, text):
+        #### like for the TMXTokenizer
         tokens = []
         i = 0
         for m in BOUNDARY_REGEX.finditer(text):
             tokens.append(text[i:m.start()])
             i = m.end()
-        return tokens
+        ### The tokenization may include too much spaces
+        tokens = ' '.join(tokens)
+        tokens = tokens.strip()
+        ### remove possible duplicate spaces
+        tokens = re.sub(' +', ' ', tokens)
+        return tokens.split(" ")
 
 def get_custom_tokenizer(lang, mode, fast=False):
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."

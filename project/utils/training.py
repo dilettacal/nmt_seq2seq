@@ -15,7 +15,7 @@ import math
 from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert, AverageMeter
-from settings import DEFAULT_DEVICE, SEED, TEACHER_RATIO
+from settings import DEFAULT_DEVICE, SEED
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 import random

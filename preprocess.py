@@ -12,13 +12,13 @@ Ex:
 python preprocess.py --lang_code de --type tmx --corpus europarl --max_len 30 --min_len 2 --path data/raw/europarl/de --file de-en.tmx
 
 Conversion:
-Converted lines: 1916030
+Converted lines: 1.916.030 (total sentences in the dataset)
 
 Filtered by length:
-Total samples:  1053263
+Total samples:  1.149.845 (total sentences, with minimum length "min_len" and maximum length "max_len")
 
 Samples after voc reduction (based on converted lines):
-Total samples:  1052761
+Total samples:  1.052.761
 """
 import argparse
 import os
@@ -43,6 +43,7 @@ def data_prepro_parser():
     parser.add_argument('--path', default="data/raw/europarl/de", help="Path to raw data files")
     parser.add_argument('--file', default="de-en.tmx", help="File name after extraction")
     parser.add_argument('--v', type=str2bool, default="True", help="Either vocabulary should be reduced by replacing some repeating tokens with labels.\nNumbers are replaced with NUM, Persons names are replaced with PERSON. Require: Spacy!")
+    parser.add_argument('--fast', type=str2bool, default="True", help="Filter by fast tokenizing")
 
     return parser
 
@@ -94,36 +95,50 @@ if __name__ == '__main__':
             else:
                 print("Filtering by length...")
                 filtered_src_lines, filtered_trg_lines = [], []
-                for src_l, trg_l in zip(src_lines, trg_lines):
-                    #### to reduce time "get_customizer_tokenizer(lang, w, "fast")
+                if parser.fast:
+                    for src_l, trg_l in zip(src_lines, trg_lines):
+                        src_l_s = src_l.strip()
+                        trg_l_s = trg_l.strip()
+                        ### remove possible duplicate spaces
+                        src_l_s = re.sub(' +', ' ', src_l_s)
+                        trg_l_s = re.sub(' +', ' ', trg_l_s)
+                        if src_l_s != "" and trg_l_s != "":
+                            src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
+                            if (len(src_l_spl) <= max_len and len(src_l_spl) >= min_len) and (
+                                    len(trg_l_spl) <= max_len and len(trg_l_spl) >= min_len):
+                                filtered_src_lines.append(' '.join(src_l_spl))
+                                filtered_trg_lines.append(' '.join(trg_l_spl))
+                    assert len(filtered_src_lines) == len(filtered_trg_lines)
+
+                else:
                     src_lang_tokenizer = get_custom_tokenizer("en", "w")
                     trg_lang_tokenizer = get_custom_tokenizer(lang_code, "w")
                     src_lang_tokenizer.set_mode(True)
                     trg_lang_tokenizer.set_mode(True)
+                    for src_l, trg_l in zip(src_lines, trg_lines):
+                        #### to reduce time "get_customizer_tokenizer(lang, w, "fast")
 
-                    tokenized_src_line = ' '.join(src_lang_tokenizer.tokenize(src_l))
-                    tokenized_trg_line = ' '.join(trg_lang_tokenizer.tokenize(trg_l))
+                        tokenized_src_line = ' '.join(src_lang_tokenizer.tokenize(src_l))
+                        tokenized_trg_line = ' '.join(trg_lang_tokenizer.tokenize(trg_l))
 
-                    src_l_s = tokenized_src_line.strip()
-                    trg_l_s = tokenized_trg_line.strip()
-                    ### remove possible duplicate spaces
-                    src_l_s = re.sub(' +', ' ', src_l_s)
-                    trg_l_s = re.sub(' +', ' ', trg_l_s)
+                        src_l_s = tokenized_src_line.strip()
+                        trg_l_s = tokenized_trg_line.strip()
+                        ### remove possible duplicate spaces
+                        src_l_s = re.sub(' +', ' ', src_l_s)
+                        trg_l_s = re.sub(' +', ' ', trg_l_s)
 
-                    if src_l_s != "" and trg_l_s != "":
-                        src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
-                        if (len(src_l_spl) <= max_len and len(src_l_spl) >= min_len) and (len(trg_l_spl) <= max_len and len(trg_l_spl) >= min_len):
-                            filtered_src_lines.append(' '.join(src_l_s))
-                            filtered_trg_lines.append(' '.join(trg_l_s))
-                assert len(filtered_src_lines) == len(filtered_trg_lines)
+                        if src_l_s != "" and trg_l_s != "":
+                            src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
+                            if (len(src_l_spl) <= max_len and len(src_l_spl) >= min_len) and (len(trg_l_spl) <= max_len and len(trg_l_spl) >= min_len):
+                                filtered_src_lines.append(' '.join(src_l_s))
+                                filtered_trg_lines.append(' '.join(trg_l_s))
+                    assert len(filtered_src_lines) == len(filtered_trg_lines)
 
                 src_lines, trg_lines = filtered_src_lines, filtered_trg_lines
                 train_data, val_data, test_data = split_data(src_lines, trg_lines)
-                persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", ".de"))
-                persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", ".de"))
-                persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", ".de"))
-
-
+                persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "."+lang_code))
+                persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "."+lang_code))
+                persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "."+lang_code))
 
         if reduce_vocab:
             #### This really takes long. Start only if a reduction is really needed :-)
@@ -157,9 +172,9 @@ if __name__ == '__main__':
                             take_trg_lines.append(tokenized_trg_line)
                     assert len(take_trg_lines) == len(take_trg_lines)
                     train_data, val_data, test_data = split_data(take_src_lines, take_trg_lines)
-                    persist_txt(train_data, STORE_PATH, "train.clean", exts=(".en", ".de"))
-                    persist_txt(val_data, STORE_PATH, "val.clean", exts=(".en", ".de"))
-                    persist_txt(test_data, STORE_PATH, "test.clean", exts=(".en", ".de"))
+                    persist_txt(train_data, STORE_PATH, "train.clean", exts=(".en", "."+lang_code))
+                    persist_txt(val_data, STORE_PATH, "val.clean", exts=(".en", "."+lang_code))
+                    persist_txt(test_data, STORE_PATH, "test.clean", exts=(".en","."+lang_code))
                 else:
                     print("This only works with Spacy. Please install spacy for EN and {}".format(lang_code.upper()))
 

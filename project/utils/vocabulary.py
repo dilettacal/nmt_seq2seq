@@ -136,6 +136,9 @@ def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_fi
     logger.log("\n".join(
         '%02d %s' % (i, t) for i, t in enumerate(trg_field.vocab.itos[:10])))
 
+    #print("Space SRC:", src_field.vocab.stoi[" "]) # not learned
+   # print("Space TRG:", trg_field.vocab.stoi[" "])
+
     logger.log("Number of source words (types): {}".format(len(src_field.vocab)))
     logger.log("Number of target words (types): {}".format(len(trg_field.vocab)))
 
