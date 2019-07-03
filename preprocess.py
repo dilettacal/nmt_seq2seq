@@ -11,10 +11,13 @@ Ex:
 
 python preprocess.py --lang_code de --type tmx --corpus europarl --max_len 30 --min_len 2 --path data/raw/europarl/de --file de-en.tmx
 
-Filtering by length...
+Conversion:
+Converted lines: 1916030
+
+Filtered by length:
 Total samples:  1053263
-1053263
-Reducing the vocabulary...
+
+Samples after voc reduction (based on converted lines):
 Total samples:  1052761
 """
 import argparse
@@ -39,7 +42,7 @@ def data_prepro_parser():
     parser.add_argument("--min_len", default=1, type=int, help="Filter sequences with a length >= min_len")
     parser.add_argument('--path', default="data/raw/europarl/de", help="Path to raw data files")
     parser.add_argument('--file', default="de-en.tmx", help="File name after extraction")
-    parser.add_argument('--v', type=str2bool, default="False", help="Either vocabulary should be reduced by replacing some repeating tokens with labels.\nNumbers are replaced with NUM, Persons names are replaced with PERSON. Require: Spacy!")
+    parser.add_argument('--v', type=str2bool, default="True", help="Either vocabulary should be reduced by replacing some repeating tokens with labels.\nNumbers are replaced with NUM, Persons names are replaced with PERSON. Require: Spacy!")
 
     return parser
 
@@ -92,7 +95,7 @@ if __name__ == '__main__':
                 print("Filtering by length...")
                 filtered_src_lines, filtered_trg_lines = [], []
                 for src_l, trg_l in zip(src_lines, trg_lines):
-
+                    #### to reduce time "get_customizer_tokenizer(lang, w, "fast")
                     src_lang_tokenizer = get_custom_tokenizer("en", "w")
                     trg_lang_tokenizer = get_custom_tokenizer(lang_code, "w")
                     src_lang_tokenizer.set_mode(True)

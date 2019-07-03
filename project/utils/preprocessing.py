@@ -55,7 +55,12 @@ class TMXTokenizer(tokenizer.Tokenizer):
         for m in BOUNDARY_REGEX.finditer(text):
             tokens.append(text[i:m.start()])
             i = m.end()
-        return tokens
+        ### The tokenization may include too much spaces
+        tokens = ' '.join(tokens)
+        tokens = tokens.strip()
+        ### remove possible duplicate spaces
+        tokens = re.sub(' +', ' ', tokens)
+        return tokens.split(" ")
 
 ########## Project custom tokenizers ###########
 
