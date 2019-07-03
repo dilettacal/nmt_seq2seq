@@ -77,7 +77,7 @@ These files are only split based on the sequence word boundaries.
 
 Example:
 ```bash
-python run_custom_nmt.py --corpus "" --train 170000 --val 1000 --test 1000 --nlayers 4 --bi True
+python run_custom_nmt.py --corpus "" --nlayers 4 --bi True --rnn gru
 ```
 
 ## Experiments
