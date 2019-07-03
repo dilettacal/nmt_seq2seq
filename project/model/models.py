@@ -229,6 +229,7 @@ class ContextSeq2Seq(Seq2Seq):
 
 #### Initializations methods based on initialization in the respecitve papers:
 #### See: https://github.com/bentrevett/pytorch-seq2seq (Notebook 1, 2 and 3)
+### TODO: maybe remove them
 def uniform_init_weights(m):
     for name, param in m.named_parameters():
         nn.init.uniform_(param.data, -0.08, 0.08)
