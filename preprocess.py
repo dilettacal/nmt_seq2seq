@@ -92,7 +92,7 @@ if __name__ == '__main__':
                      open(os.path.join(output_file_path, "bitext.tok.de"), mode="r",
                           encoding="utf-8").readlines() if line]
 
-        if max_len > 0 or min_len > 0:
+        if max_len > 0:
             files = ['.'.join(file.split(".")[:2]) for file in os.listdir(STORE_PATH) if file.endswith("tok.en") or file.endswith("tok."+lang_code)]
             if files:
                 print("File already reduced by length!")
@@ -163,21 +163,16 @@ if __name__ == '__main__':
                     take_src_lines, take_trg_lines = [],[]
                     for src_l, trg_l in zip(src_lines, trg_lines):
                         if src_l != "" and trg_l != "":
-                            if max_len > 0 or min_len > 0:
-                                src_l_spl, trg_l_spl = src_l.split(" "), trg_l.split(" ")
+                            tokenized_src_line = src_lang_tokenizer.tokenize(src_l)
+                            tokenized_trg_line = trg_lang_tokenizer.tokenize(trg_l)
+                            tokenized_src_line = tokenized_src_line.strip()
+                            tokenized_trg_line = tokenized_trg_line.strip()
+                            tokenized_src_line = re.sub(' +', ' ', tokenized_src_line)
+                            tokenized_trg_line = re.sub(' +', ' ', tokenized_trg_line)
+                            src_l_spl, trg_l_spl = tokenized_src_line.split(" "), tokenized_trg_line.split(" ")
+                            if max_len > 0:
                                 if (len(src_l_spl) <= max_len and len(src_l_spl) >= min_len) and (
                                         len(trg_l_spl) <= max_len and len(trg_l_spl) >= min_len):
-                                    src_l = ' '.join(src_l_spl)
-                                    trg_l = ' '.join(trg_l_spl)
-                                    tokenized_src_line = ' '.join(src_lang_tokenizer.tokenize(src_l))
-                                    tokenized_trg_line = ' '.join(trg_lang_tokenizer.tokenize(trg_l))
-
-                                    tokenized_src_line = tokenized_src_line.strip()
-                                    tokenized_trg_line = tokenized_trg_line.strip()
-                                    ### remove possible duplicate spaces
-                                    tokenized_src_line = re.sub(' +', ' ', tokenized_src_line)
-                                    tokenized_trg_line = re.sub(' +', ' ', tokenized_trg_line)
-
                                     take_src_lines.append(tokenized_src_line)
                                     take_trg_lines.append(tokenized_trg_line)
                     assert len(take_trg_lines) == len(take_trg_lines)
