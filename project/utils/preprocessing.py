@@ -112,6 +112,8 @@ class BaseSequenceTokenizer(object):
         self.type = type
 
     def _clean_text(self, text):
+        if isinstance(text, list):
+            text = ' '.join(text)
         text = re.sub(space_before_punct, r"\1", text)
         text = re.sub(before_apos, r"\1", text)
         text = re.sub(after_apos, r"\1\2", text)
@@ -146,6 +148,7 @@ class SpacyTokenizer(BaseSequenceTokenizer):
             tokens = [tok.text for tok in doc]
             tokens = self.replace_text(tokens, ents)
             tokens = [token if token.isupper() else token.lower() for token in tokens]
+            tokens = self._clean_text(tokens)
         return tokens
 
     def get_entities(self, doc):
