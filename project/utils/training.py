@@ -42,6 +42,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         check_tr = True if epoch % 10 == 0 and epoch > 0 else False
         if epoch == epochs:
             last = True
+        else: last = False
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
                                optimizer=optimizer,device=device, model_type=model_type, logger=logger, check_trans=check_tr, SRC=SRC, TRG=TRG,last=last)
         avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=compute_bleu)
@@ -148,7 +149,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
                 src_to_translate = src_copy[:, :num_translation]
                 trg_to_translate = trg_copy[:, :num_translation]
             else:
-                num_translation = 5
+                num_translation = 2
                 src_to_translate = src_copy[:, :num_translation]
                 trg_to_translate = trg_copy[:, :num_translation]
             check_translation(src_to_translate, trg_to_translate, raw_scores, model,SRC=SRC, TRG=TRG, logger=logger)
@@ -343,8 +344,12 @@ def check_translation(src, trg, scores, model, SRC, TRG, logger):
 
         model.train()  # test mode
         probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
+        src_sent = ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
+        if model.reverse_input:
+            src_sent = src_sent.split(" ")[::-1]
+            src_sent = ' '.join(src_sent)
 
-        logger.log('Source: {}'.format(' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)), stdout=False)
+        logger.log('Source: {}'.format(src_sent), stdout=False)
         logger.log('Target: {}'.format(' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)), stdout=False)
         logger.log('Training Pred (Greedy): {}'.format(' '.join(TRG.vocab.itos[x] for x in maxwords)), stdout=False)
         logger.log('Validation Greedy Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions)),stdout=False)
