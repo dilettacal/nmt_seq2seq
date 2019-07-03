@@ -61,6 +61,8 @@ class ContextDecoder(Decoder):
         self.maxout_dim = maxout_dim
         ### Maxout ####
         ### After Cho: the score at time step i is computed by addition of O_h h_t + O_y y_{t-1} + O_c C
+        ### as the decoder is unrolled in the ContextSeq2Seq, the input y is always y{t-1}
+        ### So sum is computed on the actual hidden state (forward pass in the rnn), the actual input and the fixed context C
         self.w_o = nn.Linear(self.maxout_dim, self.vocab_size)
         self.u_o = nn.Linear(self.h_dim, self.maxout_dim)
         if self.embedding_size < self.h_dim:
@@ -83,15 +85,10 @@ class ContextDecoder(Decoder):
         emb_con = torch.cat((embedded, context), dim=2)
 
         _, h = self.rnn(emb_con, h0)  # 1,64,500
-        ### output shape [batch_size, trg_vocab]
-        # squeeze --> tensor: [1, emb_dim] or [1, hid_dim]
-       # output = torch.cat((preout, context.squeeze(0)),
-                          # dim=1)
+
         if self.pre_v_o:
             embedded = self.pre_v_o(embedded.squeeze(0)).unsqueeze(0)
-        #t_i = torch.cat((h.unsqueeze(0), embedded.unsqueeze(0), context.unsqueeze(0)), dim=1).sum(dim=1)
-       #
-        #print(t_i.size())
+
         t_i = self.u_o(h) + self.v_o(embedded) + self.c_o(context) #[1, batch_size, maxout_dim ]
         t_i = t_i.view(-1, self.maxout_dim, x.size(1)) # [1, maxout_dim, batch_size]
         t_i = torch.max(t_i, dim=-1)[0] #[1,1000]
