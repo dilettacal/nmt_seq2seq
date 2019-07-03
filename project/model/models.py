@@ -1,12 +1,12 @@
 """
 Credits for some parts of this source code:
 
-Class Seq2Seq (with or w/o Attention):
+Class Seq2Seq (with or w/o Attention) - modified version from this code:
 Author: Luke Melas
 Title: Machine Translation with Recurrent Neural Networks
-URL: https://lukemelas.github.io/machine-translation.html
+URL: https://lukemelas.github.io/machine-translation.html and https://github.com/lukemelas/Machine-Translation/blob/master/models/Seq2seq.py (on the courtesy of the author)
 
-Class ContextSeq2Seq:
+Class ContextSeq2Seq - modified version from this code:
 
 Author Ben Trevett:
 Title: 2 - Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation.ipynb
@@ -111,7 +111,7 @@ class Seq2Seq(nn.Module):
         x = self.linear2(x)
         return x
 
-
+    #### Original code #####
     def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
         beam_outputs = self.beam_search(src, beam_size, max_len=max_len, remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
@@ -120,7 +120,8 @@ class Seq2Seq(nn.Module):
 
     def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.
-        Slightly modified from: https://lukemelas.github.io/machine-translation.html
+
+            Slightly modified from: https://lukemelas.github.io/machine-translation.html
         '''
         src = src.to(self.device)
         # Encode
@@ -142,6 +143,7 @@ class Seq2Seq(nn.Module):
                 if last_word != self.eos_token:
                     ### shape: [1] --> [1,1], needed as we are unrolling the decoder with bs 1
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
+                    #### handling of both models #####
                     if self.context_model:
                         outputs_d, new_state = self.decoder(last_word_input, current_state, context, val=False)
                         x = self.linear1(outputs_d)
@@ -151,7 +153,7 @@ class Seq2Seq(nn.Module):
                         context = self.attention(src, outputs_e, outputs_d)
                         out_cat = torch.cat((outputs_d, context), dim=2)
                         x = self.linear1(out_cat)
-
+                    ###########################################
                     x = self.dropout(self.tanh(x))
                     x = self.linear2(x)
                     x = x.squeeze().data.clone()
