@@ -89,11 +89,11 @@ class ContextDecoder(Decoder):
         if self.pre_v_o:
             embedded = self.pre_v_o(embedded.squeeze(0)).unsqueeze(0)
 
-        t_i = self.u_o(h) + self.v_o(embedded) + self.c_o(context) #[1, batch_size, maxout_dim ]
+        t_i = self.u_o(h0) + self.v_o(embedded) + self.c_o(context) #[1, batch_size, maxout_dim ]
         t_i = t_i.view(-1, self.maxout_dim, x.size(1)) # [1, maxout_dim, batch_size]
         t_i = torch.max(t_i, dim=-1)[0] #[1,1000]
         out = self.w_o(t_i)
-        ### output shape consistent with the shape of the normal decoder: [1, batch_size, fina_dim]
+        ### output shape consistent with the shape of the normal decoder: [1, fina_dim]
         output = out.unsqueeze(0)
         return output, h
 
