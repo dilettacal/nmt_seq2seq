@@ -6,16 +6,18 @@ My Bachelor Thesis is about Neural Machine Translation.
 
 Main topics discussed are Encoder-Decoder architectures or Sequence-to-Sequence models in their simplest form. 
 
+Languages: German, English
+
 
 ##### TODO: model description
 
 
 Following frameworks and libraries are used:
-- PyTorch: 1.1.0
+- PyTorch: 0.4.0
 - torchtext: 0.3.1 (Data handling, vectorization, vocabularies)
 - spacy: tokenization, preprocessing
-    - Models required: German, English. Others optionally
-- tmx2corpus: A library to convert tmx files to raw text files
+    - Models required: German, English
+- tmx2corpus: A library to convert tmx files to text files (only needed if you want to train with europarl!)
 - nltk: `corpus_bleu` function is used to compute the corpus bleu
 - numpy, pandas, matplotlib
 
@@ -24,6 +26,8 @@ Following frameworks and libraries are used:
 ### Requirements for the project ####
 pip install --user torch torchtext
 pip install --user -U spacy
+### download language models 
+### if you use other langugages, update the `settings.py` file
 python -m spacy download en
 python -m spacy download de
 pip install nltk
@@ -33,7 +37,7 @@ pip install numpy pandas matplotlib
 pip install git+https://github.com/amake/tmx2corpus.git
 
 ```
-Or see the `setup.sh` script or the `requirements.txt` file.
+Or see the `setup.sh` script.
 
 
 ## Goals
@@ -44,6 +48,10 @@ TODO: bla bla bla
 **TODO**: Extend this part !!!!!!
 ## How to use the program
 
+(**WORK IN PROGRESS**)
+
+EUROPARL:
+
 In this program the Europarl dataset has been used. This dataset is available on the OPUS platform: http://opus.nlpl.eu/Europarl.php in different formats, either in `tmx` or in `txt` format.
 Download the files from the matrix in the section "Statistics and TMX/Moses Downloads". 
 
@@ -51,7 +59,7 @@ For more information about Opus: http://www.lrec-conf.org/proceedings/lrec2012/p
 
 The Europarl corpus is described here: http://www.statmt.org/europarl/
 
-The `tmx` format is a very common format in the translation industry, as it acts as a database for translations, as it stores for each translation unit (`<tu>`) two segments, one for the source language and the second for the target language.
+The `tmx` format is a very common format in the translation industry, as it acts as a database for translations, storing for each translation unit (`<tu>`) two segments, one for the source language and the second for the target language.
 Segments stored in this xml files are unique, meaning that there should not be any repeated translations. The format should also assure that sentences are really aligned.
 
 The `tmx` format is available at: http://opus.nlpl.eu/download.php?f=Europarl/v7/tmx/de-en.tmx.gz.
@@ -62,8 +70,10 @@ To preprocess the tmx corpus, you need to install the tmx2corpus library with `p
 
 Extract the file in a directory, e.g. "data" (default: "data/raw/europarl/de") and run `preprocess.py`, passing the arguments as described in the python script.
 
+TED TALKS:
+
 The model also runs with the Torchtext IWSLT corpus. Just pass `--corpus ""` as an argument. 
-The IWSLT files are not tokenized, but used as they are. Torchtext will only split words based on white spaces.
+These files are only split based on the sequence word boundaries.
 
 Example:
 ```bash
@@ -71,5 +81,10 @@ python run_custom_nmt.py --corpus "" --train 170000 --val 1000 --test 1000 --nla
 ```
 
 ## Experiments
+(**WORK IN PROGRESS**)
+
+(only on Europarl)
+
+bla bla bla
 
 ## Conclusion
