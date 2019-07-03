@@ -18,8 +18,8 @@ Filtered by length:
 Total samples:  1.149.845 (total sentences, with minimum length "min_len" and maximum length "max_len")
 
 Samples after voc reduction (based on converted lines):
-Total samples:  1.916.030
-Time: 2:30
+Total samples:  1.149.845
+Time: 1:30
 """
 import argparse
 import os

@@ -71,7 +71,7 @@ def experiment_parser():
     parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
     parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
     parser.add_argument('--val_bs', default=12, type=int, help="Validation batch size")
-    parser.add_argument('--tok', default="tok", type=str, help="tok files or clean files")
+    parser.add_argument('--tok', default="clean", type=str, help="tok files or clean files")
 
     return parser
 
