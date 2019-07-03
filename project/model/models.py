@@ -53,6 +53,7 @@ class Seq2Seq(nn.Module):
         self.pad_token = tokens_bos_eos_pad_unk[2]
         self.unk_token = tokens_bos_eos_pad_unk[3]
         self.device = experiment_config.get_device()
+        self.reverse_input = experiment_config.reverse_input
         rnn_type = experiment_config.rnn_type
         self.cell = rnn_type
         self.context_model = False
@@ -89,6 +90,11 @@ class Seq2Seq(nn.Module):
     def forward(self, src, trg):
         src = src.to(self.device)
         trg = trg.to(self.device)
+
+        if self.reverse_input:
+            inv_index = torch.arange(src.size(0)-1,-1,-1).long()
+            inv_index = inv_index.to(self.device)
+            src = src.index_select(0, inv_index)
 
         # Encode
         out_e, final_e = self.encoder(src)
@@ -173,6 +179,7 @@ class ContextSeq2Seq(Seq2Seq):
 
         self.context_model = True
         self.attention = None
+        self.reverse_input = False
 
         self.decoder = ContextDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
                                       self.num_layers * 2 if self.enc_bi else self.num_layers, dropout_p=self.dp)
@@ -188,6 +195,7 @@ class ContextSeq2Seq(Seq2Seq):
     def forward(self, src, trg):
         src = src.to(self.device)
         trg = trg.to(self.device)
+
 
         batch_size = trg.shape[1]
         max_len = trg.shape[0]
@@ -274,5 +282,6 @@ def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     elif model_type == "s":
         #### This returs a model like in Sutskever et al. ####
         #### The architecture was multilayered, thus layers are automatically set to 2 and input sequences were reversed (this is handled in the vocabulary class)
+        if not experiment_config.reverse_input: experiment_config.reverse_input = True
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
         return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)

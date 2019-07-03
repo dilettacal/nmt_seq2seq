@@ -19,7 +19,21 @@ Following frameworks and libraries are used:
 - nltk: `corpus_bleu` function is used to compute the corpus bleu
 - numpy, pandas, matplotlib
 
-See the `setup.sh` script or the `requirements.txt` file.
+
+```bash
+### Requirements for the project ####
+pip install --user torch torchtext
+pip install --user -U spacy
+python -m spacy download en
+python -m spacy download de
+pip install nltk
+pip install numpy pandas matplotlib
+
+### Required to preprocess the tmx file ####
+pip install git+https://github.com/amake/tmx2corpus.git
+
+```
+Or see the `setup.sh` script or the `requirements.txt` file.
 
 
 ## Goals
@@ -42,7 +56,7 @@ Segments stored in this xml files are unique, meaning that there should not be a
 
 The `tmx` format is available at: http://opus.nlpl.eu/download.php?f=Europarl/v7/tmx/de-en.tmx.gz.
 
-The `txt` format is available at: http://opus.nlpl.eu/download.php?f=Europarl/v7/moses/de-en.txt.zip (this should be the txt version of the tmx file).
+The `txt` format is available at: http://opus.nlpl.eu/download.php?f=Europarl/v7/moses/de-en.txt.zip (The zip file contains two separate files for the source (`.en`) and for the target language (e.g. `.de`)).
 
 To preprocess the tmx corpus, you need to install the tmx2corpus library with `pip install git+https://github.com/amake/tmx2corpus.git`. The preprocessing is very easy and only takes few seconds.
 
