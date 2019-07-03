@@ -5,11 +5,17 @@ import string
 from datetime import datetime
 import re
 
-import tokenizer ## from tmx2corpus!!!!!
+try:
+    import tokenizer ## from tmx2corpus!!!!!
+    from tmx2corpus import Converter
+except ImportError or ModuleNotFoundError as e:
+    print(e, "Please install tmx2corpus")
+    pass
+
 from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import Logger
 from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED
-from tmx2corpus import Converter
+
 
 ### Regex ###
 space_before_punct = r'\s([?.!"](?:\s|$))'
@@ -43,24 +49,41 @@ class MinLenFilter(object):
     def filter(self, bitext):
         filtered_texts = list(filter(lambda item: len(item[1].split(" ")) >= self.len, bitext.items()))
         return bool(len(filtered_texts)==2) # both texts match the given predicate
+try:
+    class TMXTokenizer(tokenizer.Tokenizer):
+        def __init__(self, lang):
+            #self.custom_tokenizer = custom_tokenizer
+            super(TMXTokenizer, self).__init__(lang.lower())
 
-class TMXTokenizer(tokenizer.Tokenizer):
-    def __init__(self, lang):
-        #self.custom_tokenizer = custom_tokenizer
-        super(TMXTokenizer, self).__init__(lang.lower())
+        def _tokenize(self, text):
+            tokens = []
+            i = 0
+            for m in BOUNDARY_REGEX.finditer(text):
+                tokens.append(text[i:m.start()])
+                i = m.end()
+            ### The tokenization may include too much spaces
+            tokens = ' '.join(tokens)
+            tokens = tokens.strip()
+            ### remove possible duplicate spaces
+            tokens = re.sub(' +', ' ', tokens)
+            return tokens.split(" ")
 
-    def _tokenize(self, text):
-        tokens = []
-        i = 0
-        for m in BOUNDARY_REGEX.finditer(text):
-            tokens.append(text[i:m.start()])
-            i = m.end()
-        ### The tokenization may include too much spaces
-        tokens = ' '.join(tokens)
-        tokens = tokens.strip()
-        ### remove possible duplicate spaces
-        tokens = re.sub(' +', ' ', tokens)
-        return tokens.split(" ")
+
+    class TMXConverter(Converter):
+        def __init__(self, output):
+            super().__init__(output)
+
+
+    class TXTConverter(Converter):
+        def __init__(self, output):
+            super().__init__(output)
+
+        def convert(self, files: list):
+            pass
+
+except NameError as e:
+    print(e, "Please install tmx2corpus")
+    pass
 
 ########## Project custom tokenizers ###########
 
@@ -180,17 +203,6 @@ def get_custom_tokenizer(lang, mode, fast=False):
 
 
 
-class TMXConverter(Converter):
-    def __init__(self, output):
-        super().__init__(output)
-
-
-class TXTConverter(Converter):
-    def __init__(self, output):
-        super().__init__(output)
-
-    def convert(self, files:list):
-        pass
 
 
 def remove_adjacent_same_label(line):

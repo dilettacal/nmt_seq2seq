@@ -23,11 +23,14 @@ Total samples:  1.052.761
 import argparse
 import os
 import time
-
-from tmx2corpus import FileOutput
+try:
+    from tmx2corpus import FileOutput
+    from project.utils.preprocessing import TMXConverter, get_custom_tokenizer, split_data, persist_txt, TMXTokenizer
+except ImportError or ModuleNotFoundError as e:
+    print(e, "Please install tmx2corpus")
+    pass
 
 from project.experiment.setup_experiment import str2bool
-from project.utils.preprocessing import TMXConverter, get_custom_tokenizer, split_data, persist_txt, TMXTokenizer
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 import re
