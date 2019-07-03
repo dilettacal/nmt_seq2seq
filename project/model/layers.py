@@ -3,8 +3,6 @@ import torch
 import torch.nn.functional as F
 
 #### https://github.com/Usama113/Maxout-PyTorch/blob/master/Maxout.ipynb
-from settings import DEFAULT_DEVICE
-
 
 class ListModule(object):
     def __init__(self, module, prefix, *args):

@@ -16,6 +16,9 @@ space_before_punct = r'\s([?.!"](?:\s|$))'
 before_apos = r"\s+(['])"
 after_apos = r"(['])\s+([\w])"
 
+
+########## Wrapper around tmx2corpus dependency ##############
+
 class EmptyFilter(object):
     def filter(self, bitext):
         filtered_texts = list(filter(lambda item: item[1] or item[1] != "", bitext.items()))
@@ -51,6 +54,7 @@ class TMXTokenizer(tokenizer.Tokenizer):
             i = m.end()
         return tokens
 
+########## Project custom tokenizers ###########
 
 class BaseSequenceTokenizer(object):
     def __init__(self, lang):
@@ -87,16 +91,16 @@ class BaseSequenceTokenizer(object):
         text = cleanup_digits(text)
         return text
 
-class CharBasedTokenizer(TMXTokenizer):
+class CharBasedTokenizer(BaseSequenceTokenizer):
 
     def __init__(self, lang):
-        super(TMXTokenizer, self).__init__(lang)
+        super(CharBasedTokenizer, self).__init__(lang)
         self.type = "char"
 
     def _custom_tokenize(self, text):
         return list(text)
 
-class SpacyTokenizer(TMXTokenizer):
+class SpacyTokenizer(BaseSequenceTokenizer):
     def __init__(self, lang, model):
         self.nlp = model
         super(SpacyTokenizer, self).__init__(lang)
@@ -131,7 +135,7 @@ class SpacyTokenizer(TMXTokenizer):
         return text.split(" ") if isinstance(text, str) else text
 
 
-class StandardSplitTokenizer(TMXTokenizer):
+class StandardSplitTokenizer(BaseSequenceTokenizer):
     def _custom_tokenize(self, text):
         tokens = []
         i = 0

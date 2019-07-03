@@ -24,7 +24,7 @@ import time
 from tmx2corpus import FileOutput
 
 from project.experiment.setup_experiment import str2bool
-from project.utils.preprocessing import TMXConverter, get_custom_tokenizer, split_data, persist_txt
+from project.utils.preprocessing import TMXConverter, get_custom_tokenizer, split_data, persist_txt, TMXTokenizer
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         else:
             ### This conversion uses standard tokenizers, which splits sentences on spaces and punctuation, this is very fast
             converter = TMXConverter(output=FileOutput(output_file_path))
-            tokenizers = [get_custom_tokenizer("", "w", "fast"), get_custom_tokenizer("", "w", "fast")]
+            tokenizers = [TMXTokenizer("en"), TMXTokenizer("de")]
             converter.add_tokenizers(tokenizers)
             converter.convert([COMPLETE_PATH]) #---> bitext.en, bitext.de, bitext.tok.de, bitext.tok.en
             print("Converted lines:", converter.output_lines)

@@ -1,14 +1,10 @@
 import os
 import time
-
-import dill
-import numpy as np
-import torch
 from torchtext import data, datasets
-
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
 from project.utils.io import SrcField, Seq2SeqDataset
+from project.utils.preprocessing import get_custom_tokenizer
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO
 
@@ -35,26 +31,19 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
 
     ### Define tokenizers ####
     if char_level:
-        src_tokenizer = lambda s: list(s)
-        trg_tokenizer = lambda s: list(s)
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c"), get_custom_tokenizer("de", "c")
     else:
-        if reverse_input:
-            src_tokenizer = lambda s: s.split()[::-1]
-            trg_tokenizer = lambda s: s.split()
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", "fast"), get_custom_tokenizer("de", "w", "fast") #
 
-        else:
-            src_tokenizer = lambda s: s.split()
-            trg_tokenizer = lambda s: s.split()
+    src_tokenizer.set_mode(True)
+    trg_tokenizer.set_mode(True)
 
     SRC_sos_eos_pad_unk = [None, None, PAD_TOKEN, UNK_TOKEN]
-    TRGsos_eos_pad_unk = [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN]
+    TRG_sos_eos_pad_unk = [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN]
 
-    if reverse_input:
-        src_vocab = SrcField(tokenize=src_tokenizer, include_lengths=False,sos_eos_pad_unk=SRC_sos_eos_pad_unk, pad_first=True)
-    else:
-        src_vocab = SrcField(tokenize=src_tokenizer, include_lengths=False, sos_eos_pad_unk=SRC_sos_eos_pad_unk)
+    src_vocab = SrcField(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False, sos_eos_pad_unk=SRC_sos_eos_pad_unk)
 
-    trg_vocab = SrcField(tokenize=trg_tokenizer, include_lengths=False, sos_eos_pad_unk=TRGsos_eos_pad_unk)
+    trg_vocab = SrcField(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False, sos_eos_pad_unk=TRG_sos_eos_pad_unk)
 
     print("Fields created!")
 
@@ -82,6 +71,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     else:
+        #### Training on IWSLT torchtext corpus #####
         print("Loading data...")
         start = time.time()
         path = get_full_path(DATA_DIR_PREPRO, "iwslt")
@@ -102,8 +92,6 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         src_vocab.build_vocab(train, val, test, min_freq=5)
         trg_vocab.build_vocab(train, val, test, min_freq=5)
         print("Src vocabulary created!")
-
-
 
 
     #### Iterators
