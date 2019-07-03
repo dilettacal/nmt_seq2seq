@@ -75,6 +75,7 @@ class Seq2Seq(nn.Module):
         self.dropout = nn.Dropout(experiment_config.dp)
         self.linear2 = nn.Linear(self.emb_size, self.trg_vocab_size) #emb size of target
 
+        ### This part is used in the original code
         if False and self.decoder.embedding.weight.size() == self.linear2.weight.size():
             print('Weight tying!')
             self.linear2.weight = self.decoder.embedding.weight
@@ -168,8 +169,6 @@ class Seq2Seq(nn.Module):
             best_options = options[:k]  # place top candidates in beam
         best_options.sort(key=lambda x: x[0], reverse=True)
         return best_options
-
-
 
 
 class ContextSeq2Seq(Seq2Seq):

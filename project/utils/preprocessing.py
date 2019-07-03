@@ -16,6 +16,9 @@ space_before_punct = r'\s([?.!"](?:\s|$))'
 before_apos = r"\s+(['])"
 after_apos = r"(['])\s+([\w])"
 
+### from tmx2corpus "tokenizer.py"
+BOUNDARY_REGEX = re.compile(r'\b|\Z')
+
 
 ########## Wrapper around tmx2corpus dependency ##############
 
@@ -49,7 +52,7 @@ class TMXTokenizer(tokenizer.Tokenizer):
     def _tokenize(self, text):
         tokens = []
         i = 0
-        for m in tokenizer.BOUNDARY_REGEX.finditer(text):
+        for m in BOUNDARY_REGEX.finditer(text):
             tokens.append(text[i:m.start()])
             i = m.end()
         return tokens
@@ -139,12 +142,10 @@ class StandardSplitTokenizer(BaseSequenceTokenizer):
     def _custom_tokenize(self, text):
         tokens = []
         i = 0
-        for m in tokenizer.BOUNDARY_REGEX.finditer(text):
+        for m in BOUNDARY_REGEX.finditer(text):
             tokens.append(text[i:m.start()])
             i = m.end()
         return tokens
-
-
 
 def get_custom_tokenizer(lang, mode, fast=False):
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
