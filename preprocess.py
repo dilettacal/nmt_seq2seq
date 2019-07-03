@@ -18,7 +18,8 @@ Filtered by length:
 Total samples:  1.149.845 (total sentences, with minimum length "min_len" and maximum length "max_len")
 
 Samples after voc reduction (based on converted lines):
-Total samples:  1.052.761
+Total samples:  1.916.030
+Time: 2:30
 """
 import argparse
 import os
@@ -162,17 +163,23 @@ if __name__ == '__main__':
                     take_src_lines, take_trg_lines = [],[]
                     for src_l, trg_l in zip(src_lines, trg_lines):
                         if src_l != "" and trg_l != "":
-                            tokenized_src_line = ' '.join(src_lang_tokenizer.tokenize(src_l))
-                            tokenized_trg_line = ' '.join(trg_lang_tokenizer.tokenize(trg_l))
+                            if max_len > 0 or min_len > 0:
+                                src_l_spl, trg_l_spl = src_l.split(" "), trg_l.split(" ")
+                                if (len(src_l_spl) <= max_len and len(src_l_spl) >= min_len) and (
+                                        len(trg_l_spl) <= max_len and len(trg_l_spl) >= min_len):
+                                    src_l = ' '.join(src_l_spl)
+                                    trg_l = ' '.join(trg_l_spl)
+                                    tokenized_src_line = ' '.join(src_lang_tokenizer.tokenize(src_l))
+                                    tokenized_trg_line = ' '.join(trg_lang_tokenizer.tokenize(trg_l))
 
-                            tokenized_src_line = tokenized_src_line.strip()
-                            tokenized_trg_line = tokenized_trg_line.strip()
-                            ### remove possible duplicate spaces
-                            tokenized_src_line = re.sub(' +', ' ', tokenized_src_line)
-                            tokenized_trg_line = re.sub(' +', ' ', tokenized_trg_line)
+                                    tokenized_src_line = tokenized_src_line.strip()
+                                    tokenized_trg_line = tokenized_trg_line.strip()
+                                    ### remove possible duplicate spaces
+                                    tokenized_src_line = re.sub(' +', ' ', tokenized_src_line)
+                                    tokenized_trg_line = re.sub(' +', ' ', tokenized_trg_line)
 
-                            take_src_lines.append(tokenized_src_line)
-                            take_trg_lines.append(tokenized_trg_line)
+                                    take_src_lines.append(tokenized_src_line)
+                                    take_trg_lines.append(tokenized_trg_line)
                     assert len(take_trg_lines) == len(take_trg_lines)
                     train_data, val_data, test_data = split_data(take_src_lines, take_trg_lines)
                     persist_txt(train_data, STORE_PATH, "train.clean", exts=(".en", "."+lang_code))
