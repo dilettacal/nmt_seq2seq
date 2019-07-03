@@ -189,8 +189,6 @@ class ContextSeq2Seq(Seq2Seq):
         self.maxout = Maxout(self.hid_dim*2 + self.emb_size, maxout_dim, 2)
 
         self.linear1 = nn.Linear(maxout_dim, self.trg_vocab_size)
-        self.tanh = None
-        self.linear2 = None
 
         #### Additional linear transformation is added here to get better results representations
       #  self.linear1 = nn.Linear(self.emb_size +2 * self.hid_dim, self.emb_size)
