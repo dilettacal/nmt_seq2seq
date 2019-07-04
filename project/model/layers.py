@@ -79,10 +79,10 @@ class Maxout(nn.Module):
 ### Attention: see https://lukemelas.github.io/machine-translation.html
 
 class Attention(nn.Module):
-    def __init__(self, pad_token=1, bidirectional=False, attn_type='dot-product', h_dim=300):
+    def __init__(self, pad_token=1, bidirectional=False, attn_type='dot', h_dim=300):
         super(Attention, self).__init__()
         # Check attn type and store variables
-        if attn_type not in ['dot-product', 'additive', 'none']:
+        if attn_type not in ['dot', 'additive', 'none']:
             raise Exception('Incorrect attention type')
         self.bidirectional = bidirectional
         self.attn_type = attn_type
