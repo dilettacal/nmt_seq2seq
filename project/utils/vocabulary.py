@@ -100,7 +100,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src)))
 
    # val_batch_size = experiment.batch_size//2 if experiment.batch_size >=2 else experiment.batch_size
-    val_iter = data.BucketIterator(val, experiment.val_batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
+    val_iter = data.BucketIterator(val, 1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
     #print(val_iter.batch_size)
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
 

@@ -162,8 +162,9 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
 def validate(val_iter, model, criterion, device, TRG, bleu=False):
     model.eval()
     losses = AverageMeter()
-    bleus = AverageMeter()
-    perl_bleus = AverageMeter()
+
+    total_bleu = AverageMeter()
+    total_perl_bleu = AverageMeter()
     sent_candidates = []
     sent_references = []
 
@@ -172,7 +173,6 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
             src = batch.src.to(device)
             trg = batch.trg.to(device)
 
-            batch_size = trg.size(1)
             #### compute model scores
             ### These are still raw computations from the linear output layer from the model
             ### As CrossEntropyLoss wrapper was used for loss computation
@@ -181,8 +181,9 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
             scores = scores[:-1]
             trg = trg[1:]
 
-            raw_scores = scores.clone() ### for BLEU
+            #raw_scores = scores.clone() ### for BLEU
             raw_trg = trg.clone() ### for BLEU
+            raw_src = src.clone()
 
             # Reshape for loss function
             scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
@@ -198,63 +199,36 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
 
             if bleu:
                 #print("Computing BLEU score for batch {}...".format(i))
-                for seq_idx in range(batch_size):
+                ### For the BLEU computation we do not want to consider special tokens (SOS, EOS and PAD)
+                clean_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
 
-                    ### raw_trg = [seq_len, batch_size]
-                    ### with select(1, seq_idx), we get at each step the sequence at seq_idx in the batch, thus trg_seq = [seq_len]
-                    trg_seq = raw_trg.select(1, seq_idx)  ### adding a dimension at index 1
-
-                    #### Greedy search - the max value for each candidate is chosen #####
-
-                    ### For each sequence in the batch, the model delivers a probability distribution over the trg vocabulary
-                    ### We select the probabilities for each sequence (seq_idx) and computes the max, thus we get a sequence of word idx (as they are stored in the voc)
-                    ### max_idx = [seq_len]
-
-                    probs, max_idx = torch.max(raw_scores.data.select(1, seq_idx), dim=1)
-
-                    ### Convert each index to a string
-                    candidate = [TRG.vocab.itos[x] for x in max_idx]
-
-                    #### BLEU ####
-
-                    ### References are the real target sequences
-                    ### To pass them the NLTK function "corpus_bleu" they need to be bidimensional, thus we add a dimension to trg_seq and convert them to a list
-
-                    reference = list(trg_seq.data)
-
-                    ### For the BLEU computation we do not want to consider special tokens (SOS, EOS and PAD)
-                    clean_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
-
-                    ### cleaning the prediction
-                    candidate = [w for w in candidate if w not in clean_tokens]
-
-                    ### cleaning here the reference
-                    reference = [w for w in reference if w not in clean_tokens]
-
-                    sent_out = ' '.join(candidate)
-                    sent_ref = ' '.join(TRG.vocab.itos[j] for j in reference)
-                    sent_candidates.append(sent_out)
-                    sent_references.append(sent_ref)
-
-                ### smoothing functions allow to avoid the problem of missing n-gram overlappings
-                smooth = SmoothingFunction()
-
-                ### Computing corpus bleu for this batch
-                batch_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
-                                            hypotheses=[hyp.split() for hyp in sent_candidates],
-                                            smoothing_function=smooth.method4) * 100
-
-                try:
-                    perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
-                except TypeError or Exception as e:
-                    print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
-                    perl_bleu = 0
-                bleus.update(batch_bleu)
-                perl_bleus.update(perl_bleu)
+                # Get model prediction (from beam search)
+                out = model.predict(raw_src, beam_size=1)  # list of ints (word indices) from greedy search
+                ref = list(raw_trg.data.squeeze())
+                # Prepare sentence for bleu script
+                out = [w for w in out if w not in clean_tokens]
+                ref = [w for w in ref if w not in clean_tokens]
+                sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
+                sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+                sent_candidates.append(sent_out)
+                sent_references.append(sent_ref)
 
 
+        ### compute bleu
         if bleu:
-           return losses.avg, [bleus.avg, perl_bleus.avg]
+            smooth = SmoothingFunction()  # if there are less than 4 ngrams
+            nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
+                                    hypotheses=[hyp.split() for hyp in sent_candidates],
+                                    smoothing_function=smooth.method4) * 100
+            total_bleu.update(nlkt_bleu)
+            try:
+                perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
+                total_perl_bleu.update(perl_bleu)
+            except TypeError or Exception as e:
+                print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
+                perl_bleu = 0
+                total_perl_bleu.update(perl_bleu)
+            return losses.avg, [total_bleu.val, total_perl_bleu.val]
 
         else:
            return losses.avg, -1
