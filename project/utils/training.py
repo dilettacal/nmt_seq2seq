@@ -203,7 +203,8 @@ def validate(val_iter, model, criterion, device, TRG, bleu=False):
                 clean_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
 
                 # Get model prediction (from beam search)
-                out = model.predict(raw_src, beam_size=1)  # list of ints (word indices) from greedy search
+                out = model.predict(raw_src, max_len=raw_trg.size(0), beam_size=1)  # list of ints (word indices) from greedy search
+                #print(out.size())
                 ref = list(raw_trg.data.squeeze())
                 # Prepare sentence for bleu script
                 out = [w for w in out if w not in clean_tokens]
@@ -253,6 +254,7 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
 
             # Reshape for loss function
             scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
+
 
             ##### top1 = output.max(1)[1]
             tgt = tgt.view(scores.size(0))
