@@ -36,7 +36,6 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     valid_every = log_every
 
     for epoch in range(epochs):
-
         start_time = time.time()
         if samples_iter:
             if epoch == (epochs-1):
@@ -48,6 +47,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             samples=None
 
         if epoch % valid_every == 0:
+
             tr_logger.log("Translation check. Epoch {}".format(epoch+1))
             avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
                                    optimizer=optimizer, device=device, logger=logger,
@@ -106,6 +106,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
 
     model.train()
     losses = AverageMeter()
+    train_iter.init_epoch()
 
     for i, batch in enumerate(train_iter):
 
@@ -146,6 +147,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
 
 def validate(val_iter, model, device, TRG):
     model.eval()
+    val_iter.init_epoch()
 
     # Iterate over words in validation batch.
     bleu = AverageMeter()
