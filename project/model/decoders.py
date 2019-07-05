@@ -3,7 +3,6 @@ Class: Decoder
 
 Handles the decoder part of a Seq2Seq model.
 The decoder can be custom with lstm and gru cells.
-Or it can propagate context to the embeddings and to the final output layer, as proposed in Cho et al. (2014).
 
 """
 

@@ -6,12 +6,6 @@ Author: Luke Melas
 Title: Machine Translation with Recurrent Neural Networks
 URL: https://lukemelas.github.io/machine-translation.html and https://github.com/lukemelas/Machine-Translation/blob/master/models/Seq2seq.py (on the courtesy of the author)
 
-Class ContextSeq2Seq - modified version from this code:
-
-Author Ben Trevett:
-Title: 2 - Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation.ipynb
-Implements paper (Cho et al. 2014): https://arxiv.org/abs/1406.1078
-URL: https://github.com/bentrevett/pytorch-seq2seq/blob/master/2%20-%20Learning%20Phrase%20Representations%20using%20RNN%20Encoder-Decoder%20for%20Statistical%20Machine%20Translation.ipynb
 
 """
 import random
@@ -21,7 +15,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 from project.experiment.setup_experiment import Experiment
-from project.model.decoders import Decoder, ContextDecoder
+from project.model.decoders import Decoder
 from project.model.encoders import Encoder
 from project.model.layers import Attention, Maxout
 from settings import VALID_CELLS, SEED
