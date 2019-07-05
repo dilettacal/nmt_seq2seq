@@ -22,71 +22,71 @@ import random
 random.seed(SEED)
 
 
-def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None, device=DEFAULT_DEVICE, model_type="custom", max_len=30):
-    best_valid_loss = float('inf')
-    best_ppl_value = float('inf')
+def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
+                device=DEFAULT_DEVICE, model_type="custom", translations=[]):
+    best_bleu_score = 0
 
-    losses = dict()
+    metrics = dict()
     train_losses = []
-    val_losses = []
-    ppl = dict()
     train_ppls = []
-    val_ppls = []
 
     nltk_bleus, perl_bleus = [], []
     bleus = dict()
 
+    valid_every = 5
+
     for epoch in range(epochs):
+
         start_time = time.time()
-        compute_bleu = True if epoch % 5 == 0 else False
+        #  compute_bleu = True if epoch % 5 == 0 else False
         check_tr = True if epoch % 10 == 0 and epoch > 0 else False
-        if epoch == epochs:
-            last = True
-        else: last = False
+
+        last = True if epoch == (epochs-1) else False
+
         avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
-                               optimizer=optimizer,device=device, model_type=model_type, logger=logger, check_trans=check_tr, SRC=SRC, TRG=TRG,last=last)
-        avg_val_loss,  avg_bleu_val = validate(val_iter, model, criterion, device, TRG, bleu=compute_bleu)
-
-        val_losses.append(avg_val_loss)
+                               optimizer=optimizer, device=device, model_type=model_type, logger=logger,
+                               check_trans=check_tr, SRC=SRC, TRG=TRG, last=last)
         train_losses.append(avg_train_loss)
-        if compute_bleu:
-            nltk_bleus.append(avg_bleu_val[0])
-            perl_bleus.append(avg_bleu_val[1])
-
-        val_ppl = math.exp(avg_val_loss)
-
-        if val_ppl < best_ppl_value:
-            best_ppl_value = val_ppl
-            logger.save_model(model.state_dict())
-            logger.log('New best perplexity value: {:.3f}'.format(best_ppl_value))
-
-        end_epoch_time = time.time()
-        total_epoch = convert(end_epoch_time-start_time)
-
 
         train_ppl = math.exp(avg_train_loss)
 
-        ### scheduler monitors val loss value
-        scheduler.step(val_ppl)  # input bleu score
-
-        val_ppls.append(val_ppl)
         train_ppls.append(train_ppl)
 
-        logger.log('Epoch: {} | Time: {}'.format(epoch+1, total_epoch))
-        logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
-        if compute_bleu:
-            nlkt_b = avg_bleu_val[0]
+        if epoch % valid_every == 0:
+            avg_bleu_val = validate(val_iter, model, criterion, device)
+            nltk_bleus.append(avg_bleu_val[0])
+            perl_bleus.append(avg_bleu_val[1])
+            bleu = avg_bleu_val[0]
             perl_b = avg_bleu_val[1]
-            #perl_b = 0
-            logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f} | Val. (nlkt) BLEU: {nlkt_b:.3f} | Val. (perl) BLEU: {perl_b:.3f} |')
+
+            ### scheduler monitors val loss value
+            scheduler.step(bleu)  # input bleu score
+
+            if bleu > best_bleu_score:
+                best_bleu_score = bleu
+                logger.save_model(model.state_dict())
+                logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
+
+            end_epoch_time = time.time()
+            total_epoch = convert(end_epoch_time - start_time)
+
+            logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
+            logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. (nlkt) BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
+
+            metrics.update({"loss": train_losses, "ppl": train_ppls})
+            bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
+
         else:
-            logger.log(f'\t Val. Loss: {avg_val_loss:.3f} |  Val. PPL: {val_ppl:7.3f}')
+            end_epoch_time = time.time()
+            total_epoch = convert(end_epoch_time - start_time)
 
-    losses.update({"train": train_losses, "val": val_losses})
-    ppl.update({"train": train_ppls, "val": val_ppls})
-    bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
+            logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
+            logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
 
-    return bleus, losses, ppl
+            metrics.update({"loss": train_losses, "ppl": train_ppls})
+
+
+    return bleus, metrics
 
 
 
@@ -130,17 +130,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
         loss.backward()
         losses.update(loss.item())
         # Clip gradient norms and step optimizer
-
-        ### Sutskever gradient clipping type
-        if model_type == "s":
-            ### this should clip the norm to the range [10, 25] as in the paper
-            grad_norm = get_gradient_norm(model)
-            if grad_norm > 5:
-                norm_changes += 1
-                customized_clip_value(model.parameters(), grad_norm)
-
-        else:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         optimizer.step()
         if check_trans and condition:
@@ -158,83 +148,60 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", mode
     return losses.avg
 
 
-
-def validate(val_iter, model, criterion, device, TRG, bleu=False):
+def validate(val_iter, model, device, TRG):
     model.eval()
-    losses = AverageMeter()
 
-    total_bleu = AverageMeter()
-    total_perl_bleu = AverageMeter()
-    sent_candidates = []
-    sent_references = []
+    # Iterate over words in validation batch.
+    bleu = AverageMeter()
+    perl = AverageMeter()
+    sent_candidates = []  # list of sentences from decoder
+    sent_references = []  # list of target sentences
 
+    clean_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
     with torch.no_grad():
         for i, batch in enumerate(val_iter):
+            # Use GPU
             src = batch.src.to(device)
             trg = batch.trg.to(device)
 
-            #### compute model scores
-            ### These are still raw computations from the linear output layer from the model
-            ### As CrossEntropyLoss wrapper was used for loss computation
-            ### the log softmax operation is done by this object internally
-            scores = model(src, trg)
-            scores = scores[:-1]
-            trg = trg[1:]
 
-            #raw_scores = scores.clone() ### for BLEU
-            raw_trg = trg.clone() ### for BLEU
-            raw_src = src.clone()
+            # Get model prediction (from beam search)
+            out = model.predict(src, max_len=trg.size(0),
+                                beam_size=1)  # list of ints (word indices) from greedy search
+            # print(out.size())
+            ref = list(trg.data.squeeze())
+            # Prepare sentence for bleu script
+            out = [w for w in out if w not in clean_tokens]
+            ref = [w for w in ref if w not in clean_tokens]
+            sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
+            sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+            sent_candidates.append(sent_out)
+            sent_references.append(sent_ref)
 
-            # Reshape for loss function
-            scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
+            # Get model prediction (from beam search)
+            out = model.predict(src, beam_size=1)  # list of ints (word indices) from greedy search
+            ref = list(trg.data.squeeze())
+            out = [w for w in out if w not in clean_tokens]
+            ref = [w for w in ref if w not in clean_tokens]
+            sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
+            sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+            sent_candidates.append(sent_out)
+            sent_references.append(sent_ref)
 
-            trg = trg.view(scores.size(0))
+        smooth = SmoothingFunction()  # if there are less than 4 ngrams
+        nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
+                                hypotheses=[hyp.split() for hyp in sent_candidates],
+                                smoothing_function=smooth.method4) * 100
+        bleu.update(nlkt_bleu)
+        try:
+            perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
+            perl.update(perl_bleu)
+        except TypeError or Exception as e:
+            print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
+            perl_bleu = 0
+            perl.update(perl_bleu)
 
-            # Calculate loss
-            loss = criterion(scores, trg)
-            # save loss
-            losses.update(loss.item())
-
-            #### check the BLEU value for the batch ####
-
-            if bleu:
-                #print("Computing BLEU score for batch {}...".format(i))
-                ### For the BLEU computation we do not want to consider special tokens (SOS, EOS and PAD)
-                clean_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
-
-                # Get model prediction (from beam search)
-                out = model.predict(raw_src, max_len=raw_trg.size(0), beam_size=1)  # list of ints (word indices) from greedy search
-                #print(out.size())
-                ref = list(raw_trg.data.squeeze())
-                # Prepare sentence for bleu script
-                out = [w for w in out if w not in clean_tokens]
-                ref = [w for w in ref if w not in clean_tokens]
-                sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
-                sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
-                sent_candidates.append(sent_out)
-                sent_references.append(sent_ref)
-
-
-        ### compute bleu
-        if bleu:
-            smooth = SmoothingFunction()  # if there are less than 4 ngrams
-            nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
-                                    hypotheses=[hyp.split() for hyp in sent_candidates],
-                                    smoothing_function=smooth.method4) * 100
-            total_bleu.update(nlkt_bleu)
-            try:
-                perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
-                total_perl_bleu.update(perl_bleu)
-            except TypeError or Exception as e:
-                print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
-                perl_bleu = 0
-                total_perl_bleu.update(perl_bleu)
-            return losses.avg, [total_bleu.val, total_perl_bleu.val]
-
-        else:
-           return losses.avg, -1
-
-
+    return [bleu.val, perl.val]
 
 
 def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30):

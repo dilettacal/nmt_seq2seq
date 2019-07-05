@@ -12,14 +12,14 @@ from settings import SEED
 
 random.seed(SEED)
 
-class TranslationReversibleField(torchtext.data.Field):
+class NMTField(torchtext.data.Field):
 
     def __init__(self, **kwargs):
             ### Create vocabulary object
-            super(TranslationReversibleField, self).__init__(**kwargs)
+            super(NMTField, self).__init__(**kwargs)
 
     def build_vocab(self, *args, **kwargs):
-            super(TranslationReversibleField, self).build_vocab(*args, **kwargs)
+            super(NMTField, self).build_vocab(*args, **kwargs)
             self.sos_id = self.vocab.stoi[self.init_token]
             self.eos_id = self.vocab.stoi[self.eos_token]
             self.pad_id = self.vocab.stoi[self.pad_token]
@@ -67,31 +67,29 @@ class TranslationReversibleField(torchtext.data.Field):
             return [' '.join(ex) for ex in batch]  ## Reverse tokenization by joining the words
 
 
-class SrcField(TranslationReversibleField):
+class SrcField(NMTField):
 
-    def __init__(self,sos_eos_pad_unk =[None, None, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True, tokenize=None, pad_first=False):
+    def __init__(self,sos_eos_pad_unk =[None, None, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True, tokenize=None, pad_first=False,lower=False):
         self.sos_token = sos_eos_pad_unk[0]
         self.eos_token = sos_eos_pad_unk[1]
         self.pad_token = sos_eos_pad_unk[2]
         self.unk_token = sos_eos_pad_unk[3]
-        super().__init__(lower=False, pad_token=self.pad_token,
+        super().__init__(lower=lower, pad_token=self.pad_token,
                          eos_token=self.eos_token, init_token=self.sos_token,
                          unk_token=self.unk_token, include_lengths=include_lengths,
                          sequential=sequential, tokenize=tokenize, pad_first=pad_first)
 
 
-class TrgField(TranslationReversibleField):
+class TrgField(NMTField):
 
-    def __init__(self, sos_eos_pad_unk =[SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True, tokenize=None):
+    def __init__(self, sos_eos_pad_unk =[SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN], include_lengths = False, sequential=True, tokenize=None, lower=False):
         self.sos_token = sos_eos_pad_unk[0]
         self.eos_token = sos_eos_pad_unk[1]
         self.pad_token = sos_eos_pad_unk[2]
         self.unk_token = sos_eos_pad_unk[3]
-        super().__init__(lower=False, pad_token=self.pad_token,
+        super().__init__(lower=lower, pad_token=self.pad_token,
                          eos_token=self.eos_token, init_token=self.sos_token,
-                         unk_token=self.unk_token, include_lengths=include_lengths,
-                         sequential=sequential, tokenize=tokenize)
-
+                         unk_token=self.unk_token, include_lengths=include_lengths, sequential=sequential, tokenize=tokenize)
 
 
 class Seq2SeqDataset(Dataset):

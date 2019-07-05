@@ -3,7 +3,7 @@ import time
 from torchtext import data, datasets
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
-from project.utils.io import SrcField, Seq2SeqDataset
+from project.utils.io import SrcField, Seq2SeqDataset, TrgField
 from project.utils.preprocessing import get_custom_tokenizer
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO
@@ -41,9 +41,17 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     SRC_sos_eos_pad_unk = [None, None, PAD_TOKEN, UNK_TOKEN]
     TRG_sos_eos_pad_unk = [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN]
 
-    src_vocab = SrcField(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False, sos_eos_pad_unk=SRC_sos_eos_pad_unk)
+    if experiment.tok == "tok" or corpus == "":
+        lower = True
+    else:
+        lower = False
 
-    trg_vocab = SrcField(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False, sos_eos_pad_unk=TRG_sos_eos_pad_unk)
+    src_vocab = SrcField(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,
+                         sos_eos_pad_unk=SRC_sos_eos_pad_unk, lower=lower)
+
+    trg_vocab = TrgField(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,
+                         sos_eos_pad_unk=TRG_sos_eos_pad_unk, lower=lower)
+
 
     print("Fields created!")
 
@@ -63,7 +71,10 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         exts = ("."+experiment.get_src_lang(), "."+experiment.get_trg_lang())
         train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
                                                  exts=exts, train="train."+file_type, validation="val."+file_type, test="test."+file_type,
-                                                 path=data_dir, reduce=reduce, reverse_input=False, truncate=experiment.truncate)
+                                                 path=data_dir, reduce=reduce, truncate=experiment.truncate)
+        samples = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
+                                                 exts=exts, train="samples."+file_type, validation="", test="",
+                                                 path=data_dir, truncate=0)
 
 
         end = time.time()
@@ -80,31 +91,37 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         train, val, test = datasets.IWSLT.splits(root=path,
                                                  exts=exts, fields=(src_vocab, trg_vocab),
                                                  filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= experiment.truncate)
+
+        samples = None
         end = time.time()
         print("Duration: {}".format(convert(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     if voc_limit > 0:
-        src_vocab.build_vocab(train, val, min_freq=5, max_size=voc_limit)
-        trg_vocab.build_vocab(train, val, min_freq=5, max_size=voc_limit)
-        print("Src vocabulary created!")
+        src_vocab.build_vocab(train, val, min_freq=3, max_size=voc_limit)
+        trg_vocab.build_vocab(train, val, min_freq=3, max_size=voc_limit)
+        print("Vocabularies created!")
     else:
-        src_vocab.build_vocab(train, val, min_freq=5)
-        trg_vocab.build_vocab(train, val, min_freq=5)
-        print("Src vocabulary created!")
+        src_vocab.build_vocab(train, val, min_freq=3)
+        trg_vocab.build_vocab(train, val, min_freq=3)
+        print("Vocabularies created!")
 
 
     #### Iterators
 
     # Create iterators to process text in batches of approx. the same length
-    train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src)))
+    train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)), shuffle=True)
 
    # val_batch_size = experiment.batch_size//2 if experiment.batch_size >=2 else experiment.batch_size
-    val_iter = data.BucketIterator(val, 1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
+    val_iter = data.BucketIterator(val, 1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=True)
     #print(val_iter.batch_size)
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
 
-    return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test
+    if samples:
+        samples_iter = data.Iterator(samples, batch_size=1, device=device, repeat=False, shuffle=False)
+    else: samples_iter = None
+
+    return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test, samples, samples_iter
 
 
 def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_field, corpus):
