@@ -38,10 +38,14 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     for epoch in range(epochs):
 
         start_time = time.time()
-        if epoch == (epochs-1):
-            samples = [batch for i, batch in enumerate(samples_iter)]
+        if samples_iter:
+            if epoch == (epochs-1):
+                samples = [batch for i, batch in enumerate(samples_iter)]
+            else:
+                samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
         else:
-            samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
+            ### samples are none if model is trained with e.g. iwlst corpus
+            samples=None
 
         if epoch % valid_every == 0:
             tr_logger.log("Translation check. Epoch {}".format(epoch+1))
