@@ -34,7 +34,6 @@ class Seq2Seq(nn.Module):
         super(Seq2Seq, self).__init__()
 
         self.model_type = experiment_config.model_type
-        self.decoder_type = experiment_config.decoder_type
         self.hid_dim = experiment_config.hid_dim
         self.emb_size = experiment_config.emb_size
         self.src_vocab_size = experiment_config.src_vocab_size
@@ -74,12 +73,6 @@ class Seq2Seq(nn.Module):
             print('Weight tying!')
             self.linear2.weight = self.decoder.embedding.weight
 
-    def init_weights(self, func=None):
-        if not func:
-            pass
-        else:
-            self.apply(func)
-
         ### create encoder and decoder
 
     def forward(self, src, trg):
@@ -118,6 +111,10 @@ class Seq2Seq(nn.Module):
             Slightly modified from: https://lukemelas.github.io/machine-translation.html
         '''
         src = src.to(self.device)
+        if self.reverse_input:
+            inv_index = torch.arange(src.size(0) - 1, -1, -1).long()
+            inv_index = inv_index.to(self.device)
+            src = src.index_select(0, inv_index)
         # Encode
         outputs_e, states = self.encoder(src)  # batch size = 1
         if self.context_model:

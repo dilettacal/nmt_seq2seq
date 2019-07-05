@@ -81,7 +81,6 @@ class Experiment(object):
         self.corpus = self.args.corpus
         self.lang_code = self.args.lang_code
         self.reverse_lang_comb = self.args.reverse
-        self.val_batch_size = self.args.val_bs
         #print("Reverse?", self.reverse_lang_comb)
         self.model_type = self.args.model_type
 

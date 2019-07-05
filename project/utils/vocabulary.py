@@ -72,8 +72,10 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
                                                  exts=exts, train="train."+file_type, validation="val."+file_type, test="test."+file_type,
                                                  path=data_dir, reduce=reduce, truncate=experiment.truncate)
-        samples = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab), exts=exts, train="samples."+file_type, path=data_dir, truncate=0)
-
+        samples = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab), exts=exts,
+                                        train="samples."+file_type,
+                                        validation="", test="",
+                                        path=data_dir)
 
         end = time.time()
         print("Duration: {}".format(convert(end - start)))
@@ -113,7 +115,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
 
     if samples:
-        samples_iter = data.Iterator(samples, batch_size=1, device=device, repeat=False, shuffle=False)
+        samples_iter = data.Iterator(samples[0], batch_size=1, device=device, repeat=False, shuffle=False, sort_key=lambda x: (len(x.src)))
     else: samples_iter = None
 
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test, samples, samples_iter
@@ -140,6 +142,9 @@ def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_fi
     logger.log("\n".join(["%20s %10d" % x for x in src_field.vocab.freqs.most_common(20)]))
     logger.log("Most common words (trg):")
     logger.log("\n".join(["%20s %10d" % x for x in trg_field.vocab.freqs.most_common(20)]))
+
+    logger.log("Total UNKs in the source dataset: {}".format(src_field.vocab.freqs[UNK_TOKEN]))
+    logger.log("Total UNKs in the target dataset: {}".format(trg_field.vocab.freqs[UNK_TOKEN]))
 
     logger.log("First 10 words (src):")
     logger.log("\n".join(
