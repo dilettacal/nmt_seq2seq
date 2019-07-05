@@ -48,7 +48,7 @@ echo "Sutskever"
 echo "====================================="
 
 python3 run_custom_nmt.py --hs 300 --emb 300 --nlayers 2 --dp 0.25 --reverse_input True --reverse False --model_type s --epochs 80 -v 30000 -b 64 --train 170000 --val 1000 --test 1000 ---lr 0.002
-512
+512u
 echo "====================================="
 
 echo "Improvements"
