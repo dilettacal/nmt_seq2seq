@@ -72,9 +72,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
                                                  exts=exts, train="train."+file_type, validation="val."+file_type, test="test."+file_type,
                                                  path=data_dir, reduce=reduce, truncate=experiment.truncate)
-        samples = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
-                                                 exts=exts, train="samples."+file_type, validation="", test="",
-                                                 path=data_dir, truncate=0)
+        samples = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab), exts=exts, train="samples."+file_type, path=data_dir, truncate=0)
 
 
         end = time.time()
@@ -111,10 +109,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
 
     # Create iterators to process text in batches of approx. the same length
     train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)), shuffle=True)
-
-   # val_batch_size = experiment.batch_size//2 if experiment.batch_size >=2 else experiment.batch_size
     val_iter = data.BucketIterator(val, 1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=True)
-    #print(val_iter.batch_size)
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
 
     if samples:

@@ -1,9 +1,6 @@
 import argparse
-
 import torch
-
-from settings import VALID_MODELS, VALID_DEC
-from project.utils.utils import Logger
+from settings import VALID_MODELS
 
 
 def str2bool(v):
@@ -43,10 +40,8 @@ def experiment_parser():
     parser.add_argument('--epochs', default=50, type=int, metavar='N', help='number of epochs, default: 50')
     parser.add_argument('--model', metavar='DIR', default=None, help='path to model, default: None')
 
-    parser.add_argument('--predict_from_input', metavar='STR', default=None, help='Source sentence to translate')
     parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Sequence max length. Default 30 units.")
     parser.add_argument('--model_type', default="custom", metavar='STR', help="Model type (custom, cho, sutskever)")
-    parser.add_argument('--dec', type=str, default="standard", help="Decoder type: Standard, Context")
 
     parser.add_argument('--corpus', default="europarl", metavar='STR',
                         help="The corpus, where training should be performed. Possible values: \'europarl\' and \'simple'\ - the iwslt dataset from torchtext")
@@ -64,13 +59,11 @@ def experiment_parser():
     parser.add_argument('--cuda', type=str2bool, default="True")
 
     parser.add_argument('--rnn', metavar="STR", default="lstm")
-    parser.add_argument('--maxout', type=int, default=0, help="Maxout units") #not used
 
     parser.add_argument('--train', default=200000, type=int, help="Number of training examples")
     parser.add_argument('--val', default=20000, type=int, help="Number of validation examples")
     parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
     parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
-    parser.add_argument('--val_bs', default=12, type=int, help="Validation batch size")
     parser.add_argument('--tok', default="clean", type=str, help="tok files or clean files")
 
     return parser
@@ -81,7 +74,6 @@ class Experiment(object):
         self.args = experiment_parser().parse_args()
 
         assert self.args.model_type.lower() in VALID_MODELS
-        assert self.args.dec in VALID_DEC
         #### Training configurations
         self.epochs = self.args.epochs
         self.batch_size = self.args.b
@@ -110,9 +102,6 @@ class Experiment(object):
         self.src_lang = self.lang_code if self.reverse_lang_comb == True else "en"
         self.trg_lang = self.lang_code if self.src_lang == "en" else "en"
 
-       # print("Src:", self.src_lang)
-        #print("Trg:", self.trg_lang)
-
         self.cuda = self.args.cuda
         self.lr = self.args.lr
 
@@ -138,11 +127,6 @@ class Experiment(object):
 
 
         self.tok = self.args.tok
-
-        self.decoder_type = self.args.dec
-        if self.decoder_type == "context":
-            self.rnn_type = "gru"
-
 
     def get_args(self):
         return self.args

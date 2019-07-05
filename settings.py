@@ -23,8 +23,7 @@ DEFAULT_DEVICE = "cpu"
 LSTM = "lstm"
 GRU = "gru"
 VALID_CELLS = [LSTM, GRU]
-VALID_MODELS = ["custom", "s", "c", "attn"]
-VALID_DEC = ["standard", "context", "attn"]
+VALID_MODELS = ["custom", "s", "attn"]
 
 
 SEED = 42
