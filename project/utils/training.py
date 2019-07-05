@@ -103,9 +103,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
 
 def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logger=None, samples = None, tr_logger=None):
-   # print(device)
-    norm_changes = 0
-    # Train model
+
     model.train()
     losses = AverageMeter()
 
@@ -219,7 +217,6 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
 
             # Reshape for loss function
             scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
-
 
             ##### top1 = output.max(1)[1]
             tgt = tgt.view(scores.size(0))
