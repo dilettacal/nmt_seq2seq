@@ -117,9 +117,6 @@ class Seq2Seq(nn.Module):
             src = src.index_select(0, inv_index)
         # Encode
         outputs_e, states = self.encoder(src)  # batch size = 1
-        if self.context_model:
-            context = states
-        else: context = None
         # Start with '<s>'
         init_lprob = -1e10
         init_sent = [self.bos_token]
