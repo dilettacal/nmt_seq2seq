@@ -23,7 +23,7 @@ random.seed(SEED)
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None):
+                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, log_every=5):
     best_bleu_score = 0
 
     metrics = dict()
@@ -33,19 +33,18 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     nltk_bleus, perl_bleus = [], []
     bleus = dict()
 
-    valid_every = 5
+    valid_every = log_every
 
     for epoch in range(epochs):
 
         start_time = time.time()
-        #  compute_bleu = True if epoch % 5 == 0 else False
         if epoch == (epochs-1):
             samples = [batch for i, batch in enumerate(samples_iter)]
         else:
-            samples = [batch for i, batch in enumerate(samples_iter) if i < 5]
+            samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
 
         if epoch % valid_every == 0:
-            tr_logger.log("Translation check. Epoch {}".format(epoch))
+            tr_logger.log("Translation check. Epoch {}".format(epoch+1))
             avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
                                    optimizer=optimizer, device=device, logger=logger,
                                    SRC=SRC, TRG=TRG, samples=samples, tr_logger=tr_logger)
@@ -73,7 +72,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             total_epoch = convert(end_epoch_time - start_time)
 
             logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
-            logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. (nlkt) BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
+            logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
 
             metrics.update({"loss": train_losses, "ppl": train_ppls})
             bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
@@ -86,11 +85,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
                                    SRC=SRC, TRG=TRG, samples=None, tr_logger=tr_logger)
 
             train_losses.append(avg_train_loss)
-
             train_ppl = math.exp(avg_train_loss)
-
             train_ppls.append(train_ppl)
-
             total_epoch = convert(end_epoch_time - start_time)
 
             logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
@@ -111,7 +107,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
 
     for i, batch in enumerate(train_iter):
 
-        condition = i == 0 or i == len(train_iter)//2 or i == len(train_iter)
+        condition = i == len(train_iter)-1
         #print(device)
         # Use GPU
         src = batch.src.to(device)
@@ -143,7 +139,6 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
         if condition:
             check_translation(samples, raw_scores, model,SRC=SRC, TRG=TRG, logger=tr_logger)
 
-    logger.log("Gradient Norm Changes: {}".format(norm_changes))
     return losses.avg
 
 
@@ -327,9 +322,6 @@ def check_translation(samples, scores, model, SRC, TRG, logger):
             model.train()  # test mode
             probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
             src_sent = ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
-            if model.reverse_input:
-                src_sent = src_sent.split(" ")[::-1]
-                src_sent = ' '.join(src_sent)
 
             logger.log('Source: {}'.format(src_sent), stdout=False)
             logger.log('Target: {}'.format(' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)), stdout=False)
