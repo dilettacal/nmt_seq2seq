@@ -82,8 +82,6 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
 
         else:
-            end_epoch_time = time.time()
-
             avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
                                    optimizer=optimizer, device=device, logger=logger,
                                    SRC=SRC, TRG=TRG, samples=None, tr_logger=tr_logger)
@@ -91,6 +89,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             train_losses.append(avg_train_loss)
             train_ppl = math.exp(avg_train_loss)
             train_ppls.append(train_ppl)
+            end_epoch_time = time.time()
+
             total_epoch = convert(end_epoch_time - start_time)
 
             logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
