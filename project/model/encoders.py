@@ -59,7 +59,7 @@ class Encoder(nn.Module):
             out, _ = nn.utils.rnn.pad_packed_sequence(x, input_lengths)
 
         ## handling bidirectionality
-     #   if self.bidirectional:
-     #       out = out[:, :, :self.h_dim] + out[:, :, self.h_dim:]
+        if self.bidirectional:
+            out = out[:, :, :self.h_dim] + out[:, :, self.h_dim:]
         return out, h
 
