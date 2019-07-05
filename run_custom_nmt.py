@@ -97,17 +97,22 @@ def main():
     Training the model
     
     """
-
+    log_every=5
     bleus, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
                                  optimizer=optimizer, scheduler=scheduler, SRC=SRC, TRG=TRG,
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(),
-                                 tr_logger=translation_logger, samples_iter=samples_iter)
+                                 tr_logger=translation_logger, samples_iter=samples_iter, log_every=log_every)
 
     ### metrics metrics.({"loss": train_losses, "ppl": train_ppls})
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
   # perl_bleu_metric = Metric("bleu_perl", list(bleus.values())[1])
     train_loss = Metric("train_loss", list(metrics.values())[0])
     train_perpl = Metric("train_ppl", list(metrics.values())[1])
+    #metric, title, ylabel, file
+    #title="Validation nltk BLEU/Epochs", ylabel="BLEU", file="nltk_bleu"
+   # logger.plot(dict({"Train PPL": list(metrics.values())[1], "BLEU": list(bleus.values())[0]}),
+    #            title="Training PPL/BLEU over the epochs", ylabel="PPL/BLEU",
+     #           file="train_metrics", log_every=log_every)
 
 
     logger.pickle_obj(nltk_bleu_metric.get_dict(), "nltk_bleus")
