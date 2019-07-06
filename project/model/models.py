@@ -76,27 +76,27 @@ class Seq2Seq(nn.Module):
 
         ### create encoder and decoder
 
-    def forward(self, src, trg):
-        src = src.to(self.device)
-        trg = trg.to(self.device)
+    def forward(self, enc_input, dec_input):
+        enc_input = enc_input.to(self.device)
+        dec_input = dec_input.to(self.device) #seq_len, bs
 
         if self.reverse_input:
-            inv_index = torch.arange(src.size(0)-1,-1,-1).long()
+            inv_index = torch.arange(enc_input.size(0) - 1, -1, -1).long()
             inv_index = inv_index.to(self.device)
-            src = src.index_select(0, inv_index)
+            enc_input = enc_input.index_select(0, inv_index)
 
         # Encode
-        out_e, final_e = self.encoder(src)
+        out_e, final_e = self.encoder(enc_input)
         # Decode
-        out_d, final_d = self.decoder(trg, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
+        out_d, final_d = self.decoder(dec_input, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
 
         # Attend
-        context = self.attention(src, out_e, out_d) #seq_len, bs, hid_dim
+        context = self.attention(enc_input, out_e, out_d) #seq_len, bs, hid_dim
         out_cat = torch.cat((out_d, context), dim=2)
         # Predict (returns probabilities)
         x = self.linear1(out_cat)
         x = self.dropout(self.tanh(x))
-        x = self.linear2(x)
+        x = self.linear2(x) #seq_len, bs, trg_vocab_size
         return x
 
     #### Original code #####
