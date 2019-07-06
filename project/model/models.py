@@ -210,20 +210,16 @@ def count_parameters(model):
 #### Factory method to generate the model ####
 def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
-    sampled_training = experiment_config.sample
     if model_type == "custom":
         if experiment_config.bi and experiment_config.reverse_input:
             experiment_config.reverse_input = False
-        if sampled_training:
-            return UnrolledSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
-        else: return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
     elif model_type == "s":
         #### This returs a model like in Sutskever et al. ####
         #### The architecture was multilayered, thus layers are automatically set to 2 and input sequences were reversed (this is handled in the vocabulary class)
         if not experiment_config.reverse_input: experiment_config.reverse_input = True
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
-        if sampled_training: return UnrolledSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
-        else: return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
 
