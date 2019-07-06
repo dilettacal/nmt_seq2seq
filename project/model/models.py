@@ -161,7 +161,7 @@ class Seq2Seq(nn.Module):
 
 
 class UnrolledSeq2Seq(Seq2Seq):
-
+    ##### nicht trainieren #TODO: Remove this
     def __init__(self, experiment_config: Experiment, tokens_bos_eos_pad_unk):
         super(UnrolledSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
         self.decoder = UnrolledDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
