@@ -122,7 +122,7 @@ class Seq2SeqDataset(Dataset):
 
         assert len(src_lines) == len(trg_lines)
         combined = list(zip(src_lines, trg_lines))
-        random.shuffle(combined)
+       # random.shuffle(combined)
 
         for i, (src_line, trg_line) in enumerate(combined):
             src_line, trg_line = src_line.strip(), trg_line.strip()
