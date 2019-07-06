@@ -122,12 +122,12 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test, samples, samples_iter
 
 
-def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_field, corpus):
+def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_field, experiment):
     """ This prints some useful stuff about our data sets. """
-    if corpus == "":
+    if experiment.corpus == "":
         corpus_name = "IWLST"
     else:
-        corpus_name = corpus
+        corpus_name = experiment.corpus
     logger.log("Dataset in use: {}".format(corpus_name.upper()))
 
     logger.log("Data set sizes (number of sentence pairs):")
@@ -157,6 +157,7 @@ def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_fi
     logger.log("Number of Vocabulary source words (types): {}".format(len(src_field.vocab)))
     logger.log("Number of Vocabulary target words (types): {}".format(len(trg_field.vocab)))
 
+    logger.log("Minimal word frequency (src/trg): {}".format(experiment.min_freq))
 
 
 

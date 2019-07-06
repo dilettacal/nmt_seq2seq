@@ -59,7 +59,7 @@ def main():
     data_logger = Logger(path=experiment_path, file_name="data.log")
     translation_logger = Logger(path=experiment_path, file_name="translations.log")
 
-    print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, experiment.corpus)
+    print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, experiment)
 
     # Create model
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
