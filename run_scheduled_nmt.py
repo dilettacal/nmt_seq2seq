@@ -105,7 +105,7 @@ def main():
     bleus, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
                                  optimizer=optimizer, scheduler=scheduler, SRC=SRC, TRG=TRG,
                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(),
-                                 tr_logger=translation_logger, samples_iter=samples_iter, log_every=log_every)
+                                 tr_logger=translation_logger, samples_iter=samples_iter, log_every=log_every, teacher=experiment.sample)
 
     ### metrics metrics.({"loss": train_losses, "ppl": train_ppls})
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
