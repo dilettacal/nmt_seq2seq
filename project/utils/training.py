@@ -23,7 +23,7 @@ random.seed(SEED)
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, log_every=5):
+                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, log_every=5, teacher=False):
     best_bleu_score = 0
 
     metrics = dict()
@@ -51,7 +51,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             tr_logger.log("Translation check. Epoch {}".format(epoch+1))
             avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
                                    optimizer=optimizer, device=device, logger=logger,
-                                   SRC=SRC, TRG=TRG, samples=samples, tr_logger=tr_logger)
+                                   SRC=SRC, TRG=TRG, samples=samples, tr_logger=tr_logger, teacher=teacher)
 
             train_losses.append(avg_train_loss)
             train_ppl = math.exp(avg_train_loss)
@@ -84,7 +84,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         else:
             avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
                                    optimizer=optimizer, device=device, logger=logger,
-                                   SRC=SRC, TRG=TRG, samples=None, tr_logger=tr_logger)
+                                   SRC=SRC, TRG=TRG, samples=None, tr_logger=tr_logger, teacher=teacher)
 
             train_losses.append(avg_train_loss)
             train_ppl = math.exp(avg_train_loss)
@@ -102,7 +102,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
 
 
-def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logger=None, samples = None, tr_logger=None):
+def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logger=None, samples = None, tr_logger=None, teacher=False):
 
     model.train()
     losses = AverageMeter()
@@ -124,12 +124,14 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
             raw_scores = scores.clone()
         else: raw_scores = None
         # Remove <s> from trg and </s> from scores
-        scores = scores[:-1]
+        if teacher:
+            scores = scores[1:] # must be so, because during dec unrolling, we use SOS as the start token
+        else: scores = scores[:-1]
         trg = trg[1:]
 
         # Reshape for loss function
         scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
-        print(scores.requires_grad)
+        #print(scores.requires_grad)
         trg = trg.view(scores.size(0))
 
         # Pass through loss function

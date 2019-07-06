@@ -103,9 +103,9 @@ class Attention(nn.Module):
             return out_d.clone() * 0, out_d.clone() * 0
 
         # Deal with bidirectional encoder, move batches first
-        if self.bidirectional: # sum hidden states for both directions
+      #  if self.bidirectional: # sum hidden states for both directions
             #print(out_e.size()) #lstm: 30,64,1024 - seq_len, bs, hid_dim*2
-            out_e = out_e.contiguous().view(out_e.size(0), out_e.size(1), 2, -1).sum(2).view(out_e.size(0), out_e.size(1), -1)
+     #       out_e = out_e.contiguous().view(out_e.size(0), out_e.size(1), 2, -1).sum(2).view(out_e.size(0), out_e.size(1), -1)
         out_e = out_e.transpose(0,1) # b x sl x hd
         out_d = out_d.transpose(0,1) # b x tl x hd
 

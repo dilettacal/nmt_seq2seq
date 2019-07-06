@@ -176,33 +176,24 @@ class UnrolledSeq2Seq(Seq2Seq):
 
         outputs_e, states = self.encoder(enc_input)
         states = states[:self.decoder.num_layers]
-        print("Target size:", ground_truth.size())
         seq_max_len = ground_truth.size(0)
         batch_size = ground_truth.size(1)
-        # tensor to store decoder outputs
-      #  outputs = torch.zeros(seq_max_len,
-                             # batch_size,
-                            #  self.trg_vocab_size).to(self.device)
-       # outputs.requires_grad = True
 
         outputs = torch.empty((seq_max_len, batch_size, self.trg_vocab_size), requires_grad=True).to(self.device)
 
-        print(outputs.size())
         use_teacher_forcing = True if random.random() < teacher_ratio else False
 
         output = ground_truth[0, :]
 
         for t in range(seq_max_len):
-            output, states = self.decoder(output, states)
+            output, states = self.decoder(output.unsqueeze(0), states)
             # Attend
             context = self.attention(enc_input, outputs_e, output)
             out_cat = torch.cat((output, context), dim=2)
             x = self.linear1(out_cat)
             x = self.dropout(self.tanh(x))
             x = self.linear2(x)
-            print("out", x.size())
             x = x.data.squeeze().clone()
-            print("X", x.size())
             outputs[t] = x
             top1 = x.max(1)[1]
             output = (ground_truth[t] if use_teacher_forcing else top1)

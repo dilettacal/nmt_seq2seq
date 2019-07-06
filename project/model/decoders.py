@@ -47,11 +47,6 @@ class UnrolledDecoder(Decoder):
         super(UnrolledDecoder, self).__init__(trg_vocab_size, embedding, h_dim, num_layers, dropout_p=dropout_p, rnn_cell=rnn_cell)
 
     def forward(self, x, h0):
-
-        print(h0[0].size())
-        ### x = [batch_size]
-        print("Unrolled Dec, x:", x.size())
-        x = x.unsqueeze(0) # [1, batch_size]
         x = self.embedding(x)  # 1,1,256
         x = self.dropout(x)
         out, h = self.rnn(x, h0)
