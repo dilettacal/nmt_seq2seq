@@ -16,7 +16,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 from project.experiment.setup_experiment import Experiment
-from project.model.decoders import Decoder, UnrolledDecoder
+from project.model.decoders import Decoder
 from project.model.encoders import Encoder
 from project.model.layers import Attention
 from settings import VALID_CELLS, SEED
