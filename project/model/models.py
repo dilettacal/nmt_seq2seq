@@ -13,11 +13,12 @@ import random
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import torch.nn.functional as F
 
 from project.experiment.setup_experiment import Experiment
 from project.model.decoders import Decoder, UnrolledDecoder
 from project.model.encoders import Encoder
-from project.model.layers import Attention, Maxout
+from project.model.layers import Attention
 from settings import VALID_CELLS, SEED
 
 """
@@ -144,7 +145,8 @@ class Seq2Seq(nn.Module):
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
-                    lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
+                    #lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
+                    lprobs = F.log_softmax(x, dim=-1)
                     # Add top k candidates to options list for next word
                     for index in torch.topk(lprobs, k)[1]:
                         option = (float(lprobs[index]) + lprob, sentence + [index], new_state)
