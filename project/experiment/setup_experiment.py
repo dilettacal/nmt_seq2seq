@@ -65,6 +65,7 @@ def experiment_parser():
     parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
     parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
     parser.add_argument('--tok', default="clean", type=str, help="tok files or clean files")
+    parser.add_argument('--min', type=int, default=5, help="Minimal word frequency")
 
     return parser
 
@@ -83,6 +84,7 @@ class Experiment(object):
         self.reverse_lang_comb = self.args.reverse
         #print("Reverse?", self.reverse_lang_comb)
         self.model_type = self.args.model_type
+        self.min_freq = self.args.min
 
         assert self.args.attn in ["none", "additive", "dot"]
         self.attn = self.args.attn
