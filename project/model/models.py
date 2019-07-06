@@ -47,6 +47,7 @@ class Seq2Seq(nn.Module):
         self.unk_token = tokens_bos_eos_pad_unk[3]
         self.device = experiment_config.get_device()
         self.reverse_input = experiment_config.reverse_input
+        self.weight_tied = experiment_config.tied
         rnn_type = experiment_config.rnn_type
         self.cell = rnn_type
         self.context_model = False
@@ -69,7 +70,7 @@ class Seq2Seq(nn.Module):
         self.linear2 = nn.Linear(self.emb_size, self.trg_vocab_size) #emb size of target
 
         ### This part is used in the original code
-        if False and self.decoder.embedding.weight.size() == self.linear2.weight.size():
+        if self.weight_tied and self.decoder.embedding.weight.size() == self.linear2.weight.size():
             print('Weight tying!')
             self.linear2.weight = self.decoder.embedding.weight
 
