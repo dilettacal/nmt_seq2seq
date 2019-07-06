@@ -18,6 +18,7 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     #### Create torchtext fields
     ####### SRC, TRG
     voc_limit = experiment.voc_limit
+    min_freq = experiment.min_freq
 
     char_level = experiment.char_level
     corpus = experiment.corpus
@@ -98,12 +99,12 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     if voc_limit > 0:
-        src_vocab.build_vocab(train, val, min_freq=3, max_size=voc_limit)
-        trg_vocab.build_vocab(train, val, min_freq=3, max_size=voc_limit)
+        src_vocab.build_vocab(train, val, min_freq=min_freq, max_size=voc_limit)
+        trg_vocab.build_vocab(train, val, min_freq=min_freq, max_size=voc_limit)
         print("Vocabularies created!")
     else:
-        src_vocab.build_vocab(train, val, min_freq=3)
-        trg_vocab.build_vocab(train, val, min_freq=3)
+        src_vocab.build_vocab(train, val, min_freq=min_freq)
+        trg_vocab.build_vocab(train, val, min_freq=min_freq)
         print("Vocabularies created!")
 
 
