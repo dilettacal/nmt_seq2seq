@@ -15,8 +15,6 @@ from project.utils.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import train_model, validate_test_set, beam_predict
 from project.utils.utils import convert, Logger, Metric
 from settings import MODEL_STORE
-import math
-
 
 def main():
 

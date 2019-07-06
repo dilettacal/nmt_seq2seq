@@ -1,5 +1,5 @@
 """
-Credits for some parts of this source code:
+Credits for this source code:
 
 Class Seq2Seq (with or w/o Attention) - modified version from this code:
 Author: Luke Melas
@@ -12,7 +12,6 @@ import random
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.nn.functional as F
 
 from project.experiment.setup_experiment import Experiment
