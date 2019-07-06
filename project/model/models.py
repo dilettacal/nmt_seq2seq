@@ -1,5 +1,5 @@
 """
-Credits for some parts of this source code:
+Credits for this source code:
 
 Class Seq2Seq (with or w/o Attention) - modified version from this code:
 Author: Luke Melas
@@ -12,11 +12,10 @@ import random
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.nn.functional as F
 
 from project.experiment.setup_experiment import Experiment
-from project.model.decoders import Decoder, UnrolledDecoder
+from project.model.decoders import Decoder
 from project.model.encoders import Encoder
 from project.model.layers import Attention
 from settings import VALID_CELLS, SEED
@@ -159,49 +158,6 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
-
-class UnrolledSeq2Seq(Seq2Seq):
-    ##### nicht trainieren #TODO: Remove this
-    def __init__(self, experiment_config: Experiment, tokens_bos_eos_pad_unk):
-        super(UnrolledSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
-        self.decoder = UnrolledDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
-                                   self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=self.cell,
-                                   dropout_p=self.dp)
-
-
-    def forward(self, enc_input, ground_truth, teacher_ratio=1):
-        enc_input = enc_input.to(self.device)
-        if self.reverse_input:
-            inv_index = torch.arange(enc_input.size(0) - 1, -1, -1).long()
-            inv_index = inv_index.to(self.device)
-            enc_input = enc_input.index_select(0, inv_index)
-
-        outputs_e, states = self.encoder(enc_input)
-        states = states[:self.decoder.num_layers]
-        seq_max_len = ground_truth.size(0)
-        batch_size = ground_truth.size(1)
-
-        outputs = torch.empty((seq_max_len, batch_size, self.trg_vocab_size), requires_grad=True).to(self.device)
-
-        use_teacher_forcing = True if random.random() < teacher_ratio else False
-
-        output = ground_truth[0, :]
-
-        for t in range(seq_max_len):
-            output, states = self.decoder(output.unsqueeze(0), states)
-            # Attend
-            context = self.attention(enc_input, outputs_e, output)
-            out_cat = torch.cat((output, context), dim=2)
-            x = self.linear1(out_cat)
-            x = self.dropout(self.tanh(x))
-            x = self.linear2(x)
-            x = x.data.squeeze().clone()
-            outputs[t] = x
-            top1 = x.max(1)[1]
-            output = (ground_truth[t] if use_teacher_forcing else top1)
-        return outputs
-
-
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -210,20 +166,16 @@ def count_parameters(model):
 #### Factory method to generate the model ####
 def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
-    sampled_training = experiment_config.sample
     if model_type == "custom":
         if experiment_config.bi and experiment_config.reverse_input:
             experiment_config.reverse_input = False
-        if sampled_training:
-            return UnrolledSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
-        else: return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
     elif model_type == "s":
         #### This returs a model like in Sutskever et al. ####
         #### The architecture was multilayered, thus layers are automatically set to 2 and input sequences were reversed (this is handled in the vocabulary class)
         if not experiment_config.reverse_input: experiment_config.reverse_input = True
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
-        if sampled_training: return UnrolledSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
-        else: return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
 
