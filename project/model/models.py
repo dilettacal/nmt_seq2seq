@@ -15,7 +15,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 from project.experiment.setup_experiment import Experiment
-from project.model.decoders import Decoder
+from project.model.decoders import Decoder, UnrolledDecoder
 from project.model.encoders import Encoder
 from project.model.layers import Attention, Maxout
 from settings import VALID_CELLS, SEED
@@ -100,55 +100,6 @@ class Seq2Seq(nn.Module):
         return x
 
 
-    def sample(self, src, trg, teacher_ratio=0.90, remove_tokens=[]):
-        src = src.to(self.device)
-        if self.reverse_input:
-            inv_index = torch.arange(src.size(0) - 1, -1, -1).long()
-            inv_index = inv_index.to(self.device)
-            src = src.index_select(0, inv_index)
-            # Encode
-        outputs_e, states = self.encoder(src)  # batch size = 1
-        # Start with '<s>'
-        init_lprob = -1e10
-        init_sent = [self.bos_token]
-        best_options = [(init_lprob, init_sent, states)]  # beam
-
-        max_len = trg.size(0)
-        for time_step in range(max_len):
-            options = []
-            for lprob, sentence, current_state in best_options:
-                # Prepare last word
-                last_word = sentence[-1]
-                if last_word != self.eos_token:
-                    ### shape: [1] --> [1,1], needed as we are unrolling the decoder with bs 1
-                    last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
-                    outputs_d, new_state = self.decoder(last_word_input, current_state)
-                    # Attend
-                    context = self.attention(src, outputs_e, outputs_d)
-                    out_cat = torch.cat((outputs_d, context), dim=2)
-                    x = self.linear1(out_cat)
-                    ###########################################
-                    x = self.dropout(self.tanh(x))
-                    x = self.linear2(x)
-                    x = x.squeeze().data.clone()
-                    # Block predictions of tokens in remove_tokens
-                    for t in remove_tokens: x[t] = -10e10
-                    lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
-                    # Add top k candidates to options list for next word
-                    for index in torch.topk(lprobs, 1)[1]:
-                        option = (float(lprobs[index]) + lprob, sentence + [index], new_state)
-                        options.append(option)
-                else:  # keep sentences ending in '</s>' as candidates
-                    options.append((lprob, sentence, current_state))
-            options.sort(key=lambda x: x[0], reverse=True)  # sort by lprob
-            best_options = options[:1]  # place top candidates in beam
-        best_options.sort(key=lambda x: x[0], reverse=True)
-        generated_sentence = best_options[1]
-        if len(generated_sentence) < max_len:
-            generated_sentence[max_len:] = self.pad_token
-        return generated_sentence
-
-
     #### Original code #####
     def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
@@ -205,6 +156,59 @@ class Seq2Seq(nn.Module):
         best_options.sort(key=lambda x: x[0], reverse=True)
         return best_options
 
+
+
+class UnrolledSeq2Seq(Seq2Seq):
+
+    def __init__(self, experiment_config: Experiment, tokens_bos_eos_pad_unk):
+        super(UnrolledSeq2Seq, self).__init__(experiment_config, tokens_bos_eos_pad_unk)
+        self.decoder = UnrolledDecoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
+                                   self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=self.cell,
+                                   dropout_p=self.dp)
+
+
+    def forward(self, enc_input, ground_truth, teacher_ratio=1):
+        enc_input = enc_input.to(self.device)
+        if self.reverse_input:
+            inv_index = torch.arange(enc_input.size(0) - 1, -1, -1).long()
+            inv_index = inv_index.to(self.device)
+            enc_input = enc_input.index_select(0, inv_index)
+
+        outputs_e, states = self.encoder(enc_input)
+        states = states[:self.decoder.num_layers]
+        print("Target size:", ground_truth.size())
+        seq_max_len = ground_truth.size(0)
+        batch_size = ground_truth.size(1)
+        # tensor to store decoder outputs
+      #  outputs = torch.zeros(seq_max_len,
+                             # batch_size,
+                            #  self.trg_vocab_size).to(self.device)
+       # outputs.requires_grad = True
+
+        outputs = torch.empty((seq_max_len, batch_size, self.trg_vocab_size), requires_grad=True).to(self.device)
+
+        print(outputs.size())
+        use_teacher_forcing = True if random.random() < teacher_ratio else False
+
+        output = ground_truth[0, :]
+
+        for t in range(seq_max_len):
+            output, states = self.decoder(output, states)
+            # Attend
+            context = self.attention(enc_input, outputs_e, output)
+            out_cat = torch.cat((output, context), dim=2)
+            x = self.linear1(out_cat)
+            x = self.dropout(self.tanh(x))
+            x = self.linear2(x)
+            print("out", x.size())
+            x = x.data.squeeze().clone()
+            print("X", x.size())
+            outputs[t] = x
+            top1 = x.max(1)[1]
+            output = (ground_truth[t] if use_teacher_forcing else top1)
+        return outputs
+
+
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -213,14 +217,20 @@ def count_parameters(model):
 #### Factory method to generate the model ####
 def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
+    sampled_training = experiment_config.sample
     if model_type == "custom":
         if experiment_config.bi and experiment_config.reverse_input:
             experiment_config.reverse_input = False
-        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        if sampled_training:
+            return UnrolledSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        else: return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
     elif model_type == "s":
         #### This returs a model like in Sutskever et al. ####
         #### The architecture was multilayered, thus layers are automatically set to 2 and input sequences were reversed (this is handled in the vocabulary class)
         if not experiment_config.reverse_input: experiment_config.reverse_input = True
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
-        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        if sampled_training: return UnrolledSeq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        else: return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+
+

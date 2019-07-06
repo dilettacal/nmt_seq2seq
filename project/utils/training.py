@@ -129,6 +129,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
 
         # Reshape for loss function
         scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
+        print(scores.requires_grad)
         trg = trg.view(scores.size(0))
 
         # Pass through loss function

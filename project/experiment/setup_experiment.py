@@ -68,6 +68,8 @@ def experiment_parser():
     parser.add_argument('--min', type=int, default=5, help="Minimal word frequency. If min_freq < 0, then min_freq is set to default value")
     parser.add_argument('--tied', default="False", type=str2bool, help="Tie weights between input and output in decoder.")
 
+    parser.add_argument('--sample', type=str2bool, default="False", help="Wheter to sample or not")
+
     return parser
 
 
@@ -87,6 +89,8 @@ class Experiment(object):
         self.model_type = self.args.model_type
         self.min_freq = self.args.min if self.args.min > 0 else 5
         self.tied = self.args.tied
+
+        self.sample = self.args.sample
 
         assert self.args.attn in ["none", "additive", "dot"]
         self.attn = self.args.attn
