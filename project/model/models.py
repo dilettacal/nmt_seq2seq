@@ -99,6 +99,56 @@ class Seq2Seq(nn.Module):
         x = self.linear2(x) #seq_len, bs, trg_vocab_size
         return x
 
+
+    def sample(self, src, trg, teacher_ratio=0.90, remove_tokens=[]):
+        src = src.to(self.device)
+        if self.reverse_input:
+            inv_index = torch.arange(src.size(0) - 1, -1, -1).long()
+            inv_index = inv_index.to(self.device)
+            src = src.index_select(0, inv_index)
+            # Encode
+        outputs_e, states = self.encoder(src)  # batch size = 1
+        # Start with '<s>'
+        init_lprob = -1e10
+        init_sent = [self.bos_token]
+        best_options = [(init_lprob, init_sent, states)]  # beam
+
+        max_len = trg.size(0)
+        for time_step in range(max_len):
+            options = []
+            for lprob, sentence, current_state in best_options:
+                # Prepare last word
+                last_word = sentence[-1]
+                if last_word != self.eos_token:
+                    ### shape: [1] --> [1,1], needed as we are unrolling the decoder with bs 1
+                    last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
+                    outputs_d, new_state = self.decoder(last_word_input, current_state)
+                    # Attend
+                    context = self.attention(src, outputs_e, outputs_d)
+                    out_cat = torch.cat((outputs_d, context), dim=2)
+                    x = self.linear1(out_cat)
+                    ###########################################
+                    x = self.dropout(self.tanh(x))
+                    x = self.linear2(x)
+                    x = x.squeeze().data.clone()
+                    # Block predictions of tokens in remove_tokens
+                    for t in remove_tokens: x[t] = -10e10
+                    lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
+                    # Add top k candidates to options list for next word
+                    for index in torch.topk(lprobs, 1)[1]:
+                        option = (float(lprobs[index]) + lprob, sentence + [index], new_state)
+                        options.append(option)
+                else:  # keep sentences ending in '</s>' as candidates
+                    options.append((lprob, sentence, current_state))
+            options.sort(key=lambda x: x[0], reverse=True)  # sort by lprob
+            best_options = options[:1]  # place top candidates in beam
+        best_options.sort(key=lambda x: x[0], reverse=True)
+        generated_sentence = best_options[1]
+        if len(generated_sentence) < max_len:
+            generated_sentence[max_len:] = self.pad_token
+        return generated_sentence
+
+
     #### Original code #####
     def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
