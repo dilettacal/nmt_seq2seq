@@ -179,15 +179,6 @@ def validate(val_iter, model, device, TRG):
             sent_candidates.append(sent_out)
             sent_references.append(sent_ref)
 
-            # Get model prediction (from beam search)
-            out = model.predict(src, beam_size=1)  # list of ints (word indices) from greedy search
-            ref = list(trg.data.squeeze())
-            out = [w for w in out if w not in clean_tokens]
-            ref = [w for w in ref if w not in clean_tokens]
-            sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
-            sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
-            sent_candidates.append(sent_out)
-            sent_references.append(sent_ref)
 
         smooth = SmoothingFunction()  # if there are less than 4 ngrams
         nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
@@ -257,6 +248,27 @@ def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, ma
 
     # print("BLEU", batch_bleu)
     return losses.avg, [nlkt_bleu, perl_bleu]
+
+def validate_losses(val_iter, model, criterion, logger):
+    '''Calculate losses by teacher forcing on the validation set'''
+    model.eval()
+    losses = AverageMeter()
+    for i, batch in enumerate(val_iter):
+        src = batch.src.to(model.device)
+        trg = batch.trg.to(model.device)
+        # Forward
+        scores = model(src, trg)
+        scores = scores[:-1]
+        trg = trg[1:]
+        # Reshape for loss function
+        scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
+        trg = trg.view(scores.size(0))
+        num_words = (trg != 0).float().sum()
+        # Calculate loss
+        loss = criterion(scores, trg)
+        losses.update(loss.data[0])
+    logger.log('Average loss on validation: {:.3f}'.format(losses.avg))
+    return losses.avg
 
 
 def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
