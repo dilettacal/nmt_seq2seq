@@ -79,7 +79,7 @@ def main():
     else:
         pretraiend_src, pretrained_trg = None, None
 
-    model = get_nmt_model(experiment, tokens_bos_eos_pad_unk, pretrained_src, pretrained_trg)
+    model = get_nmt_model(experiment, tokens_bos_eos_pad_unk, pretraiend_src, pretrained_trg)
     print(model)
     model = model.to(experiment.get_device())
 
@@ -91,7 +91,7 @@ def main():
     # Create loss function and optimizer
     criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2, verbose=True, min_lr=1e-7, cooldown=1, factor=0.25)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=30, verbose=True, min_lr=1e-7, cooldown=2, factor=0.25)
 
 
     logger.log('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),
@@ -115,8 +115,8 @@ def main():
     log_every=5
     bleus, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
                                  optimizer=optimizer, scheduler=scheduler, SRC=SRC, TRG=TRG,
-                epochs=experiment.epochs, logger=logger, device=experiment.get_device(),
-                                 tr_logger=translation_logger, samples_iter=samples_iter, log_every=log_every)
+                                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(),
+                                 tr_logger=translation_logger, samples_iter=samples_iter, check_translations_every=log_every)
 
     ### metrics metrics.({"loss": train_losses, "ppl": train_ppls})
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])

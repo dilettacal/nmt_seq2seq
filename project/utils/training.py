@@ -23,7 +23,7 @@ random.seed(SEED)
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, log_every=5, teacher=False):
+                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, check_translations_every=5, teacher=False):
     best_bleu_score = 0
 
     metrics = dict()
@@ -33,7 +33,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     nltk_bleus, perl_bleus = [], []
     bleus = dict()
 
-    check_transl_every = log_every
+    check_transl_every = check_translations_every
 
     for epoch in range(epochs):
         start_time = time.time()

@@ -82,8 +82,8 @@ try:
             pass
 
 except NameError as e:
-    print(e, "Please install tmx2corpus")
-    pass
+    print(e, "Please install tmx2corpus and rerun preprocess file!")
+    exit(1)
 
 ########## Project custom tokenizers ###########
 
@@ -255,36 +255,36 @@ def expand_contraction(sentence, mapping):
     return expanded_sentence
 
 
-def split_data(src_sents, trg_sents, test_ratio=0.3, seed=SEED):
+def split_data(src_sents, trg_sents, val_ratio=0.1, train_ratio=0.8, seed=SEED):
     assert len(src_sents) == len(trg_sents)
     data = list(zip(src_sents, trg_sents))
 
     num_samples = len(data)
     print("Total samples: ", num_samples)
 
-    test_range = int(num_samples * test_ratio)  # test dataset 0.1
-    train_range = num_samples - test_range
+
+    print("Shuffling data....")
     random.seed(seed)  # 30
     random.shuffle(data)
 
-    data_set = data[:train_range]
-    val_set = data[train_range:]
+    train_end = int(train_ratio*num_samples)
+    validate_end = int(val_ratio*num_samples) + train_end
+    train_set = data[:train_end]
+    val_set = data[train_end:validate_end]
+    test_set = data[validate_end:]
+    print("Total train:", len(train_set))
+    print("Total validation:", len(val_set))
+    print("Total test:", len(test_set))
+    print("All togheter:", len(test_set) + len(train_set) + len(val_set))
 
-    # create test set
-    num_samples = len(data_set)
-    test_range = int(num_samples * 0.1)
-    train_range = num_samples - test_range
-
-    train_set = data_set[:train_range]
-    test_set = data_set[train_range:]
-
-    print(len(test_set) + len(train_set) + len(val_set))
+    samples = train_set[:5] + val_set[:5] + test_set[:5]
 
     train_set = list(zip(*train_set))
     val_set = list(zip(*val_set))
     test_set = list(zip(*test_set))
 
-    return train_set, val_set, test_set
+    samples_set = list(zip(*samples))
+    return train_set, val_set, test_set, samples_set
 
 
 

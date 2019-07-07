@@ -34,6 +34,14 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     if char_level:
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c"), get_custom_tokenizer("de", "c")
     else:
+        ### equivalent to str.split(" ") but it considers punctuation and not only spaces as token boundaries. It also removes duplicate spaces.
+        '''sent = "( DE ) Mr President , starting the agenda in this way with a brief debate on the Berlin statement is a good choice ."
+           src_tokenizer.tokenize(sent) -->  
+           ['(', 'DE', ')', 'Mr', 'President', ',', 'starting', 'the', 'agenda', 'in', 'this', 'way', 'with', 'a', 'brief', 'debate', 'on', 'the', 'Berlin', 'statement', 'is', 'a', 'good', 'choice', '.']
+           
+           sent.split(" ")
+           ['(', 'DE', ')', 'Mr', 'President', ',', 'starting', 'the', 'agenda', 'in', 'this', 'way', 'with', 'a', 'brief', 'debate', 'on', 'the', 'Berlin', 'statement', 'is', 'a', 'good', 'choice', '.']
+        '''
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", "fast"), get_custom_tokenizer("de", "w", "fast") #
 
     src_tokenizer.set_mode(True)
