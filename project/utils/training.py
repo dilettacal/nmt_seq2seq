@@ -33,7 +33,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     nltk_bleus, perl_bleus = [], []
     bleus = dict()
 
-    valid_every = log_every
+    check_transl_every = log_every
 
     for epoch in range(epochs):
         start_time = time.time()
@@ -46,7 +46,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             ### samples are none if model is trained with e.g. iwlst corpus
             samples=None
 
-        if epoch % valid_every == 0:
+        if epoch % check_transl_every == 0:
 
             tr_logger.log("Translation check. Epoch {}".format(epoch+1))
             avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
@@ -89,14 +89,31 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             train_losses.append(avg_train_loss)
             train_ppl = math.exp(avg_train_loss)
             train_ppls.append(train_ppl)
+
+            avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG)
+            nltk_bleus.append(avg_bleu_val[0])
+            perl_bleus.append(avg_bleu_val[1])
+            bleu = avg_bleu_val[0]
+            perl_b = avg_bleu_val[1]
+
+            ### scheduler monitors val loss value
+            scheduler.step(bleu)  # input bleu score
+
+            if bleu > best_bleu_score:
+                best_bleu_score = bleu
+                logger.save_model(model.state_dict())
+                logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
+
+
             end_epoch_time = time.time()
 
             total_epoch = convert(end_epoch_time - start_time)
 
             logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
-            logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f}')
+            logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
 
             metrics.update({"loss": train_losses, "ppl": train_ppls})
+            bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
 
     return bleus, metrics
 
