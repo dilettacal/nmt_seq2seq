@@ -67,6 +67,7 @@ def experiment_parser():
     parser.add_argument('--tok', default="clean", type=str, help="tok files or clean files")
     parser.add_argument('--min', type=int, default=5, help="Minimal word frequency. If min_freq < 0, then min_freq is set to default value")
     parser.add_argument('--tied', default="False", type=str2bool, help="Tie weights between input and output in decoder.")
+    parser.add_argument('--pretrained', default="False", type=str2bool, help="Initialize embeddings weights with pre-trained embeddings")
     return parser
 
 
@@ -86,6 +87,7 @@ class Experiment(object):
         self.model_type = self.args.model_type
         self.min_freq = self.args.min if self.args.min > 0 else 5
         self.tied = self.args.tied
+        self.pretrained = self.args.pretrained
 
         assert self.args.attn in ["none", "additive", "dot"]
         self.attn = self.args.attn

@@ -13,7 +13,7 @@ from project.model.models import count_parameters, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import train_model, validate_test_set, beam_predict
-from project.utils.utils import convert, Logger, Metric
+from project.utils.utils import convert, Logger, Metric, load_embeddings
 from settings import MODEL_STORE
 
 def main():
@@ -28,7 +28,6 @@ def main():
     src_lang = experiment.get_src_lang()
     trg_lang = experiment.get_trg_lang()
 
-    print("Language combination ({}-{})".format(src_lang, trg_lang))
 
     lang_comb = "{}_{}".format(src_lang, trg_lang)
     layers = experiment.nlayers
@@ -43,6 +42,10 @@ def main():
     os.makedirs(experiment_path, exist_ok=True)
 
     data_dir = experiment.data_dir
+
+    # Create directory for logs, create logger, log hyperparameters
+    logger = Logger(experiment_path)
+    logger.log("Language combination ({}-{})".format(src_lang, trg_lang))
 
 
     # Load and process data
@@ -61,7 +64,22 @@ def main():
 
     # Create model
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
-    model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
+
+    if experiment.pretrained:
+        np_lang_code_file = 'scripts/emb-{}-{}.npy'.format(len(SRC.vocab), experiment.lang_code)
+        np_en_file = 'scripts/emb-{}-en.npy'.format(len(TRG.vocab))
+        embedding_lang_code, embedding_EN = load_embeddings(np_lang_code_file, np_en_file)
+        if experiment.src_lang == "en":
+            pretraiend_src = embedding_EN
+            pretrained_trg = embedding_lang_code
+        else:
+            pretraiend_src = embedding_lang_code
+            pretrained_trg = embedding_EN
+        logger.log("Running experiment with pretrained embeddings!")
+    else:
+        pretraiend_src, pretrained_trg = None, None
+
+    model = get_nmt_model(experiment, tokens_bos_eos_pad_unk, pretrained_src, pretrained_trg)
     print(model)
     model = model.to(experiment.get_device())
 
@@ -75,8 +93,7 @@ def main():
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2, verbose=True, min_lr=1e-7, cooldown=1, factor=0.25)
 
-    # Create directory for logs, create logger, log hyperparameters
-    logger = Logger(experiment_path)
+
     logger.log('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),
                                                                        convert(end_time_data - time_data)))
     logger.log(">>>> Path to model: {}".format(os.path.join(logger.path, "model.pkl")))

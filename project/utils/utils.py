@@ -122,3 +122,12 @@ class AverageMeter():
         self.sum = self.sum + val * n
         self.count = self.count + n
         self.avg = self.sum / self.count
+
+def load_embeddings(np_src_file, np_trg_file):
+    ''' Load pretrained embeddings '''
+    if os.path.isfile(np_src_file) and os.path.isfile(np_trg_file):
+        pretrained_src = torch.from_numpy(np.load(np_src_file))
+        pretraiend_trg = torch.from_numpy(np.load(np_trg_file))
+    else:
+        raise Exception('Vectors not available to load from numpy file')
+    return pretrained_src, pretraiend_trg

@@ -75,6 +75,17 @@ class Seq2Seq(nn.Module):
             self.linear2.weight = self.decoder.embedding.weight
 
         ### create encoder and decoder
+    def load_pretraiend_embeddings(self, pretrained_src, pretraiend_trg):
+        assert pretrained_src.size(1) == pretraiend_trg.size(1)
+        self.src_vocab_size, self.emb_size = pretrained_src.size()
+        self.trg_vocab_size, _ = pretraiend_trg.size()
+
+        enc_embedding = nn.Embedding(self.src_vocab_size, self.emb_size)
+        self.encoder.embedding.weight.data.copy_(enc_embedding)
+
+        dec_embedding = nn.Embedding(self.trg_vocab_size, self.emb_size)
+        self.encoder.embedding.weight.data.copy_(dec_embedding)
+        print("Embeddings weights have been loaded!")
 
     def forward(self, enc_input, dec_input):
         enc_input = enc_input.to(self.device)
@@ -164,18 +175,19 @@ def count_parameters(model):
 
 ####### Use this function to set up a model from the main script #####
 #### Factory method to generate the model ####
-def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
+def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk, pretraiend_src=None, pretrained_trg =None):
     model_type = experiment_config.model_type
     if model_type == "custom":
         if experiment_config.bi and experiment_config.reverse_input:
             experiment_config.reverse_input = False
-        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        model =  Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
-    elif model_type == "s":
+    else: ### sutskever model
         #### This returs a model like in Sutskever et al. ####
         #### The architecture was multilayered, thus layers are automatically set to 2 and input sequences were reversed (this is handled in the vocabulary class)
         if not experiment_config.reverse_input: experiment_config.reverse_input = True
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
-        return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+        model =  Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
+    return model
 
 
