@@ -144,8 +144,8 @@ class Seq2Seq(nn.Module):
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
-                    #lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
-                    lprobs = F.log_softmax(x, dim=-1)
+                    lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
+                    #lprobs = F.log_softmax(x, dim=-1)
                     # Add top k candidates to options list for next word
                     for index in torch.topk(lprobs, k)[1]:
                         option = (float(lprobs[index]) + lprob, sentence + [index], new_state)

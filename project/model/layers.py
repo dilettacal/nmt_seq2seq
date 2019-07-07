@@ -48,8 +48,8 @@ class Attention(nn.Module):
             attn = self.tanh(attn) @ self.vector # --> b x sl x tl
 
         # Softmax and reshape
-        attn = F.log_softmax(attn, dim=1)
-       # attn = attn.exp() / attn.exp().sum(dim=1, keepdim=True) # in updated pytorch, make softmax
+        #attn = F.log_softmax(attn, dim=1)
+        attn = attn.exp() / attn.exp().sum(dim=1, keepdim=True) # in updated pytorch, make softmax
         attn = attn.transpose(1,2) # --> b x tl x sl
 
         # Get attention distribution
