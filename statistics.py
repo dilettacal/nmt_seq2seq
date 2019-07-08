@@ -27,6 +27,8 @@ def experiment_1x(data_logger):
     experiment.min_freq = MIN_FREQ
     experiment.corpus = "europarl"
     src_lang = experiment.src_lang = "de"
+    experiment.trg_lang = "en"
+    experiment.lang_code = "de"
 
     print(experiment.__dict__)
 
@@ -47,6 +49,7 @@ def experiment_1x(data_logger):
     data_logger.log("Total English words in the training dataset: {}".format(sum(TRG.vocab.freqs.values())))
 
     print("Check:", SRC.vocab.freqs.values())
+    print("Check:", sum(SRC.vocab.freqs.values()))
 
 
 
