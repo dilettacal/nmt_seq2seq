@@ -147,3 +147,4 @@ test.*
 /floyd_train_models.sh
 /floyd_en_train_models.sh
 scripts/floyd
+!de-en.log

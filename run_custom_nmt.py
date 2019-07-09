@@ -8,7 +8,7 @@ import os, datetime, time, sys
 import torch
 import torch.nn as nn
 
-from project.experiment.setup_experiment import Experiment
+from project.experiment.setup_experiment import Experiment, experiment_parser
 from project.model.models import count_parameters, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.vocabulary import get_vocabularies_iterators, print_data_info
@@ -18,7 +18,7 @@ from settings import MODEL_STORE
 
 def main():
 
-    experiment = Experiment()
+    experiment = Experiment(experiment_parser())
 
     MAX_LEN = experiment.truncate
     print("Running experiment on:", experiment.get_device())

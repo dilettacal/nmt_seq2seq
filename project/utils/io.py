@@ -134,10 +134,13 @@ class Seq2SeqDataset(Dataset):
                     assert (len(src_line) <= truncate) and (len(trg_line) <= truncate)
                     src_line = ' '.join(src_line)
                     trg_line = ' '.join(trg_line)
+
                 examples.append(data.Example.fromlist(
                     [src_line, trg_line], fields))
+
             if reduce > 0 and i == reduce:
                 break
+
         return examples
 
     @classmethod

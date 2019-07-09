@@ -30,6 +30,9 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     reverse_input = experiment.reverse_input
     print("Source reversed:", reverse_input)
 
+    print("Required samples:")
+    print(experiment.train_samples, experiment.val_samples, experiment.test_samples)
+
     ### Define tokenizers ####
     if char_level:
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c"), get_custom_tokenizer("de", "c")
@@ -75,7 +78,6 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
 
         print("Loading data...")
         start = time.time()
-       # exts = (".en", ".{}".format(language_code)) if src_lang == "en" else (".{}".format(language_code), ".en")
         file_type = experiment.tok
         exts = ("."+experiment.get_src_lang(), "."+experiment.get_trg_lang())
         train, val, test = Seq2SeqDataset.splits(fields=(src_vocab, trg_vocab),
@@ -107,12 +109,12 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     if voc_limit > 0:
-        src_vocab.build_vocab(train, val, min_freq=min_freq, max_size=voc_limit)
-        trg_vocab.build_vocab(train, val, min_freq=min_freq, max_size=voc_limit)
+        src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
+        trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
         print("Vocabularies created!")
     else:
-        src_vocab.build_vocab(train, val, min_freq=min_freq)
-        trg_vocab.build_vocab(train, val, min_freq=min_freq)
+        src_vocab.build_vocab(train, min_freq=min_freq)
+        trg_vocab.build_vocab(train, min_freq=min_freq)
         print("Vocabularies created!")
 
 
@@ -164,6 +166,9 @@ def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_fi
 
     logger.log("Number of Vocabulary source words (types): {}".format(len(src_field.vocab)))
     logger.log("Number of Vocabulary target words (types): {}".format(len(trg_field.vocab)))
+
+    logger.log("Total SRC words in the training dataset: {}".format(sum(src_field.vocab.freqs.values())))
+    logger.log("Total TRG words in the training dataset: {}".format(sum(trg_field.vocab.freqs.values())))
 
     logger.log("Minimal word frequency (src/trg): {}".format(experiment.min_freq))
 

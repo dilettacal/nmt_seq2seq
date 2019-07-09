@@ -4,7 +4,7 @@ from settings import VALID_MODELS
 
 
 def str2bool(v):
-    #https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
@@ -19,10 +19,12 @@ def str2float(s):
     except ValueError:
         return None
 
+
 def str2array(s):
     if s:
         s = s.split(" ")
     return s
+
 
 def experiment_parser():
     parser = argparse.ArgumentParser(description='Neural Machine Translation')
@@ -35,7 +37,8 @@ def experiment_parser():
                         help='use bidrectional encoder, default: false')
     parser.add_argument('--reverse_input', type=str2bool, default=False,
                         help='reverse input to encoder, default: False')
-    parser.add_argument('-v', default=30000, type=int, metavar='N', help='vocab size, use 0 for maximum size, default: 0')
+    parser.add_argument('-v', default=30000, type=int, metavar='N',
+                        help='vocab size, use 0 for maximum size, default: 0')
     parser.add_argument('-b', default=64, type=int, metavar='N', help='batch size, default: 64')
     parser.add_argument('--epochs', default=50, type=int, metavar='N', help='number of epochs, default: 50')
     parser.add_argument('--model', metavar='DIR', default=None, help='path to model, default: None')
@@ -65,15 +68,19 @@ def experiment_parser():
     parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
     parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
     parser.add_argument('--tok', default="clean", type=str, help="tok files or clean files")
-    parser.add_argument('--min', type=int, default=5, help="Minimal word frequency. If min_freq < 0, then min_freq is set to default value")
-    parser.add_argument('--tied', default="False", type=str2bool, help="Tie weights between input and output in decoder.")
-    parser.add_argument('--pretrained', default="False", type=str2bool, help="Initialize embeddings weights with pre-trained embeddings")
+    parser.add_argument('--min', type=int, default=5,
+                        help="Minimal word frequency. If min_freq < 0, then min_freq is set to default value")
+    parser.add_argument('--tied', default="False", type=str2bool,
+                        help="Tie weights between input and output in decoder.")
+    parser.add_argument('--pretrained', default="False", type=str2bool,
+                        help="Initialize embeddings weights with pre-trained embeddings")
     return parser
 
 
 class Experiment(object):
-    def __init__(self):
-        self.args = experiment_parser().parse_args()
+    def __init__(self, parser):
+        # self.args = experiment_parser().parse_args()
+        self.args = parser.parse_args()
 
         assert self.args.model_type.lower() in VALID_MODELS
         #### Training configurations
@@ -83,9 +90,9 @@ class Experiment(object):
         self.corpus = self.args.corpus
         self.lang_code = self.args.lang_code
         self.reverse_lang_comb = self.args.reverse
-        #print("Reverse?", self.reverse_lang_comb)
+        # print("Reverse?", self.reverse_lang_comb)
         self.model_type = self.args.model_type
-        self.min_freq = self.args.min if self.args.min > 0 else 5
+        self.min_freq = self.args.min if self.args.min >= 0 else 5
         self.tied = self.args.tied
         self.pretrained = self.args.pretrained
 
@@ -98,7 +105,6 @@ class Experiment(object):
             self.bi = False
         else:
             self.reverse_input = self.args.reverse_input
-
 
         self.truncate = self.args.max_len
         self.data_dir = self.args.data_dir
@@ -114,7 +120,6 @@ class Experiment(object):
         self.src_vocab_size = None
         self.trg_vocab_size = None
 
-
         ### samples config
         self.train_samples = self.args.train
         self.val_samples = self.args.val
@@ -128,7 +133,6 @@ class Experiment(object):
         self.rnn_type = self.args.rnn
         self.nlayers = self.args.nlayers
         self.dp = self.args.dp
-
 
         self.tok = self.args.tok
 
@@ -147,5 +151,11 @@ class Experiment(object):
     def get_dict(self):
         return self.__dict__
 
+    def set_train(self, n):
+        self.train_samples = n
 
+    def set_val(self, n):
+        self.val_samples = n
 
+    def set_test(self, n):
+        self.test_samples = n
