@@ -1,7 +1,6 @@
 # coding=utf-8
-
-# Modifications copyright (C) 2019 dltcls
-# The download part has been removed. The path to the perl script has been adapted to the project requirements.
+# This code is taken from Tensor2Tensor
+# The download part has been removed, as the file is stored in the given directory.
 #
 # Copyright 2017 The Tensor2Tensor Authors.
 # Copyright 2017 Google Inc.
@@ -58,10 +57,12 @@ def get_moses_multi_bleu(hypotheses, references, lowercase=False):
     if np.size(hypotheses) == 0:
         return np.float32(0.0)
 
-
+    ###### project specific settings #######
     multi_bleu_path = os.path.join(os.path.abspath(ROOT), "scripts")
     os.makedirs(multi_bleu_path, exist_ok=True)
     multi_bleu_path = os.path.join(multi_bleu_path, "multi-bleu.perl")
+    #####################################################################
+    ### original script #####
     # Dump hypotheses and references to tempfiles
     hypothesis_file = tempfile.NamedTemporaryFile()
     hypothesis_file.write("\n".join(hypotheses).encode("utf-8"))
