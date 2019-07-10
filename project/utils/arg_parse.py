@@ -73,3 +73,18 @@ def experiment_parser():
     parser.add_argument('--pretrained', default="False", type=str2bool,
                         help="Initialize embeddings weights with pre-trained embeddings")
     return parser
+
+
+def data_prepro_parser():
+    parser = argparse.ArgumentParser(description='Neural Machine Translation')
+    parser.add_argument("--lang_code", default="de", type=str)
+    parser.add_argument("--type", default="tmx", type=str, help="TMX or TXT")
+    parser.add_argument("--corpus", default="europarl", type=str, help="Corpus name")
+    parser.add_argument("--max_len", default=30, type=int, help="Filter sequences with a length <= max_len")
+    parser.add_argument("--min_len", default=1, type=int, help="Filter sequences with a length >= min_len")
+    parser.add_argument('--path', default="data/raw/europarl/de", help="Path to raw data files")
+    parser.add_argument('--file', default="de-en.tmx", help="File name after extraction")
+    parser.add_argument('--v', type=str2bool, default="False", help="Either vocabulary should be reduced by replacing some repeating tokens with labels.\nNumbers are replaced with NUM, Persons names are replaced with PERSON. Require: Spacy!")
+    parser.add_argument('--fast', type=str2bool, default="False", help="Filter by fast tokenizing") #False: search for spacy models for the given langugae
+
+    return parser
