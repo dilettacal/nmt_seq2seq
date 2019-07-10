@@ -75,7 +75,7 @@ class Seq2Seq(nn.Module):
             self.linear2.weight = self.decoder.embedding.weight
 
         ### create encoder and decoder
-    def load_pretraiend_embeddings(self, pretrained_src, pretraiend_trg):
+    def load_pretrained_embeddings(self, pretrained_src, pretraiend_trg):
         assert pretrained_src.size(1) == pretraiend_trg.size(1)
         self.src_vocab_size, self.emb_size = pretrained_src.size()
         self.trg_vocab_size, _ = pretraiend_trg.size()
@@ -102,7 +102,7 @@ class Seq2Seq(nn.Module):
         out_d, final_d = self.decoder(dec_input, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
 
         # Attend
-        context = self.attention(enc_input, out_e, out_d) #seq_len, bs, hid_dim
+        context = self.attention(out_e, out_d) #seq_len, bs, hid_dim
         out_cat = torch.cat((out_d, context), dim=2)
         # Predict (returns probabilities)
         x = self.linear1(out_cat)
