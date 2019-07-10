@@ -17,11 +17,7 @@ Converted lines: 1.916.030 (total sentences in the dataset)
 Filtered by length:
 Total samples:  1.148.204 (total sentences, with minimum length "min_len" and maximum length "max_len")
 
-Samples after voc reduction (based on converted lines):
-Total samples:  1.309.477
-Time: 1:30
 """
-import argparse
 import os
 import time
 try:
@@ -31,27 +27,10 @@ except ImportError or ModuleNotFoundError as e:
     print(e, "Please install tmx2corpus")
     pass
 
-from project.experiment.setup_experiment import str2bool
+from project.utils.arg_parse import data_prepro_parser
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 import re
-
-
-def data_prepro_parser():
-    parser = argparse.ArgumentParser(description='Neural Machine Translation')
-    parser.add_argument("--lang_code", default="de", type=str)
-    parser.add_argument("--type", default="tmx", type=str, help="TMX or TXT")
-    parser.add_argument("--corpus", default="europarl", type=str, help="Corpus name")
-    parser.add_argument("--max_len", default=30, type=int, help="Filter sequences with a length <= max_len")
-    parser.add_argument("--min_len", default=1, type=int, help="Filter sequences with a length >= min_len")
-    parser.add_argument('--path', default="data/raw/europarl/de", help="Path to raw data files")
-    parser.add_argument('--file', default="de-en.tmx", help="File name after extraction")
-    parser.add_argument('--v', type=str2bool, default="False", help="Either vocabulary should be reduced by replacing some repeating tokens with labels.\nNumbers are replaced with NUM, Persons names are replaced with PERSON. Require: Spacy!")
-    parser.add_argument('--fast', type=str2bool, default="False", help="Filter by fast tokenizing") #False: search for spacy models for the given langugae
-
-    return parser
-
-
 
 if __name__ == '__main__':
     #### preprocessing pipeline for tmx files
@@ -61,7 +40,6 @@ if __name__ == '__main__':
     lang_code = parser.lang_code
     file_type = parser.type
     path_to_raw_file = parser.path
-    reduce_vocab = parser.v
     max_len, min_len = parser.max_len, parser.min_len
 
     COMPLETE_PATH = os.path.join(path_to_raw_file, parser.file)
@@ -156,47 +134,6 @@ if __name__ == '__main__':
             print("Generating samples files...")
             persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "."+lang_code))
 
-        if reduce_vocab:
-            #### This really takes long. Start only if a reduction is really needed :-)
-            print("Reducing the vocabulary...")
-            #### tokenize with spacy if available
-            files = ['.'.join(file.split(".")[:2]) for file in os.listdir(STORE_PATH) if file.endswith("clean.en") or file.endswith("clean."+lang_code)]
-            if files:
-                print("File already cleaned!")
-            else:
-                src_lang_tokenizer = get_custom_tokenizer("en", "w")
-                trg_lang_tokenizer = get_custom_tokenizer(lang_code, "w")
-                if src_lang_tokenizer.type == "spacy" and trg_lang_tokenizer.type == "spacy":
-                    src_lang_tokenizer.set_mode(False)
-                    trg_lang_tokenizer.set_mode(False)
-                    #src_lines = [src_lang_tokenizer.tokenize(line) for line in src_lines]
-                    #trg_lines = [trg_lang_tokenizer.tokenize(line) for line in trg_lines]
-
-                    take_src_lines, take_trg_lines = [],[]
-                    for src_l, trg_l in zip(src_lines, trg_lines):
-                        if src_l != "" and trg_l != "":
-                            tokenized_src_line = src_lang_tokenizer.tokenize(src_l)
-                            tokenized_trg_line = trg_lang_tokenizer.tokenize(trg_l)
-                            tokenized_src_line = tokenized_src_line.strip()
-                            tokenized_trg_line = tokenized_trg_line.strip()
-                            tokenized_src_line = re.sub(' +', ' ', tokenized_src_line)
-                            tokenized_trg_line = re.sub(' +', ' ', tokenized_trg_line)
-                            src_l_spl, trg_l_spl = tokenized_src_line.split(" "), tokenized_trg_line.split(" ")
-                            if max_len > 0:
-                                if (len(src_l_spl) <= max_len and len(src_l_spl) >= min_len) and (
-                                        len(trg_l_spl) <= max_len and len(trg_l_spl) >= min_len):
-                                    take_src_lines.append(tokenized_src_line)
-                                    take_trg_lines.append(tokenized_trg_line)
-                    assert len(take_trg_lines) == len(take_trg_lines)
-                    train_data, val_data, test_data, samples_data = split_data(take_src_lines, take_trg_lines)
-                    persist_txt(train_data, STORE_PATH, "train.clean", exts=(".en", "."+lang_code))
-                    persist_txt(val_data, STORE_PATH, "val.clean", exts=(".en", "."+lang_code))
-                    persist_txt(test_data, STORE_PATH, "test.clean", exts=(".en","."+lang_code))
-                    print("Generating samples files...")
-                    persist_txt(samples_data, STORE_PATH, file_name="samples.clean", exts=(".en", "." + lang_code))
-
-                else:
-                    print("This only works with Spacy. Please install spacy for EN and {}".format(lang_code.upper()))
 
         print("Total time:", convert(time.time() - start))
     else:

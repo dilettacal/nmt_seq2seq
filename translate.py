@@ -11,7 +11,7 @@ import os
 
 import torch
 
-from project.experiment.setup_experiment import Experiment
+from project.utils.experiment import Experiment
 from settings import RESULTS_DIR, ROOT
 
 path_to_model = os.path.join(RESULTS_DIR,"en_de/s/2/uni/2019-06-29-12-32-40/model.pkl")
