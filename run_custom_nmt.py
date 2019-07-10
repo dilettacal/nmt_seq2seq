@@ -51,7 +51,7 @@ def main():
     # Load and process data
     time_data = time.time()
     SRC, TRG, train_iter, val_iter, test_iter, train_data, val_data, test_data, samples, samples_iter = \
-        get_vocabularies_iterators(src_lang, experiment, data_dir)
+        get_vocabularies_iterators(experiment, data_dir)
     
     end_time_data = time.time()
 
