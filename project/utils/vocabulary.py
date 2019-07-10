@@ -1,9 +1,11 @@
 import os
 import time
 from torchtext import data, datasets
+from torchtext.data import Field
+
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
-from project.utils.io import SrcField, Seq2SeqDataset, TrgField
+from project.utils.io import Seq2SeqDataset
 from project.utils.preprocessing import get_custom_tokenizer
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO
@@ -50,19 +52,15 @@ def get_vocabularies_iterators(src_lang, experiment, data_dir = None, max_len=30
     src_tokenizer.set_mode(True)
     trg_tokenizer.set_mode(True)
 
-    SRC_sos_eos_pad_unk = [None, None, PAD_TOKEN, UNK_TOKEN]
-    TRG_sos_eos_pad_unk = [SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN]
 
     if experiment.tok == "tok" or corpus == "":
         lower = True
     else:
         lower = False
 
-    src_vocab = SrcField(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,
-                         sos_eos_pad_unk=SRC_sos_eos_pad_unk, lower=lower)
+    src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=lower)
 
-    trg_vocab = TrgField(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,
-                         sos_eos_pad_unk=TRG_sos_eos_pad_unk, lower=lower)
+    trg_vocab = Field(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=lower)
 
 
     print("Fields created!")
