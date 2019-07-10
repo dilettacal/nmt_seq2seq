@@ -25,7 +25,7 @@ after_apos = r"(['])\s+([\w])"
 ### from tmx2corpus "tokenizer.py"
 BOUNDARY_REGEX = re.compile(r'\b|\Z')
 
-
+#### TMXTokenizer and TMXConverter are generic wrappers for the tmx2corpus dependency ####
 try:
     class TMXTokenizer(tokenizer.Tokenizer):
         def __init__(self, lang):
@@ -45,21 +45,13 @@ try:
             tokens = re.sub(' +', ' ', tokens)
             return tokens.split(" ")
 
-
     class TMXConverter(Converter):
         def __init__(self, output):
             super().__init__(output)
 
 
-    class TXTConverter(Converter):
-        def __init__(self, output):
-            super().__init__(output)
-
-        def convert(self, files: list):
-            pass
-
 except NameError as e:
-    print(e, "Please install tmx2corpus and rerun preprocess file!")
+    print(e, "Please install tmx2corpus to preprocess file!")
     exit(1)
 
 ########## Project custom tokenizers ###########
@@ -161,6 +153,8 @@ class StandardSplitTokenizer(BaseSequenceTokenizer):
         tokens = re.sub(' +', ' ', tokens)
         return tokens.split(" ")
 
+
+##### Factory method ########
 def get_custom_tokenizer(lang, mode, fast=False):
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
     tokenizer = None
@@ -183,7 +177,7 @@ def get_custom_tokenizer(lang, mode, fast=False):
 
 
 
-
+#### other tokenization utilities ###
 
 def remove_adjacent_same_label(line):
     if isinstance(line, str):
@@ -232,7 +226,21 @@ def expand_contraction(sentence, mapping):
     return expanded_sentence
 
 
+##### Generates splits from the main dataset ####
+
 def split_data(src_sents, trg_sents, val_ratio=0.1, train_ratio=0.8, seed=SEED):
+
+    """
+    Split the source and target sentences using the provided ratios and seed
+    Default: 80, 10, 10
+    :param src_sents: list containing only the source sentences
+    :param trg_sents: list containing only the target sentences
+    :param val_ratio: validation ratio
+    :param train_ratio: training ration
+    :param seed: splits on the provided feed, default see settings.py
+    :return: splits
+    """
+
     assert len(src_sents) == len(trg_sents)
     data = list(zip(src_sents, trg_sents))
 
@@ -264,11 +272,15 @@ def split_data(src_sents, trg_sents, val_ratio=0.1, train_ratio=0.8, seed=SEED):
     return train_set, val_set, test_set, samples_set
 
 
-
-flatten = lambda l: [item for sublist in l for item in sublist]
-
-
 def persist_txt(lines, store_path, file_name, exts):
+    """
+    Stores the given lines
+    :param lines: bilingual list of sentences
+    :param store_path: path to store the file in
+    :param file_name:
+    :param exts: tuple containing the extensions, should match the line order, default: (.en, lang_code)
+    :return:
+    """
     with open(os.path.join(store_path, file_name + exts[0]), mode="w", encoding="utf-8") as src_out_file,\
             open(os.path.join(store_path, file_name + exts[1]), mode="w", encoding="utf-8") as trg_out_file:
         if len(lines) == 2:
