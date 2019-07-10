@@ -10,7 +10,12 @@ random.seed(SEED)
 
 
 class Seq2SeqDataset(Dataset):
-    """Defines a dataset for machine translation."""
+    """
+    Defines a dataset for machine translation.
+    Part of this code is taken from the original source code TranslationDatset:
+    See: https://github.com/pytorch/text/blob/master/torchtext/datasets/translation.py#L10
+
+    """
 
     @staticmethod
     def sort_key(x):
