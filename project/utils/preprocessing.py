@@ -26,29 +26,6 @@ after_apos = r"(['])\s+([\w])"
 BOUNDARY_REGEX = re.compile(r'\b|\Z')
 
 
-########## Wrapper around tmx2corpus dependency ##############
-
-class EmptyFilter(object):
-    def filter(self, bitext):
-        filtered_texts = list(filter(lambda item: item[1] or item[1] != "", bitext.items()))
-        return bool(len(filtered_texts) == 2)
-
-
-class MaxLenFilter(object):
-    def __init__(self, length):
-        self.len = length
-
-    def filter(self, bitext):
-        filtered_texts = list(filter(lambda item: len(item[1].split(" ")) <= self.len, bitext.items()))
-        return bool(len(filtered_texts) == 2)  # both texts match the given predicate
-
-class MinLenFilter(object):
-    def __init__(self, length):
-        self.len = length
-
-    def filter(self, bitext):
-        filtered_texts = list(filter(lambda item: len(item[1].split(" ")) >= self.len, bitext.items()))
-        return bool(len(filtered_texts)==2) # both texts match the given predicate
 try:
     class TMXTokenizer(tokenizer.Tokenizer):
         def __init__(self, lang):

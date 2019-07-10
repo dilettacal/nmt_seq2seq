@@ -3,11 +3,7 @@ This python file includes some special filter for a better preprocessing.
 - umlaut_dictionary maps chars with diaeresis to the equivalent form without diaeresis
 - eng_prefixes_dictionary maps some English contractions to the equivalent complete form
 
-Other filters are used to filter out certain sentences and reduce the corpus size:
-- eng_prefixes reduces the dataset to the sentences beginning with those prefixes
--
 """
-import string
 
 # Mapping for German language
 UMLAUT_MAP = {u'Ä': 'Ae',
