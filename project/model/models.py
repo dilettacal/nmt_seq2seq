@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from project.experiment.setup_experiment import Experiment
+from project.utils.experiment import Experiment
 from project.model.decoders import Decoder
 from project.model.encoders import Encoder
 from project.model.layers import Attention
