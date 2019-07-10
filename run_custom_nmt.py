@@ -8,7 +8,8 @@ import os, datetime, time, sys
 import torch
 import torch.nn as nn
 
-from project.experiment.setup_experiment import Experiment, experiment_parser
+from project.utils.arg_parse import experiment_parser
+from project.utils.experiment import Experiment
 from project.model.models import count_parameters, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.vocabulary import get_vocabularies_iterators, print_data_info
