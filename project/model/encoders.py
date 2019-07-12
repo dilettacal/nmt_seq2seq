@@ -35,7 +35,7 @@ class Encoder(nn.Module):
         self.rnn_type = rnn_cell
         self.dropout = nn.Dropout(dropout_p)
 
-    def forward(self, x, input_lengths = None):
+    def forward(self, x):
         # Embed text
         x = self.embedding(x)
         x = self.dropout(x)
@@ -51,15 +51,7 @@ class Encoder(nn.Module):
             h0 = (init) # h0 = h
 
         # Pass through RNN
-        if input_lengths:
-            x = nn.utils.rnn.pack_padded_sequence(x, input_lengths)
-
         out, h = self.rnn(x, h0)  # h is a tuple, if lstm else single
-        if input_lengths:
-            out, _ = nn.utils.rnn.pad_packed_sequence(x, input_lengths)
 
-        ## handling bidirectionality
-      #  if self.bidirectional:
-           # out = out[:, :, :self.h_dim] + out[:, :, self.h_dim:]
         return out, h
 
