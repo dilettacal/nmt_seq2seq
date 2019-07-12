@@ -97,7 +97,10 @@ class Seq2Seq(nn.Module):
             enc_input = enc_input.index_select(0, inv_index)
 
         # Encode
-        encoder_outputs, final_e = self.encoder(enc_input)
+        ### bidirectional encoder hidden states are stacked: [fw1, bw1, fw2, bw2, ..., fwL, bwL] , L= num layers
+        ### Alternatively, decoder should take num_layers and encoder hidden states should be reduced to the last 2 (forelast forward, last one last bw step)
+        ### e.g. #hidden [-2, :, : ] (last FW)  and hidden [-1, :, : ] (last BW)
+        encoder_outputs, final_e = self.encoder(enc_input) #final_e is [2*num_layers, bs, hid_dim] if bidiretional, else [num_layers, bs, hid_dim]
 
         # Decode
         decoder_outputs, final_d = self.decoder(dec_input, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
