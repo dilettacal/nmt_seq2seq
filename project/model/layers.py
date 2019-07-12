@@ -24,15 +24,20 @@ class Attention(nn.Module):
 
     def attention(self, encoder_outputs, decoder_outputs):
         '''Produces context and attention distribution'''
-
         # If no attention, return context of zeros
         if self.attn_type == 'none':
             return decoder_outputs.clone() * 0, decoder_outputs.clone() * 0
 
         # Deal with bidirectional encoder, move batches first
         if self.bidirectional: # sum hidden states for both directions
-            #print(out_e.size()) #lstm: 30,64,1024 - seq_len, bs, hid_dim*2
-            encoder_outputs = encoder_outputs.contiguous().view(encoder_outputs.size(0), encoder_outputs.size(1), 2, -1).sum(2).view(encoder_outputs.size(0), encoder_outputs.size(1), -1)
+            '''
+            out_e: [seq_len, bs, hid_dim*2]
+            out_e reshaped (encoder_outputs.contiguous().view(encoder_outputs.size(0), encoder_outputs.size(1), 2, -1)):
+            [seq_len, bs, 2, hid_dim]
+            Sum on 2nd dimensions (sum for all sequences as in bs): [seq_len, bs, hid_dim]
+            Final output shape: [seq_len, bs, hid_dim]
+            '''
+            encoder_outputs = encoder_outputs.contiguous().view(encoder_outputs.size(0), encoder_outputs.size(1), 2, -1).sum(2).view(encoder_outputs.size(0), encoder_outputs.size(1), -1) # final shape: (30,64,300)
         encoder_outputs = encoder_outputs.transpose(0, 1) # b x sl x hd
         decoder_outputs = decoder_outputs.transpose(0, 1) # b x tl x hd
 
@@ -48,8 +53,7 @@ class Attention(nn.Module):
             attn = self.tanh(attn) @ self.vector # --> b x sl x tl
 
         # Softmax and reshape
-        #attn = F.log_softmax(attn, dim=1)
-        attn = attn.exp() / attn.exp().sum(dim=1, keepdim=True) # in updated pytorch, make softmax
+        attn = attn.exp() / attn.exp().sum(dim=1, keepdim=True)
         attn = attn.transpose(1,2) # --> b x tl x sl
 
         # Get attention distribution

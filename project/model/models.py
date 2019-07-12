@@ -97,13 +97,14 @@ class Seq2Seq(nn.Module):
             enc_input = enc_input.index_select(0, inv_index)
 
         # Encode
-        out_e, final_e = self.encoder(enc_input)
+        encoder_outputs, final_e = self.encoder(enc_input)
+
         # Decode
-        out_d, final_d = self.decoder(dec_input, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
+        decoder_outputs, final_d = self.decoder(dec_input, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
 
         # Attend
-        context = self.attention(out_e, out_d) #seq_len, bs, hid_dim
-        out_cat = torch.cat((out_d, context), dim=2)
+        context = self.attention(encoder_outputs, decoder_outputs) #seq_len, bs, hid_dim
+        out_cat = torch.cat((decoder_outputs, context), dim=2)
         # Predict (returns probabilities)
         x = self.linear1(out_cat)
         x = self.dropout(self.tanh(x))
@@ -146,7 +147,7 @@ class Seq2Seq(nn.Module):
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
                     outputs_d, new_state = self.decoder(last_word_input, current_state)
                     # Attend
-                    context = self.attention(src, outputs_e, outputs_d)
+                    context = self.attention(outputs_e, outputs_d)
                     out_cat = torch.cat((outputs_d, context), dim=2)
                     x = self.linear1(out_cat)
                     ###########################################
