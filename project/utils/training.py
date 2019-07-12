@@ -370,18 +370,24 @@ def check_translation(samples, scores, model, SRC, TRG, logger):
 
 
 def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
-    input_sent = input_sentence.split(' ') # sentence --> list of words
+
+    #### Changed from original ###
+    #input_sent = input_sentence.split(' ') # sentence --> list of words
+    input_sent = SRC.tokenize(input_sentence.lower())
     sent_indices = [SRC.vocab.stoi[word] if word in SRC.vocab.stoi else SRC.vocab.stoi[UNK_TOKEN] for word in input_sent]
     sent = torch.LongTensor([sent_indices])
     sent = sent.to(device)
     sent = sent.view(-1,1) # reshape to sl x bs
     logger.log('Source: ' + ' '.join([SRC.vocab.itos[index] for index in sent_indices]))
     # Predict five sentences with beam search
-    preds = model.predict_k(sent, 5) # returns list of 5 lists of word indices
-    for i, pred in enumerate(preds): # loop over top 5 sentences
-        pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
-        out = str(i+1) + ': ' + ' '.join([TRG.vocab.itos[index] for index in pred])
-        logger.log(out)
+    pred = model.predict(sent, 5) # returns list of 5 lists of word indices
+    #for i, pred in enumerate(preds): # loop over top 5 sentences
+     #   pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
+      #  out = str(i+1) + ': ' + ' '.join([TRG.vocab.itos[index] for index in pred])
+       # logger.log(out)
+    pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
+    out = ' '.join(TRG.vocab.itos[idx] for idx in pred)
+    logger.log(out)
     return
 
 
