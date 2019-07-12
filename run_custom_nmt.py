@@ -56,6 +56,11 @@ def main():
     
     end_time_data = time.time()
 
+    logger.pickle_obj(SRC, "src")
+    logger.pickle_obj(TRG, "trg")
+
+    logger.log("SRC and TRG objects persisted in the experiment directory.")
+
     experiment.src_vocab_size = len(SRC.vocab)
     experiment.trg_vocab_size = len(TRG.vocab)
     data_logger = Logger(path=experiment_path, file_name="data.log")
