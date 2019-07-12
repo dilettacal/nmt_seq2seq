@@ -1,3 +1,5 @@
+from argparse import Namespace
+
 import torch
 
 from settings import VALID_MODELS
@@ -6,7 +8,9 @@ from settings import VALID_MODELS
 class Experiment(object):
     def __init__(self, parser):
         # self.args = experiment_parser().parse_args()
-        self.args = parser.parse_args()
+        if isinstance(parser, Namespace):
+            self.args = parser
+        else: self.args = parser.parse_args()
 
         assert self.args.model_type.lower() in VALID_MODELS
         #### Training configurations
