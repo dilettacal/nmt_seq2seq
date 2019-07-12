@@ -6,7 +6,7 @@ import torch.nn.functional as F
 ### Attention: see https://lukemelas.github.io/machine-translation.html
 
 class Attention(nn.Module):
-    def __init__(self, pad_token=1, bidirectional=False, attn_type='dot', h_dim=300):
+    def __init__(self, bidirectional=False, attn_type='dot', h_dim=300):
         super(Attention, self).__init__()
         # Check attn type and store variables
         if attn_type not in ['dot', 'additive', 'none']:
@@ -14,7 +14,6 @@ class Attention(nn.Module):
         self.bidirectional = bidirectional
         self.attn_type = attn_type
         self.h_dim = h_dim
-        self.pad_token = pad_token
 
         # Create parameters for additive attention
         if self.attn_type == 'additive':

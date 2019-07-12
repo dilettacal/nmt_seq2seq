@@ -62,7 +62,7 @@ class Seq2Seq(nn.Module):
                                    self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=rnn_type,
                                    dropout_p=self.dp)
 
-        self.attention = Attention(pad_token=self.pad_token, bidirectional=self.enc_bi, attn_type=self.att_type, h_dim=self.hid_dim)
+        self.attention = Attention(bidirectional=self.enc_bi, attn_type=self.att_type, h_dim=self.hid_dim)
 
         self.linear1 = nn.Linear(2*self.hid_dim, self.emb_size)
         self.tanh = nn.Tanh()
