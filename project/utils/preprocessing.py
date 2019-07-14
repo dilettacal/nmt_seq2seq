@@ -7,14 +7,8 @@ from datetime import datetime
 import re
 
 from project.utils.data.europarl import maybe_download_and_extract_europarl
-
-try:
-    import tokenizer ## from tmx2corpus!!!!!
-    from tmx2corpus import Converter, FileOutput, extract_tmx
-except ImportError or ModuleNotFoundError as e:
-    print(e, "Please install tmx2corpus")
-    pass
-
+from TMX2Corpus.tokenizer import Tokenizer ## from tmx2corpus!!!!!
+from TMX2Corpus.tmx2corpus import Converter, FileOutput, extract_tmx
 
 from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import Logger, convert
@@ -29,66 +23,7 @@ after_apos = r"(['])\s+([\w])"
 BOUNDARY_REGEX = re.compile(r'\b|\Z')
 
 #### TMXTokenizer and TMXConverter are generic wrappers for the tmx2corpus dependency ####
-try:
-    class TMXTokenizer(tokenizer.Tokenizer):
-        def __init__(self, lang):
-            #self.custom_tokenizer = custom_tokenizer
-            super(TMXTokenizer, self).__init__(lang.lower())
 
-        def _tokenize(self, text):
-            tokens = []
-            i = 0
-            for m in BOUNDARY_REGEX.finditer(text):
-                tokens.append(text[i:m.start()])
-                i = m.end()
-            ### The tokenization may include too much spaces
-            tokens = ' '.join(tokens)
-            tokens = tokens.strip()
-            ### remove possible duplicate spaces
-            tokens = re.sub(' +', ' ', tokens)
-            return tokens.split(" ")
-
-    class TMXConverter(Converter):
-        def __init__(self, output, logger):
-            super().__init__(output)
-            self.tokenizers = {}
-            self.logger = logger
-
-        def convert(self, files):
-            self.suppress_count = 0
-            self.output_lines = 0
-            for tmx in files:
-                print('Extracting %s' % os.path.basename(tmx))
-                for bitext in extract_tmx(tmx):
-                    self.__output(bitext)
-            self.logger.log('Output %d pairs', self.output_lines)
-            if self.suppress_count:
-                self.logger.log('Suppressed %d pairs', self.suppress_count)
-
-        def __output(self, bitext):
-            for fltr in self.filters:
-                if not fltr.filter(bitext):
-                    self.suppress_count += 1
-                    return
-
-            for lang, text in list(bitext.items()):
-                tokenizer = self.tokenizers.get(lang, FastTokenizer(lang))
-                bitext['tok.' + lang] = tokenizer.tokenize(text)
-
-            for lang in bitext.keys():
-                self.output.init(lang)
-
-            for lang, text in bitext.items():
-                self.output.write(lang, text)
-
-            self.output_lines += 1
-
-
-except NameError as e:
-    print(e, "Please install tmx2corpus to preprocess file!")
-    exit(1)
-
-########## Project custom tokenizers ###########
 
 class BaseSequenceTokenizer(object):
     def __init__(self, lang):
@@ -121,6 +56,64 @@ class BaseSequenceTokenizer(object):
             text = expand_contraction(text, UMLAUT_MAP)
         text = cleanup_digits(text)
         return text
+
+class TMXTokenizer(Tokenizer):
+    def __init__(self, lang):
+        # self.custom_tokenizer = custom_tokenizer
+        super(TMXTokenizer, self).__init__(lang.lower())
+
+    def _tokenize(self, text):
+        tokens = []
+        i = 0
+        for m in BOUNDARY_REGEX.finditer(text):
+            tokens.append(text[i:m.start()])
+            i = m.end()
+        ### The tokenization may include too much spaces
+        tokens = ' '.join(tokens)
+        tokens = tokens.strip()
+        ### remove possible duplicate spaces
+        tokens = re.sub(' +', ' ', tokens)
+        return tokens.split(" ")
+
+
+class TMXConverter(Converter):
+    def __init__(self, output, logger):
+        super().__init__(output)
+        self.tokenizers = {}
+        self.logger = logger
+
+    def convert(self, files):
+        self.suppress_count = 0
+        self.output_lines = 0
+        for tmx in files:
+            print('Extracting %s' % os.path.basename(tmx))
+            for bitext in extract_tmx(tmx):
+                self.__output(bitext)
+        self.logger.log('Output %d pairs', self.output_lines)
+        if self.suppress_count:
+            self.logger.log('Suppressed %d pairs', self.suppress_count)
+
+    def __output(self, bitext):
+        for fltr in self.filters:
+            if not fltr.filter(bitext):
+                self.suppress_count += 1
+                return
+
+        for lang, text in list(bitext.items()):
+            tokenizer = self.tokenizers.get(lang, FastTokenizer(lang))
+            bitext['tok.' + lang] = tokenizer.tokenize(text)
+
+        for lang in bitext.keys():
+            self.output.init(lang)
+
+        for lang, text in bitext.items():
+            self.output.write(lang, text)
+
+        self.output_lines += 1
+
+
+########## Project custom tokenizers ###########
+
 
 class CharBasedTokenizer(BaseSequenceTokenizer):
 
