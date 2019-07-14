@@ -1,31 +1,33 @@
-from project.utils.preprocessing import FastTokenizer, CharBasedTokenizer, SplitTokenizer
-from project.utils.preprocessing import SpacyTokenizer
-from project.utils.tmx2corpus.tokenizer import PyEnTokenizer
+import os
 
+import project
+from project.utils.preprocessing import FastTokenizer, CharBasedTokenizer, SplitTokenizer, get_custom_tokenizer
+from project.utils.preprocessing import SpacyTokenizer
 import spacy
 
-en_nlp = spacy.load("en")
+from settings import DATA_DIR_PREPRO
 
-frase = "This is my e-mail address: diletta.cal@gmail.com and it's my web site: http://dile.com. This is Robert's email: robby_m@gmail.com. This us the University URL: www.uni.de/vorlesungsverzeichnis/sose2019"
-frase2 = "Diese Abstimmung ist meiner Erinnerung nach so ausgegangen: 422 gegen 180 Stimmen bei einigen wenigen Enthaltungen."
-tok1 = FastTokenizer("en")
-tok2 = SpacyTokenizer("en", en_nlp)
-tok3 = PyEnTokenizer()
+output_file_path = os.path.join(DATA_DIR_PREPRO, "europarl", "de")
+src_lines, trg_lines = [], []
 
-tok4 = CharBasedTokenizer("en")
+with open(os.path.join(".", "test_tok.en"), 'r') as src_file, \
+        open(os.path.join(".", "test_tok.de"), 'r') as target_file:
+    for src_line, trg_line in zip(src_file, target_file):
+        src_line = src_line.strip()
+        trg_line = trg_line.strip()
+        if src_line != "" and trg_line != "":
+            src_lines.append(src_line)
+            trg_lines.append(trg_line)
 
-print("Fast tokenizer:")
-print(tok1.tokenize(frase))
-print("Spacy:")
-print(tok2.tokenize(frase))
+src_split_tok, trg_split_tok = get_custom_tokenizer("en", spacy_pretok=True), get_custom_tokenizer("de", spacy_pretok=True)
+assert isinstance(src_split_tok, project.utils.preprocessing.SplitTokenizer)
+assert isinstance(trg_split_tok, project.utils.preprocessing.SplitTokenizer)
 
-print(tok4.tokenize(frase))
+for src_l, trg_l in zip(src_lines, trg_lines):
+    print("Source sequence:")
+    print(src_l)
+    print(src_split_tok.tokenize(src_l))
+    print("Target sequence:")
+    print(trg_l)
+    print(trg_split_tok.tokenize(trg_l))
 
-print("Default:")
-print(tok3.tokenize(frase).split(" "))
-
-
-tok5 = SplitTokenizer("en")
-spacy_tok = tok2.tokenize(frase)
-print(tok5.tokenize(' '.join(spacy_tok)))
-print(tok5.tokenize(frase))

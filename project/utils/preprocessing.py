@@ -143,7 +143,7 @@ class SplitTokenizer(BaseSequenceTokenizer):
 
 
 ##### Factory method ########
-def get_custom_tokenizer(lang, mode, fast=False, spacy_pretok=True):
+def get_custom_tokenizer(lang, mode="w", fast=False, spacy_pretok=True):
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
     tokenizer = None
     if mode == "c":
