@@ -139,23 +139,12 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
            sent.split(" ")
            ['(', 'DE', ')', 'Mr', 'President', ',', 'starting', 'the', 'agenda', 'in', 'this', 'way', 'with', 'a', 'brief', 'debate', 'on', 'the', 'Berlin', 'statement', 'is', 'a', 'good', 'choice', '.']
         '''
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", "fast"), get_custom_tokenizer("de", "w", "fast") #
+        spacy_pretok = True if corpus == "europarl" else False
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer("de", "w", spacy_pretok=spacy_pretok) #
 
 
-    ### Simple tokenization based on word boundaries and pucntuation
-    src_tokenizer.set_mode(True)
-    trg_tokenizer.set_mode(True)
-
-
-    if experiment.tok == "tok" or corpus == "":
-        lower = True
-    else:
-        lower = False
-
-    src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=lower)
-
-    trg_vocab = Field(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=lower)
-
+    src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
+    trg_vocab = Field(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
 
     print("Fields created!")
 

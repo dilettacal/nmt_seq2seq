@@ -2,20 +2,23 @@ import abc
 import os
 import random
 import string
+import time
 from datetime import datetime
 import re
 
+from project.utils.data.europarl import maybe_download_and_extract_europarl
+
 try:
     import tokenizer ## from tmx2corpus!!!!!
-    from tmx2corpus import Converter
+    from tmx2corpus import Converter, FileOutput, extract_tmx
 except ImportError or ModuleNotFoundError as e:
     print(e, "Please install tmx2corpus")
     pass
 
-from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
-from project.utils.utils import Logger
-from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED
 
+from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
+from project.utils.utils import Logger, convert
+from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED, DATA_DIR_RAW
 
 ### Regex ###
 space_before_punct = r'\s([?.!"](?:\s|$))'
@@ -46,8 +49,39 @@ try:
             return tokens.split(" ")
 
     class TMXConverter(Converter):
-        def __init__(self, output):
+        def __init__(self, output, logger):
             super().__init__(output)
+            self.tokenizers = {}
+            self.logger = logger
+
+        def convert(self, files):
+            self.suppress_count = 0
+            self.output_lines = 0
+            for tmx in files:
+                print('Extracting %s' % os.path.basename(tmx))
+                for bitext in extract_tmx(tmx):
+                    self.__output(bitext)
+            self.logger.log('Output %d pairs', self.output_lines)
+            if self.suppress_count:
+                self.logger.log('Suppressed %d pairs', self.suppress_count)
+
+        def __output(self, bitext):
+            for fltr in self.filters:
+                if not fltr.filter(bitext):
+                    self.suppress_count += 1
+                    return
+
+            for lang, text in list(bitext.items()):
+                tokenizer = self.tokenizers.get(lang, FastTokenizer(lang))
+                bitext['tok.' + lang] = tokenizer.tokenize(text)
+
+            for lang in bitext.keys():
+                self.output.init(lang)
+
+            for lang, text in bitext.items():
+                self.output.write(lang, text)
+
+            self.output_lines += 1
 
 
 except NameError as e:
@@ -61,11 +95,6 @@ class BaseSequenceTokenizer(object):
         self.lang = lang
         self.only_tokenize = True
         self.type = "standard"
-
-    def _tokenize(self, text):
-        tokens = self._custom_tokenize(text)
-        text = self._clean_text(' '.join(tokens))
-        return text.split(" ")
 
     def tokenize(self, text):
         return self._custom_tokenize(text)
@@ -137,8 +166,7 @@ class SpacyTokenizer(BaseSequenceTokenizer):
 
         return text.split(" ") if isinstance(text, str) else text
 
-
-class StandardSplitTokenizer(BaseSequenceTokenizer):
+class FastTokenizer(BaseSequenceTokenizer):
     def _custom_tokenize(self, text):
         #### like for the TMXTokenizer
         tokens = []
@@ -153,16 +181,22 @@ class StandardSplitTokenizer(BaseSequenceTokenizer):
         tokens = re.sub(' +', ' ', tokens)
         return tokens.split(" ")
 
+class SplitTokenizer(BaseSequenceTokenizer):
+    def _custom_tokenize(self, text):
+        return text.split(" ")
+
 
 ##### Factory method ########
-def get_custom_tokenizer(lang, mode, fast=False):
+def get_custom_tokenizer(lang, mode, fast=False, spacy_pretok=True):
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
     tokenizer = None
     if mode == "c":
         tokenizer = CharBasedTokenizer(lang)
     else:
         if fast:
-            tokenizer = StandardSplitTokenizer(lang)
+            tokenizer = FastTokenizer(lang)
+        elif spacy_pretok:
+            tokenizer = SplitTokenizer(lang)
         else:
             ## this may last more than 1 hour
             if lang in SUPPORTED_LANGS.keys():
@@ -172,7 +206,8 @@ def get_custom_tokenizer(lang, mode, fast=False):
                     tokenizer = SpacyTokenizer(lang, nlp)
                 except ImportError or Exception:
                     print("Spacy not installed or model for the requested language has not been downloaded.\nStandard tokenizer is used")
-                    tokenizer = StandardSplitTokenizer(lang)
+                    tokenizer = FastTokenizer(lang)
+                    tokenizer.set_mode(True)
     return tokenizer
 
 
@@ -290,3 +325,86 @@ def persist_txt(lines, store_path, file_name, exts):
                 trg_out_file.write("{}\n".format(trg))
 
 
+#### raw file preprocessing
+def preprocess_step(parser):
+    #### preprocessing pipeline for tmx files
+    ### download the files
+    maybe_download_and_extract_europarl(language_code=parser.lang_code, tmx=True)
+    corpus_name = parser.corpus
+    lang_code = parser.lang_code
+    file_type = parser.type
+    path_to_raw_file = parser.path
+    max_len, min_len = parser.max_len, parser.min_len
+
+    COMPLETE_PATH = os.path.join(path_to_raw_file, parser.file)
+
+    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), corpus_name, lang_code, "splits", str(max_len))
+    os.makedirs(STORE_PATH, exist_ok=True)
+
+    ratio = 0.10
+
+    assert file_type in ["tmx", "txt"]
+
+    if file_type == "tmx":
+        start = time.time()
+        FILE = os.path.join(DATA_DIR_RAW, corpus_name, lang_code)
+        output_file_path = os.path.join(DATA_DIR_PREPRO, corpus_name, lang_code)
+        files = [file for file in os.listdir(output_file_path) if
+                 file.startswith("bitext.tok") or file.startswith("bitext.tok")]
+        if len(files) >= 2:
+            print("TMX file already preprocessd!")
+        else:
+            ### This conversion uses standard tokenizers, which splits sentences on spaces and punctuation, this is very fast
+            converter = TMXConverter(output=FileOutput(output_file_path))
+          #  src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer(
+       #         "de", "w", spacy_pretok=False)  # spacy is used
+        #    tokenizers = [src_tokenizer, trg_tokenizer]
+         #   converter.add_tokenizers(tokenizers)
+            #converter.add_tokenizers()
+            converter.convert([COMPLETE_PATH])
+            print("Converted lines:", converter.output_lines)
+
+        target_file = "bitext.tok.{}".format(lang_code)
+        src_lines = [line.strip("\n") for line in
+                     open(os.path.join(output_file_path, "bitext.tok.en"), mode="r",
+                          encoding="utf-8").readlines() if line]
+        trg_lines = [line.strip("\n") for line in
+                     open(os.path.join(output_file_path, target_file), mode="r",
+                          encoding="utf-8").readlines() if line]
+
+        if max_len > 0:
+            files = ['.'.join(file.split(".")[:2]) for file in os.listdir(STORE_PATH) if
+                     file.endswith("tok.en") or file.endswith("tok." + lang_code)]
+            filtered_src_lines, filtered_trg_lines = [], []
+            if files:
+                print("File already reduced by length!")
+            else:
+                print("Filtering by length...")
+                filtered_src_lines, filtered_trg_lines = [], []
+                for src_l, trg_l in zip(src_lines, trg_lines):
+                    src_l_s = src_l.strip()
+                    trg_l_s = trg_l.strip()
+                    ### remove possible duplicate spaces
+                    src_l_s = re.sub(' +', ' ', src_l_s)
+                    trg_l_s = re.sub(' +', ' ', trg_l_s)
+                    if src_l_s != "" and trg_l_s != "":
+                        src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
+                        if len(src_l_spl) >= min_len and len(trg_l_spl) >= min_len:
+                            if len(src_l_spl) <= max_len and len(trg_l_spl) <= max_len:
+                                filtered_src_lines.append(' '.join(src_l_spl))
+                                filtered_trg_lines.append(' '.join(trg_l_spl))
+                assert len(filtered_src_lines) == len(filtered_trg_lines)
+
+            src_lines, trg_lines = filtered_src_lines, filtered_trg_lines
+            print("Splitting files...")
+            train_data, val_data, test_data, samples_data = split_data(src_lines, trg_lines)
+            persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
+            persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
+            persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
+            print("Generating samples files...")
+            persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
+
+        print("Total time:", convert(time.time() - start))
+    else:
+        # TODO
+        pass
