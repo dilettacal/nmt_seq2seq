@@ -142,6 +142,10 @@ test.*
 *.tar
 *.pkl
 
+!tmx2corpus/LICENSE.txt
+!tmx2corpus/test.tmx
+!tmx2corpus/README.rst
+
 
 
 /floyd_train_models.sh
