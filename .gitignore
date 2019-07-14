@@ -142,9 +142,9 @@ test.*
 *.tar
 *.pkl
 
-!tmx2corpus/LICENSE.txt
-!tmx2corpus/test.tmx
-!tmx2corpus/README.rst
+!project/utils/tmx2corpus/LICENSE.txt
+!project/utils/tmx2corpus/test.tmx
+!project/utils/tmx2corpus/README.rst
 
 
 
