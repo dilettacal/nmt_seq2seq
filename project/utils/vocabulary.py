@@ -139,8 +139,8 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
            sent.split(" ")
            ['(', 'DE', ')', 'Mr', 'President', ',', 'starting', 'the', 'agenda', 'in', 'this', 'way', 'with', 'a', 'brief', 'debate', 'on', 'the', 'Berlin', 'statement', 'is', 'a', 'good', 'choice', '.']
         '''
-        #spacy_pretok = True if corpus == "europarl" else False
-        spacy_pretok = False
+        spacy_pretok = True if corpus == "europarl" else False
+        #spacy_pretok = False
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer("de", "w", spacy_pretok=spacy_pretok) #
         print(type(src_tokenizer), type(trg_tokenizer))
 
