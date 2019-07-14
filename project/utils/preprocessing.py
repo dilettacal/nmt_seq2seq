@@ -5,7 +5,6 @@ import random
 import string
 import time
 import re
-
 from project.utils.data.europarl import maybe_download_and_extract_europarl
 from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import convert, Logger
@@ -16,8 +15,9 @@ from project.utils.tmx2corpus.tmx2corpus import Converter, FileOutput, glom_urls
 space_before_punct = r'\s([?.!\'"](?:\s|$))'
 before_apos = r"\s+(['])"
 after_apos = r"(['])\s+([\w])"
-BOUNDARY_REGEX = re.compile(r'\b|\Z')#
+BOUNDARY_REGEX = re.compile(r'\b|\Z')  #
 TAG_REGEX = re.compile(r'<[^>]+>')
+
 
 ############### Tokenizers ################
 
@@ -38,7 +38,7 @@ class BaseSequenceTokenizer(object):
         elif self.lang == "de":
             sequence = expand_contraction(sequence, UMLAUT_MAP)
         tokens = self._tokenize(sequence)
-       # return ' '.join(tokens)
+        # return ' '.join(tokens)
         return tokens
 
     def set_mode(self, only_tokenize=True):
@@ -51,14 +51,15 @@ class BaseSequenceTokenizer(object):
         if isinstance(text, list):
             text = ' '.join(text)
         text = re.sub(space_before_punct, r"\1", text)
-      #  text = re.sub(before_apos, r"\1", text)
+        #  text = re.sub(before_apos, r"\1", text)
         text = re.sub(after_apos, r"\1\2", text)
         if self.lang == "en":
             text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
         elif self.lang == "de":
             text = expand_contraction(text, UMLAUT_MAP)
-       # text = cleanup_digits(text)
+        # text = cleanup_digits(text)
         return text
+
 
 class CharBasedTokenizer(BaseSequenceTokenizer):
 
@@ -72,6 +73,7 @@ class CharBasedTokenizer(BaseSequenceTokenizer):
     def _tokenize(self, text):
         return list(text)
 
+
 class SpacyTokenizer(BaseSequenceTokenizer):
     def __init__(self, lang, model):
         self.nlp = model
@@ -81,7 +83,7 @@ class SpacyTokenizer(BaseSequenceTokenizer):
 
     def _tokenize(self, sequence):
         if self.only_tokenize:
-           # doc = self.nlp(sequence)
+            # doc = self.nlp(sequence)
             return [tok.text for tok in self.nlp.tokenizer(sequence)]
         else:
             ### this takes really long ###
@@ -95,7 +97,6 @@ class SpacyTokenizer(BaseSequenceTokenizer):
             tokens = tokens.split(" ")
         return tokens
 
-
     ##### this could improve tokenization, not used in the project
 
     def get_entities(self, doc):
@@ -106,14 +107,15 @@ class SpacyTokenizer(BaseSequenceTokenizer):
         if isinstance(text, list):
             text = ' '.join(text)
         for ent in mapping:
-              replacee = str(ent[0])
-              replacer = str(ent[1])
-              try:
-                   text = text.replace(replacee, replacer)
-              except:
-                   pass
+            replacee = str(ent[0])
+            replacer = str(ent[1])
+            try:
+                text = text.replace(replacee, replacer)
+            except:
+                pass
 
         return text.split(" ") if isinstance(text, str) else text
+
 
 class FastTokenizer(BaseSequenceTokenizer):
     def __init__(self, lang):
@@ -131,6 +133,7 @@ class FastTokenizer(BaseSequenceTokenizer):
             tokens = glom_urls(tokens)
         tokens = [tok for tok in tokens if not tok.strip() == '']
         return ' '.join(tokens).split(" ")
+
 
 class SplitTokenizer(BaseSequenceTokenizer):
 
@@ -155,14 +158,14 @@ def get_custom_tokenizer(lang, mode, fast=False, spacy_pretok=True):
             if lang in SUPPORTED_LANGS.keys():
                 try:
                     import spacy
-                    nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"]) #makes it faster
+                    nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"])  # makes it faster
                     tokenizer = SpacyTokenizer(lang, nlp)
                 except ImportError or Exception:
-                    print("Spacy not installed or model for the requested language has not been downloaded.\nStandard tokenizer is used")
+                    print(
+                        "Spacy not installed or model for the requested language has not been downloaded.\nStandard tokenizer is used")
                     tokenizer = FastTokenizer(lang)
                     tokenizer.set_mode(True)
     return tokenizer
-
 
 
 #### other tokenization utilities ###
@@ -171,11 +174,11 @@ def remove_adjacent_same_label(line):
     if isinstance(line, str):
         line = line.split(" ")
     # Remove adjacent duplicate labels
-    toks = [line[i] for i in range(len(line)) if (i==0) or line[i] != line[i-1]]
+    toks = [line[i] for i in range(len(line)) if (i == 0) or line[i] != line[i - 1]]
     line = ' '.join(toks).strip()
     ### remove duplicate spaces
     line = re.sub(r"\s\s+", " ", line)
-    return line.strip() # as string
+    return line.strip()  # as string
 
 
 def cleanup_digits(line):
@@ -196,7 +199,7 @@ def cleanup_digits(line):
     line = ' '.join([word if not word in nums else "NUM" for word in line.split(" ")])
     ### Clean up regulations
     ### A503032001 --> LAW
-    line = re.sub(r'[a-zA-Z]+[0-9]+',"LAW", line)
+    line = re.sub(r'[a-zA-Z]+[0-9]+', "LAW", line)
     line = remove_adjacent_same_label(line)
     ## final string: Turchi Report LAW and Linkohr Report LAW am NUM Juni NUM
     return line
@@ -217,7 +220,6 @@ def expand_contraction(sentence, mapping):
 ##### Generates splits from the main dataset ####
 
 def split_data(src_sents, trg_sents, val_ratio=0.1, train_ratio=0.8, seed=SEED):
-
     """
     Split the source and target sentences using the provided ratios and seed
     Default: 80, 10, 10
@@ -235,13 +237,12 @@ def split_data(src_sents, trg_sents, val_ratio=0.1, train_ratio=0.8, seed=SEED):
     num_samples = len(data)
     print("Total samples: ", num_samples)
 
-
     print("Shuffling data....")
     random.seed(seed)  # 30
     random.shuffle(data)
 
-    train_end = int(train_ratio*num_samples)
-    validate_end = int(val_ratio*num_samples) + train_end
+    train_end = int(train_ratio * num_samples)
+    validate_end = int(val_ratio * num_samples) + train_end
     train_set = data[:train_end]
     val_set = data[train_end:validate_end]
     test_set = data[validate_end:]
@@ -269,7 +270,7 @@ def persist_txt(lines, store_path, file_name, exts):
     :param exts: tuple containing the extensions, should match the line order, default: (.en, lang_code)
     :return:
     """
-    with open(os.path.join(store_path, file_name + exts[0]), mode="w", encoding="utf-8") as src_out_file,\
+    with open(os.path.join(store_path, file_name + exts[0]), mode="w", encoding="utf-8") as src_out_file, \
             open(os.path.join(store_path, file_name + exts[1]), mode="w", encoding="utf-8") as trg_out_file:
         if len(lines) == 2:
             lines = list(zip(lines[0], lines[1]))
@@ -300,25 +301,34 @@ def raw_preprocess(parser):
         start = time.time()
         output_file_path = os.path.join(DATA_DIR_PREPRO, corpus_name, lang_code)
 
-        ### convert tmx to plain texts - no tokenization is performed
-        converter = Converter(output=FileOutput(output_file_path))
-        converter.convert([COMPLETE_PATH])
-        print("Converted lines:", converter.output_lines)
+        files = [file for file in os.listdir(output_file_path) if file.startswith("bitext")]
+        if "bitext.en" in files and "bitext.{}".format(lang_code) in files:
+            print("TMX already converted!")
+        else:
+            print("Converting tmx to file...")
+            ### convert tmx to plain texts - no tokenization is performed
+            converter = Converter(output=FileOutput(output_file_path))
+            converter.convert([COMPLETE_PATH])
+            print("Converted lines:", converter.output_lines)
 
         target_file = "bitext.{}".format(lang_code)
-        src_lines = [line.strip("\n") for line in
-                     open(os.path.join(output_file_path, "bitext.en"), mode="r",
-                          encoding="utf-8").readlines()]
-        trg_lines = [line.strip("\n") for line in
-                     open(os.path.join(output_file_path, target_file), mode="r",
-                          encoding="utf-8").readlines()]
+        src_lines, trg_lines = [], []
+
+        with open(os.path.join(output_file_path, "bitext.en"), 'r') as src_file, \
+                open(os.path.join(output_file_path, target_file), 'r') as target_file:
+            for src_line, trg_line in zip(src_file, target_file):
+                src_line = src_line.strip()
+                trg_line = trg_line.strip()
+                if src_line != "" and trg_line != "":
+                    src_lines.append(src_line)
+                    trg_lines.append(trg_line)
 
         ### tokenize lines ####
-        print(len(src_lines))
-        print(len(trg_lines))
-        assert len(src_lines) == len(trg_lines)
+        assert len(src_lines) == len(trg_lines), "Different lengths!"
 
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer("de", "w", spacy_pretok=False)  # spacy is used
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer("de",
+                                                                                                                 "w",
+                                                                                                                 spacy_pretok=False)  # spacy is used
         src_logger = Logger(output_file_path, file_name="bitext.tok.en")
         trg_logger = Logger(output_file_path, file_name="bitext.tok.{}".format(lang_code))
 
@@ -328,8 +338,7 @@ def raw_preprocess(parser):
             for i, doc in enumerate(src_tokenizer.nlp.pipe(src_lines, batch_size=1000)):
                 tok_doc = ' '.join([tok.text for tok in doc])
                 temp_src_toks.append(tok_doc)
-                src_logger.log(tok_doc, stdout=True if i % 100000 ==0 else False)
-
+                src_logger.log(tok_doc, stdout=True if i % 100000 == 0 else False)
 
         with trg_tokenizer.nlp.disable_pipes('ner'):
             for i, doc in enumerate(trg_tokenizer.nlp.pipe(trg_lines, batch_size=1000)):
@@ -347,8 +356,8 @@ def raw_preprocess(parser):
                 print("Filtering by length...")
                 filtered_src_lines, filtered_trg_lines = [], []
                 for src_l, trg_l in zip(temp_src_toks, temp_trg_toks):
-                   # src_l_s = src_l.strip()
-                   # trg_l_s = trg_l.strip()
+                    # src_l_s = src_l.strip()
+                    # trg_l_s = trg_l.strip()
                     ### remove possible duplicate spaces
                     src_l_s = re.sub(' +', ' ', src_l)
                     trg_l_s = re.sub(' +', ' ', trg_l)
