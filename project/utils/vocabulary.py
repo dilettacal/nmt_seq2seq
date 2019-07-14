@@ -3,6 +3,7 @@ import time
 from torchtext import data, datasets, data as data
 from torchtext.data import Field, Dataset
 
+import project
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
 from project.utils.preprocessing import get_custom_tokenizer
@@ -140,9 +141,14 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
            ['(', 'DE', ')', 'Mr', 'President', ',', 'starting', 'the', 'agenda', 'in', 'this', 'way', 'with', 'a', 'brief', 'debate', 'on', 'the', 'Berlin', 'statement', 'is', 'a', 'good', 'choice', '.']
         '''
         spacy_pretok = True if corpus == "europarl" else False
-        #spacy_pretok = False
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer("de", "w", spacy_pretok=spacy_pretok) #
-        print(type(src_tokenizer), type(trg_tokenizer))
+        #### TODO: Rimuovi prima di consegnare :-)
+        if spacy_pretok:
+            assert isinstance(src_tokenizer, project.utils.preprocessing.SplitTokenizer)
+            assert isinstance(trg_tokenizer, project.utils.preprocessing.SplitTokenizer)
+        else:
+            assert isinstance(src_tokenizer, project.utils.preprocessing.SpacyTokenizer)
+            assert isinstance(trg_tokenizer, project.utils.preprocessing.SpacyTokenizer)
 
 
     src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
