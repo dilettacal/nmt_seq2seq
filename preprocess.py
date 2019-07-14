@@ -20,7 +20,7 @@ Total samples:  1.148.204 (total sentences, with minimum length "min_len" and ma
 """
 import argparse
 
-from project.utils.preprocessing import preprocess_step
+from project.utils.preprocessing import raw_preprocess
 
 
 def data_prepro_parser():
@@ -36,6 +36,6 @@ def data_prepro_parser():
 
 
 if __name__ == '__main__':
-    preprocess_step(data_prepro_parser().parse_args())
+    raw_preprocess(data_prepro_parser().parse_args())
 
 
