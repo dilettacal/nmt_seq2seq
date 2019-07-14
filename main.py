@@ -10,6 +10,26 @@ from settings import DATA_DIR
 if __name__ == '__main__':
 	data = get_full_path(DATA_DIR, "preprocessed", "europarl", "de")
 
+	src_lines_tok = [line.strip("\n") for line in
+				 open(os.path.join(data, "bitext.tok.en"), mode="r",
+					  encoding="utf-8").readlines() if line]
+	trg_lines_tok = [line.strip("\n") for line in
+				 open(os.path.join(data, "bitext.tok.de"), mode="r",
+					  encoding="utf-8").readlines() if line]
+
+	print(len(src_lines_tok))
+	print(len(trg_lines_tok))
+	for i, (s, t) in zip(src_lines_tok, trg_lines_tok):
+		len_s = len(s.split(" "))
+		len_t = len(t.split(" "))
+		if s == "" or t == "":
+			print("Sentence is empty")
+			print(s, t)
+		if len_s < 2 or len_t < 2:
+			print("Sentence is short")
+			print(s, t)
+
+	exit()
 	src_lines = [line.strip("\n") for line in
 				 open(os.path.join(data, "bitext.en"), mode="r",
 					  encoding="utf-8").readlines() if line]
@@ -17,10 +37,13 @@ if __name__ == '__main__':
 				 open(os.path.join(data, "bitext.de"), mode="r",
 					  encoding="utf-8").readlines() if line]
 
+
 	print(len(src_lines), len(trg_lines))
 
 	en_nlp = spacy.load("en")
 	de_nlp = spacy.load("de")
+
+
 
 	logger = Logger(".", file_name="test_nlp.log")
 

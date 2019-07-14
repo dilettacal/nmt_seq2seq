@@ -42,10 +42,10 @@ Oriignal code: https://github.com/amake/tmx2corpus
 
 '''
 
-from __future__ import print_function
 import os
 import codecs
 import logging
+logging.basicConfig(filename='converter.log',level=logging.DEBUG)
 from xml.etree import ElementTree
 
 try:
@@ -120,9 +120,9 @@ class Converter(object):
             print('Extracting %s' % os.path.basename(tmx))
             for bitext in extract_tmx(tmx):
                 self.__output(bitext)
-        logging.info('Output %d pairs', self.output_lines)
+        logging.debug('Output %d pairs', self.output_lines)
         if self.suppress_count:
-            logging.info('Suppressed %d pairs', self.suppress_count)
+            logging.debug('Suppressed %d pairs', self.suppress_count)
 
     def __output(self, bitext):
 

@@ -10,7 +10,7 @@ from project.utils.data.europarl import maybe_download_and_extract_europarl
 from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import convert, Logger
 from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED
-from project.utils.tmx2corpus.tmx2corpus import Converter, FileOutput, extract_tmx, glom_urls
+from project.utils.tmx2corpus.tmx2corpus import Converter, FileOutput, glom_urls
 
 ### Regex ###
 space_before_punct = r'\s([?.!\'"](?:\s|$))'
@@ -299,25 +299,24 @@ def raw_preprocess(parser):
     if file_type == "tmx":
         start = time.time()
         output_file_path = os.path.join(DATA_DIR_PREPRO, corpus_name, lang_code)
-        files = [file for file in os.listdir(output_file_path) if
-                 file.startswith("bitext.tok") or file.startswith("bitext.tok")]
-        if len(files) >= 2:
-            print("TMX file already preprocessd!")
-        else:
-            ### convert tmx to plain texts - no tokenization is performed
-            converter = Converter(output=FileOutput(output_file_path))
-            converter.convert([COMPLETE_PATH])
-            print("Converted lines:", converter.output_lines)
+
+        ### convert tmx to plain texts - no tokenization is performed
+        converter = Converter(output=FileOutput(output_file_path))
+        converter.convert([COMPLETE_PATH])
+        print("Converted lines:", converter.output_lines)
 
         target_file = "bitext.{}".format(lang_code)
         src_lines = [line.strip("\n") for line in
                      open(os.path.join(output_file_path, "bitext.en"), mode="r",
-                          encoding="utf-8").readlines() if line]
+                          encoding="utf-8").readlines()]
         trg_lines = [line.strip("\n") for line in
                      open(os.path.join(output_file_path, target_file), mode="r",
-                          encoding="utf-8").readlines() if line]
+                          encoding="utf-8").readlines()]
 
         ### tokenize lines ####
+        print(len(src_lines))
+        print(len(trg_lines))
+        assert len(src_lines) == len(trg_lines)
 
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer("de", "w", spacy_pretok=False)  # spacy is used
         src_logger = Logger(output_file_path, file_name="bitext.tok.en")
@@ -348,18 +347,19 @@ def raw_preprocess(parser):
                 print("Filtering by length...")
                 filtered_src_lines, filtered_trg_lines = [], []
                 for src_l, trg_l in zip(temp_src_toks, temp_trg_toks):
-                    src_l_s = src_l.strip()
-                    trg_l_s = trg_l.strip()
+                   # src_l_s = src_l.strip()
+                   # trg_l_s = trg_l.strip()
                     ### remove possible duplicate spaces
-                    src_l_s = re.sub(' +', ' ', src_l_s)
-                    trg_l_s = re.sub(' +', ' ', trg_l_s)
+                    src_l_s = re.sub(' +', ' ', src_l)
+                    trg_l_s = re.sub(' +', ' ', trg_l)
                     if src_l_s != "" and trg_l_s != "":
                         src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
-                        if len(src_l_spl) >= min_len and len(trg_l_spl) >= min_len:
-                            if len(src_l_spl) <= max_len and len(trg_l_spl) <= max_len:
+                        if len(src_l_spl) <= max_len and len(trg_l_spl) <= max_len:
+                            if len(src_l_spl) >= min_len and len(trg_l_spl) >= min_len:
                                 filtered_src_lines.append(' '.join(src_l_spl))
                                 filtered_trg_lines.append(' '.join(trg_l_spl))
-                assert len(filtered_src_lines) == len(filtered_trg_lines)
+
+            assert len(filtered_src_lines) == len(filtered_trg_lines)
 
             src_lines, trg_lines = filtered_src_lines, filtered_trg_lines
             print("Splitting files...")
