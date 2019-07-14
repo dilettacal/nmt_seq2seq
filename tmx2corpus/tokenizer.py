@@ -2,17 +2,20 @@
 Created on Dec 19, 2013
 
 @author: aaron.madlon-kay
+
+Modified by: Diletta Calussi
+Please check original version at: https://github.com/amake/tmx2corpus
 '''
 
 from __future__ import print_function
-import sys
-import os
 import re
 
+############ Modified from original project ###########
 try:
     import tinysegmenter
 except ModuleNotFoundError as e:
     pass
+#######################################################
 
 BOUNDARY_REGEX = re.compile(r'\b|\Z')
 TAG_REGEX = re.compile(r'<[^>]+>')
@@ -35,6 +38,7 @@ class Tokenizer(object):
 return list of tokens.'''
         raise NotImplementedError
 
+#### Modified from original project #####
 
 try:
     class PyJaTokenizer(Tokenizer):
@@ -47,6 +51,7 @@ try:
 except ModuleNotFoundError or Exception:
     pass
 
+#########################################
 
 class PyEnTokenizer(Tokenizer):
     def __init__(self):

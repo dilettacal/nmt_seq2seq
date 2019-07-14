@@ -7,8 +7,12 @@ The script will recursively traverse directories and process all TMXs.
 
 To perform tokenization or to filter the output, use the convert() method
 with subclasses of the Tokenizer or Filter objects.
-
 @author: aaron.madlon-kay
+
+Modifications by: Diletta Calussi
+
+Please check original version at: https://github.com/amake/tmx2corpus
+
 '''
 
 from __future__ import print_function
@@ -17,7 +21,7 @@ import sys
 import os
 import codecs
 import logging
-from .tokenizer import DEFAULT_TOKENIZER
+from .tokenizer import DEFAULT_TOKENIZER, PyEnTokenizer
 from xml.etree import ElementTree
 
 try:
@@ -209,6 +213,11 @@ def convert(paths, tokenizers=[], bitext_filter=None, output=None):
     return 0
 
 
+
+############# Main not needed ##########
+## modified from original version (script is executable)
+
+"""
 def main():
     parser = argparse.ArgumentParser(description='Convert TMX files to '
                                      'flat corpus files')
@@ -220,8 +229,14 @@ def main():
     level = levels[min(len(levels) - 1, args.verbose)]
     logging.getLogger().setLevel(level)
 
-    return convert(args.path, tokenizers=[PyJaTokenizer()])
+   # return convert(args.path, tokenizers=[PyJaTokenizer()])
+    return convert(args.path, tokenizers=[PyEnTokenizer()])
+"""
 
 
+
+"""
 if __name__ == '__main__':
     sys.exit(main())
+
+"""
