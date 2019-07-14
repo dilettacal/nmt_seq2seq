@@ -14,8 +14,14 @@ python preprocess.py --lang_code de --type tmx --corpus europarl --max_len 30 --
 Conversion:
 Converted lines: 1.916.030 (total sentences in the dataset)
 
+Total samples:  1155582
+Shuffling data....
+Total train: 924465
+Total validation: 115558
+Total test: 115559
+
 Filtered by length:
-Total samples:  1.148.204 (total sentences, with minimum length "min_len" and maximum length "max_len")
+Total samples:  1.155.582 (total sentences, with minimum length "min_len" and maximum length "max_len")
 
 """
 import argparse
@@ -29,7 +35,7 @@ def data_prepro_parser():
     parser.add_argument("--type", default="tmx", type=str, help="TMX")
     parser.add_argument("--corpus", default="europarl", type=str, help="Corpus name")
     parser.add_argument("--max_len", default=30, type=int, help="Filter sequences with a length <= max_len")
-    parser.add_argument("--min_len", default=1, type=int, help="Filter sequences with a length >= min_len")
+    parser.add_argument("--min_len", default=2, type=int, help="Filter sequences with a length >= min_len")
     parser.add_argument('--path', default="data/raw/europarl/de", help="Path to raw data files")
     parser.add_argument('--file', default="de-en.tmx", help="File name after extraction")
     return parser

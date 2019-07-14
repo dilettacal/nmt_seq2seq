@@ -9,10 +9,8 @@ import re
 from project.utils.data.europarl import maybe_download_and_extract_europarl
 from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import convert, Logger
-from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED, DATA_DIR_RAW
-from project.utils.tmx2corpus.tokenizer import Tokenizer, glom_urls
-from project.utils.tmx2corpus.tmx2corpus import Converter, FileOutput, extract_tmx
-from nltk.tokenize import RegexpTokenizer, PunktSentenceTokenizer
+from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED
+from project.utils.tmx2corpus.tmx2corpus import Converter, FileOutput, extract_tmx, glom_urls
 
 ### Regex ###
 space_before_punct = r'\s([?.!\'"](?:\s|$))'
@@ -21,58 +19,18 @@ after_apos = r"(['])\s+([\w])"
 BOUNDARY_REGEX = re.compile(r'\b|\Z')#
 TAG_REGEX = re.compile(r'<[^>]+>')
 
-PATTERN = r'\W+'
-
-############# Raw file convertern ####
-
-
-
-class TMXConverter(Converter):
-    def __init__(self, output):
-        super().__init__(output)
-        self.tokenizers = {}
-
-    def convert(self, files):
-        self.suppress_count = 0
-        self.output_lines = 0
-        for tmx in files:
-            print('Extracting %s' % os.path.basename(tmx))
-            for bitext in extract_tmx(tmx):
-                self.__output(bitext)
-        logging.info('Output %d pairs', self.output_lines)
-        if self.suppress_count:
-            logging.info('Suppressed %d pairs', self.suppress_count)
-
-    def __output(self, bitext):
-        for fltr in self.filters:
-            if not fltr.filter(bitext):
-                self.suppress_count += 1
-                return
-
-        if bool(self.tokenizers):
-            for lang, text in list(bitext.items()):
-                tokenizer = self.tokenizers.get(lang, FastTokenizer(lang))
-                ### modified: our tokenizers return tokens
-                bitext['tok.' + lang] = ' '.join(tokenizer.tokenize(text))
-
-        for lang in bitext.keys():
-            self.output.init(lang)
-
-        for lang, text in bitext.items():
-            self.output.write(lang, text)
-
-        self.output_lines += 1
-
-
 ############### Tokenizers ################
 
-
-class BaseSequenceTokenizer(Tokenizer):
+class BaseSequenceTokenizer(object):
     def __init__(self, lang):
-        super(BaseSequenceTokenizer, self).__init__(lang.lower())
-        self.lang = lang
+        self.lang = lang.lower()
         self.only_tokenize = True
         self.type = "standard"
+
+    def _tokenize(self, text):
+        '''Override this to implement the actual tokenization: Take string,
+                return list of tokens.'''
+        raise NotImplementedError
 
     def tokenize(self, sequence):
         if self.lang == "en":
@@ -346,14 +304,8 @@ def raw_preprocess(parser):
         if len(files) >= 2:
             print("TMX file already preprocessd!")
         else:
-            ### This conversion uses standard tokenizers, which splits sentences on spaces and punctuation, this is very fast
-            converter = TMXConverter(output=FileOutput(output_file_path))
-            ### tokenization by default with spacy, if spacy not available use standard tokenizer by tmx2corp
-           # src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer(
-            #    "de", "w", spacy_pretok=False)  # spacy is used
-            #tokenizers = [src_tokenizer, trg_tokenizer]
-            #converter.add_tokenizers(tokenizers)
-            #converter.add_tokenizers()
+            ### convert tmx to plain texts - no tokenization is performed
+            converter = Converter(output=FileOutput(output_file_path))
             converter.convert([COMPLETE_PATH])
             print("Converted lines:", converter.output_lines)
 
@@ -367,24 +319,24 @@ def raw_preprocess(parser):
 
         ### tokenize lines ####
 
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer(   "de", "w", spacy_pretok=False)  # spacy is used
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer("de", "w", spacy_pretok=False)  # spacy is used
         src_logger = Logger(output_file_path, file_name="bitext.tok.en")
         trg_logger = Logger(output_file_path, file_name="bitext.tok.{}".format(lang_code))
 
         temp_src_toks, temp_trg_toks = [], []
 
-        with src_tokenizer.nlp.disable_pipes('tagger', 'parser', 'ner'):
+        with src_tokenizer.nlp.disable_pipes('ner'):
             for i, doc in enumerate(src_tokenizer.nlp.pipe(src_lines, batch_size=1000)):
                 tok_doc = ' '.join([tok.text for tok in doc])
                 temp_src_toks.append(tok_doc)
-                src_logger.log(tok_doc, stdout=True if i % 10000 ==0 else False)
+                src_logger.log(tok_doc, stdout=True if i % 100000 ==0 else False)
 
 
-        with trg_tokenizer.nlp.disable_pipes('tagger', 'parser', 'ner'):
-            for i, doc in enumerate(trg_tokenizer.nlp.pipe(src_lines, batch_size=1000)):
+        with trg_tokenizer.nlp.disable_pipes('ner'):
+            for i, doc in enumerate(trg_tokenizer.nlp.pipe(trg_lines, batch_size=1000)):
                 tok_doc = ' '.join([tok.text for tok in doc])
                 temp_trg_toks.append(tok_doc)
-                trg_logger.log(tok_doc, stdout=True if i % 10000 == 0 else False)
+                trg_logger.log(tok_doc, stdout=True if i % 100000 == 0 else False)
 
         if max_len > 0:
             files = ['.'.join(file.split(".")[:2]) for file in os.listdir(STORE_PATH) if

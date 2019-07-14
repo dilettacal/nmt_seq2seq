@@ -1,7 +1,7 @@
 This is the original README file as it has been downloaded on 2019-07-10.
 At this date, the code is distributed under MIT license.
 
-Please refer to the original repository to see original code:
+This repo includes some parts of the original code available at:
 https://github.com/amake/tmx2corpus
 
 TMX2Corpus

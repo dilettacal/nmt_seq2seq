@@ -1,4 +1,29 @@
 '''
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Aaron Madlon-Kay
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Script description:
+
 A script to convert TMXs into parallel corpuses for machine
 translation (e.g. Moses: http://www.statmt.org/moses/) training.
 
@@ -9,19 +34,18 @@ To perform tokenization or to filter the output, use the convert() method
 with subclasses of the Tokenizer or Filter objects.
 @author: aaron.madlon-kay
 
+#########################################
+
 Modifications by: Diletta Calussi
 
-Please check original version at: https://github.com/amake/tmx2corpus
+Oriignal code: https://github.com/amake/tmx2corpus
 
 '''
 
 from __future__ import print_function
-import argparse
-import sys
 import os
 import codecs
 import logging
-from .tokenizer import DEFAULT_TOKENIZER, PyEnTokenizer
 from xml.etree import ElementTree
 
 try:
@@ -70,9 +94,15 @@ class BufferOutput(object):
 
 
 class Converter(object):
+    """
+    This object converts a bitext to plain text.
+    Slightly modified from the original version.
+    In this version following has been removed:
+    - filters
+    - tokenizers
+
+    """
     def __init__(self, output):
-        self.tokenizers = {}
-        self.filters = []
         self.suppress_count = 0
         self.output = output
         self.output_lines = 0
@@ -82,14 +112,6 @@ class Converter(object):
 
     def __exit__(self, type, value, traceback):
         self.output.cleanup()
-
-    def add_tokenizers(self, tokenizers):
-        for tokenizer in tokenizers:
-            self.tokenizers[tokenizer.lang] = tokenizer
-
-    def add_filter(self, bitext_filter):
-        if bitext_filter is not None:
-            self.filters.append(bitext_filter)
 
     def convert(self, files):
         self.suppress_count = 0
@@ -103,14 +125,6 @@ class Converter(object):
             logging.info('Suppressed %d pairs', self.suppress_count)
 
     def __output(self, bitext):
-        for fltr in self.filters:
-            if not fltr.filter(bitext):
-                self.suppress_count += 1
-                return
-
-        for lang, text in list(bitext.items()):
-            tokenizer = self.tokenizers.get(lang, DEFAULT_TOKENIZER)
-            bitext['tok.' + lang] = tokenizer.tokenize(text)
 
         for lang in bitext.keys():
             self.output.init(lang)
@@ -193,7 +207,15 @@ def normalize_lang(lang):
     return result
 
 
-def convert(paths, tokenizers=[], bitext_filter=None, output=None):
+def convert(paths,output=None):
+    """
+    Converts tmx files from the given paths
+    Slightly modified from the original version:
+    - Filters and Tokenizers removed
+    :param paths:
+    :param output:
+    :return:
+    """
     files = set()
     for path in sorted(set(os.path.abspath(p) for p in paths)):
         if os.path.isdir(path):
@@ -204,8 +226,6 @@ def convert(paths, tokenizers=[], bitext_filter=None, output=None):
             files.add(path)
     if files:
         with Converter(output or FileOutput()) as converter:
-            converter.add_tokenizers(tokenizers)
-            converter.add_filter(bitext_filter)
             converter.convert(sorted(files))
     else:
         logging.error('Please specify input files or paths.')
@@ -214,29 +234,28 @@ def convert(paths, tokenizers=[], bitext_filter=None, output=None):
 
 
 
-############# Main not needed ##########
-## modified from original version (script is executable)
+#### Removed main
 
-"""
-def main():
-    parser = argparse.ArgumentParser(description='Convert TMX files to '
-                                     'flat corpus files')
-    parser.add_argument('--verbose', '-v', action='count', default=0)
-    parser.add_argument('path', nargs='+')
-    args = parser.parse_args()
-
-    levels = [logging.WARNING, logging.INFO, logging.DEBUG]
-    level = levels[min(len(levels) - 1, args.verbose)]
-    logging.getLogger().setLevel(level)
-
-   # return convert(args.path, tokenizers=[PyJaTokenizer()])
-    return convert(args.path, tokenizers=[PyEnTokenizer()])
-"""
-
-
-
-"""
-if __name__ == '__main__':
-    sys.exit(main())
-
-"""
+def glom_urls(tokens):
+    result = []
+    in_url = False
+    url = None
+    tokens.reverse()
+    while len(tokens):
+        tok = tokens.pop()
+        if in_url:
+            if tok[0] == '<' or tok[0] > u'\u007F':
+                result.append(url)
+                result.append(tok)
+                in_url = False
+            else:
+                url += tok
+                if not len(tokens):
+                    result.append(url)
+        else:
+            if tok in ('://', '@'):
+                url = (result.pop() if len(result) else '') + tok
+                in_url = True
+            else:
+                result.append(tok)
+    return result
