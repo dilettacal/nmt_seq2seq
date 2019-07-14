@@ -60,7 +60,7 @@ def experiment_parser():
     parser.add_argument('--val', default=20000, type=int, help="Number of validation examples")
     parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
     parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
-    parser.add_argument('--tok', default="clean", type=str, help="tok files or clean files")
+    parser.add_argument('--tok', default="tok", type=str, help="tok files or clean files")
     parser.add_argument('--min', type=int, default=5,
                         help="Minimal word frequency. If min_freq < 0, then min_freq is set to default value")
     parser.add_argument('--tied', default="False", type=str2bool,
