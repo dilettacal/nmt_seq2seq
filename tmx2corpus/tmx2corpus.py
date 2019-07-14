@@ -17,7 +17,7 @@ import sys
 import os
 import codecs
 import logging
-from tokenizer import DEFAULT_TOKENIZER, PyJaTokenizer
+from .tokenizer import DEFAULT_TOKENIZER
 from xml.etree import ElementTree
 
 try:

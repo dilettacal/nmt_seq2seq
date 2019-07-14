@@ -9,7 +9,10 @@ import sys
 import os
 import re
 
-import tinysegmenter
+try:
+    import tinysegmenter
+except ModuleNotFoundError as e:
+    pass
 
 BOUNDARY_REGEX = re.compile(r'\b|\Z')
 TAG_REGEX = re.compile(r'<[^>]+>')
@@ -33,13 +36,16 @@ return list of tokens.'''
         raise NotImplementedError
 
 
-class PyJaTokenizer(Tokenizer):
-    def __init__(self):
-        super(PyJaTokenizer, self).__init__('ja')
-        self.ts = tinysegmenter.TinySegmenter()
+try:
+    class PyJaTokenizer(Tokenizer):
+        def __init__(self):
+            super(PyJaTokenizer, self).__init__('ja')
+            self.ts = tinysegmenter.TinySegmenter()
 
-    def _tokenize(self, text):
-        return self.ts.tokenize(text)
+        def _tokenize(self, text):
+            return self.ts.tokenize(text)
+except ModuleNotFoundError or Exception:
+    pass
 
 
 class PyEnTokenizer(Tokenizer):
