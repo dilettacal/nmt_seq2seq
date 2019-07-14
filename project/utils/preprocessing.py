@@ -1,4 +1,5 @@
 import abc
+import logging
 import os
 import random
 import string
@@ -25,8 +26,9 @@ BOUNDARY_REGEX = re.compile(r'\b|\Z')
 #### TMXTokenizer and TMXConverter are generic wrappers for the tmx2corpus dependency ####
 
 
-class BaseSequenceTokenizer(object):
+class BaseSequenceTokenizer(Tokenizer):
     def __init__(self, lang):
+        super(BaseSequenceTokenizer, self).__init__(lang.lower())
         self.lang = lang
         self.only_tokenize = True
         self.type = "standard"
@@ -57,30 +59,11 @@ class BaseSequenceTokenizer(object):
         text = cleanup_digits(text)
         return text
 
-class TMXTokenizer(Tokenizer):
-    def __init__(self, lang):
-        # self.custom_tokenizer = custom_tokenizer
-        super(TMXTokenizer, self).__init__(lang.lower())
-
-    def _tokenize(self, text):
-        tokens = []
-        i = 0
-        for m in BOUNDARY_REGEX.finditer(text):
-            tokens.append(text[i:m.start()])
-            i = m.end()
-        ### The tokenization may include too much spaces
-        tokens = ' '.join(tokens)
-        tokens = tokens.strip()
-        ### remove possible duplicate spaces
-        tokens = re.sub(' +', ' ', tokens)
-        return tokens.split(" ")
-
 
 class TMXConverter(Converter):
-    def __init__(self, output, logger):
+    def __init__(self, output):
         super().__init__(output)
         self.tokenizers = {}
-        self.logger = logger
 
     def convert(self, files):
         self.suppress_count = 0
@@ -89,9 +72,9 @@ class TMXConverter(Converter):
             print('Extracting %s' % os.path.basename(tmx))
             for bitext in extract_tmx(tmx):
                 self.__output(bitext)
-        self.logger.log('Output %d pairs', self.output_lines)
+        logging.info('Output %d pairs', self.output_lines)
         if self.suppress_count:
-            self.logger.log('Suppressed %d pairs', self.suppress_count)
+            logging.info('Suppressed %d pairs', self.suppress_count)
 
     def __output(self, bitext):
         for fltr in self.filters:
@@ -141,6 +124,9 @@ class SpacyTokenizer(BaseSequenceTokenizer):
             tokens = [token if token.isupper() else token.lower() for token in tokens]
             tokens = self._clean_text(tokens)
         return tokens
+
+
+    ##### this could improve tokenization, not used in the project
 
     def get_entities(self, doc):
         text_ents = [(str(ent), "PERSON") for ent in doc.ents if ent.label_ in ["PER", "PERSON"]]
@@ -333,8 +319,6 @@ def preprocess_step(parser):
 
     STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), corpus_name, lang_code, "splits", str(max_len))
     os.makedirs(STORE_PATH, exist_ok=True)
-
-    ratio = 0.10
 
     assert file_type in ["tmx", "txt"]
 
