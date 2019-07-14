@@ -4,60 +4,27 @@ import os
 import random
 import string
 import time
-from datetime import datetime
 import re
 
 from project.utils.data.europarl import maybe_download_and_extract_europarl
 from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from project.utils.utils import convert
 from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED, DATA_DIR_RAW
-from tmx2corpus.tokenizer import Tokenizer
-from tmx2corpus.tmx2corpus import Converter, FileOutput, extract_tmx
-
+from project.utils.tmx2corpus.tokenizer import Tokenizer, glom_urls
+from project.utils.tmx2corpus.tmx2corpus import Converter, FileOutput, extract_tmx
+from nltk.tokenize import RegexpTokenizer, PunktSentenceTokenizer
 
 ### Regex ###
-space_before_punct = r'\s([?.!"](?:\s|$))'
+space_before_punct = r'\s([?.!\'"](?:\s|$))'
 before_apos = r"\s+(['])"
 after_apos = r"(['])\s+([\w])"
+BOUNDARY_REGEX = re.compile(r'\b|\Z')#
+TAG_REGEX = re.compile(r'<[^>]+>')
 
-### from tmx2corpus "tokenizer.py"
-BOUNDARY_REGEX = re.compile(r'\b|\Z')
+PATTERN = r'\W+'
 
-#### TMXTokenizer and TMXConverter are generic wrappers for the tmx2corpus dependency ####
+############# Raw file convertern ####
 
-
-class BaseSequenceTokenizer(Tokenizer):
-    def __init__(self, lang):
-        super(BaseSequenceTokenizer, self).__init__(lang.lower())
-        self.lang = lang
-        self.only_tokenize = True
-        self.type = "standard"
-
-    def tokenize(self, text):
-        return self._custom_tokenize(text)
-
-    @abc.abstractmethod
-    def _custom_tokenize(self, text):
-        pass
-
-    def set_mode(self, only_tokenize=True):
-        self.only_tokenize = only_tokenize
-
-    def set_type(self, type="standard"):
-        self.type = type
-
-    def _clean_text(self, text):
-        if isinstance(text, list):
-            text = ' '.join(text)
-        text = re.sub(space_before_punct, r"\1", text)
-        text = re.sub(before_apos, r"\1", text)
-        text = re.sub(after_apos, r"\1\2", text)
-        if self.lang == "en":
-            text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
-        elif self.lang == "de":
-            text = expand_contraction(text, UMLAUT_MAP)
-        text = cleanup_digits(text)
-        return text
 
 
 class TMXConverter(Converter):
@@ -84,7 +51,8 @@ class TMXConverter(Converter):
 
         for lang, text in list(bitext.items()):
             tokenizer = self.tokenizers.get(lang, FastTokenizer(lang))
-            bitext['tok.' + lang] = tokenizer.tokenize(text)
+            ### modified: our tokenizers return tokens
+            bitext['tok.' + lang] = ' '.join(tokenizer.tokenize(text))
 
         for lang in bitext.keys():
             self.output.init(lang)
@@ -95,8 +63,43 @@ class TMXConverter(Converter):
         self.output_lines += 1
 
 
-########## Project custom tokenizers ###########
+############### Tokenizers ################
 
+
+class BaseSequenceTokenizer(Tokenizer):
+    def __init__(self, lang):
+        super(BaseSequenceTokenizer, self).__init__(lang.lower())
+        self.lang = lang
+        self.only_tokenize = True
+        self.type = "standard"
+
+    def tokenize(self, sequence):
+        tokens = self.sequence_tokenize(sequence)
+       # return ' '.join(tokens)
+        return tokens
+
+    def sequence_tokenize(self, sequence):
+        return self._tokenize(sequence)
+
+
+    def set_mode(self, only_tokenize=True):
+        self.only_tokenize = only_tokenize
+
+    def set_type(self, type="standard"):
+        self.type = type
+
+    def _clean_text(self, text):
+        if isinstance(text, list):
+            text = ' '.join(text)
+        text = re.sub(space_before_punct, r"\1", text)
+      #  text = re.sub(before_apos, r"\1", text)
+        text = re.sub(after_apos, r"\1\2", text)
+        if self.lang == "en":
+            text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
+        elif self.lang == "de":
+            text = expand_contraction(text, UMLAUT_MAP)
+       # text = cleanup_digits(text)
+        return text
 
 class CharBasedTokenizer(BaseSequenceTokenizer):
 
@@ -104,7 +107,10 @@ class CharBasedTokenizer(BaseSequenceTokenizer):
         super(CharBasedTokenizer, self).__init__(lang)
         self.type = "char"
 
-    def _custom_tokenize(self, text):
+    def tokenize(self, sequence):
+        return self._tokenize(sequence)
+
+    def _tokenize(self, text):
         return list(text)
 
 class SpacyTokenizer(BaseSequenceTokenizer):
@@ -113,16 +119,21 @@ class SpacyTokenizer(BaseSequenceTokenizer):
         super(SpacyTokenizer, self).__init__(lang)
         self.type = "spacy"
 
-    def _custom_tokenize(self, text):
-        doc = self.nlp(text)
+    def _tokenize(self, sequence):
+        sequence = self._clean_text(sequence)
         if self.only_tokenize:
+            doc = self.nlp(sequence)
             return [tok.text for tok in doc]
         else:
+            ### this takes really long ###
+            sequence = cleanup_digits(sequence)
+            doc = self.nlp(sequence)
             ents = self.get_entities(doc)
             tokens = [tok.text for tok in doc]
             tokens = self.replace_text(tokens, ents)
             tokens = [token if token.isupper() else token.lower() for token in tokens]
             tokens = self._clean_text(tokens)
+            tokens = tokens.split(" ")
         return tokens
 
 
@@ -146,22 +157,29 @@ class SpacyTokenizer(BaseSequenceTokenizer):
         return text.split(" ") if isinstance(text, str) else text
 
 class FastTokenizer(BaseSequenceTokenizer):
-    def _custom_tokenize(self, text):
+    def __init__(self, lang):
+        super(BaseSequenceTokenizer, self).__init__(lang)
+
+    def _tokenize(self, sequence):
+
+        text = TAG_REGEX.sub('', sequence)
         #### like for the TMXTokenizer
         tokens = []
         i = 0
         for m in BOUNDARY_REGEX.finditer(text):
             tokens.append(text[i:m.start()])
             i = m.end()
-        ### The tokenization may include too much spaces
-        tokens = ' '.join(tokens)
-        tokens = tokens.strip()
-        ### remove possible duplicate spaces
-        tokens = re.sub(' +', ' ', tokens)
-        return tokens.split(" ")
+
+        if '://' in text or '@' in text:
+            tokens = glom_urls(tokens)
+        tokens = [tok for tok in tokens if not tok.strip() == '']
+        return ' '.join(tokens).split(" ")
 
 class SplitTokenizer(BaseSequenceTokenizer):
-    def _custom_tokenize(self, text):
+    def sequence_tokenize(self, sequence):
+        return self._tokenize(sequence)
+
+    def _tokenize(self, text):
         return text.split(" ")
 
 
