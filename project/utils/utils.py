@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 import time
 
 import dill
@@ -131,3 +133,9 @@ def load_embeddings(np_src_file, np_trg_file):
     else:
         raise Exception('Vectors not available to load from numpy file')
     return pretrained_src, pretraiend_trg
+
+
+### installing utils #####
+
+def install_package(package):
+    subprocess.call([sys.executable, "-m", "pip", "install", package])

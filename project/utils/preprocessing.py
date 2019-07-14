@@ -7,12 +7,22 @@ from datetime import datetime
 import re
 
 from project.utils.data.europarl import maybe_download_and_extract_europarl
-from TMX2Corpus.tokenizer import Tokenizer ## from tmx2corpus!!!!!
-from TMX2Corpus.tmx2corpus import Converter, FileOutput, extract_tmx
-
 from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
-from project.utils.utils import Logger, convert
+from project.utils.utils import convert, install_package
 from settings import DATA_DIR_PREPRO, SUPPORTED_LANGS, SEED, DATA_DIR_RAW
+
+try:
+    from tokenizer import Tokenizer ## from tmx2corpus!!!!!
+    from tmx2corpus import Converter, FileOutput, extract_tmx
+except ImportError or ModuleNotFoundError as e:
+    print("Dependency missing:", e)
+    print("Trying to install tmx2corpus...")
+    official_pkg = "git+https://github.com/amake/tmx2corpus.git"
+    install_package(official_pkg)
+    from tokenizer import Tokenizer  ## from tmx2corpus!!!!!
+    from tmx2corpus import Converter, FileOutput, extract_tmx
+
+
 
 ### Regex ###
 space_before_punct = r'\s([?.!"](?:\s|$))'

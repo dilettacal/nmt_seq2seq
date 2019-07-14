@@ -9,4 +9,4 @@ pip install nltk
 pip install numpy pandas matplotlib
 
 ### Required to preprocess the tmx file ####
-pip install git+https://github.com/amake/tmx2corpus.git
+pip install git+https://github.com/dltcls/tmx2corpus.git
