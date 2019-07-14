@@ -74,13 +74,13 @@ class BaseSequenceTokenizer(Tokenizer):
         self.type = "standard"
 
     def tokenize(self, sequence):
-        tokens = self.sequence_tokenize(sequence)
+        if self.lang == "en":
+            sequence = expand_contraction(sequence, ENG_CONTRACTIONS_MAP)
+        elif self.lang == "de":
+            sequence = expand_contraction(sequence, UMLAUT_MAP)
+        tokens = self._tokenize(sequence)
        # return ' '.join(tokens)
         return tokens
-
-    def sequence_tokenize(self, sequence):
-        return self._tokenize(sequence)
-
 
     def set_mode(self, only_tokenize=True):
         self.only_tokenize = only_tokenize
@@ -120,7 +120,6 @@ class SpacyTokenizer(BaseSequenceTokenizer):
         self.type = "spacy"
 
     def _tokenize(self, sequence):
-        sequence = self._clean_text(sequence)
         if self.only_tokenize:
             doc = self.nlp(sequence)
             return [tok.text for tok in doc]
@@ -161,25 +160,22 @@ class FastTokenizer(BaseSequenceTokenizer):
         super(BaseSequenceTokenizer, self).__init__(lang)
 
     def _tokenize(self, sequence):
-
         text = TAG_REGEX.sub('', sequence)
-        #### like for the TMXTokenizer
+        text = re.sub(r"\s\s+", " ", text)
         tokens = []
         i = 0
         for m in BOUNDARY_REGEX.finditer(text):
             tokens.append(text[i:m.start()])
             i = m.end()
-
         if '://' in text or '@' in text:
             tokens = glom_urls(tokens)
         tokens = [tok for tok in tokens if not tok.strip() == '']
         return ' '.join(tokens).split(" ")
 
 class SplitTokenizer(BaseSequenceTokenizer):
-    def sequence_tokenize(self, sequence):
-        return self._tokenize(sequence)
 
     def _tokenize(self, text):
+        text = re.sub(r"\s\s+", " ", text)
         return text.split(" ")
 
 
@@ -323,9 +319,9 @@ def persist_txt(lines, store_path, file_name, exts):
 
 
 #### raw file preprocessing
-def preprocess_step(parser):
+def raw_preprocess(parser):
     #### preprocessing pipeline for tmx files
-    ### download the files
+    ### download the files #####
     maybe_download_and_extract_europarl(language_code=parser.lang_code, tmx=True)
     corpus_name = parser.corpus
     lang_code = parser.lang_code
@@ -351,10 +347,11 @@ def preprocess_step(parser):
         else:
             ### This conversion uses standard tokenizers, which splits sentences on spaces and punctuation, this is very fast
             converter = TMXConverter(output=FileOutput(output_file_path))
-          #  src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer(
-       #         "de", "w", spacy_pretok=False)  # spacy is used
-        #    tokenizers = [src_tokenizer, trg_tokenizer]
-         #   converter.add_tokenizers(tokenizers)
+            ### tokenization by default with spacy, if spacy not available use standard tokenizer by tmx2corp
+            src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer(
+                "de", "w", spacy_pretok=False)  # spacy is used
+            tokenizers = [src_tokenizer, trg_tokenizer]
+            converter.add_tokenizers(tokenizers)
             #converter.add_tokenizers()
             converter.convert([COMPLETE_PATH])
             print("Converted lines:", converter.output_lines)
