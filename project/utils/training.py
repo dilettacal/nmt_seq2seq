@@ -344,7 +344,7 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False):
             predictions = model.predict(src_bs1, beam_size=1)
             predictions_beam = model.predict(src_bs1, beam_size=2)
             predictions_beam5 = model.predict(src_bs1, beam_size=5)
-            predictions_beam12 = model.predict(src_bs1, beam_size=10)
+            predictions_beam10 = model.predict(src_bs1, beam_size=10)
 
             #model.train()  # test mode
             #probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
@@ -353,7 +353,7 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False):
             beam1 = ' '.join(TRG.vocab.itos[x] for x in predictions)
             beam2 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam)
             beam5 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam5)
-            beam10 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam12)
+            beam10 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam10)
 
             logger.log('Source: {}'.format(src_sent), stdout=False)
             logger.log('Target: {}'.format(trg_sent), stdout=False)
@@ -367,11 +367,19 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False):
                 all_src.append(src_sent)
                 all_trg.append(trg_sent)
                 all_beam1.append(beam1)
+                all_beam2.append(beam2)
                 all_beam5.append(beam5)
                 all_beam10.append(beam10)
         logger.log("*"*100, stdout=False)
     if persist:
         logger.log("Total checks: {}".format(len(all_trg)))
+        print(len(all_src))
+        print(len(all_trg))
+        print(len(all_beam1))
+        print(len(all_beam2))
+        print(len(all_beam5))
+        print(len(all_beam10))
+
         final_translations = dict({"SRC": all_src, "TRG":all_trg, "BEAM1": all_beam1, "BEAM2":all_beam2, "BEAM5": all_beam5, "BEAM10": all_beam10})
         filename = os.path.join(logger.path, "final.csv")
         df = pd.DataFrame(final_translations, columns=final_translations.keys())
@@ -388,12 +396,12 @@ def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
     sent = torch.LongTensor([sent_indices])
     sent = sent.to(device)
     sent = sent.view(-1,1) # reshape to sl x bs
-    logger.log('Source: ' + ' '.join([SRC.vocab.itos[index] for index in sent_indices]))
+    logger.log('SRC  >>> ' + ' '.join([SRC.vocab.itos[index] for index in sent_indices]))
     # Predict five sentences with beam search
     pred = model.predict(sent, 5) # returns list of 5 lists of word indices
     pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
     out = ' '.join(TRG.vocab.itos[idx] for idx in pred)
-    logger.log(out)
+    logger.log('PRED >>> ' + out)
     return
 
 
