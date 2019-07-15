@@ -14,7 +14,7 @@ import math
 
 from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
-from project.utils.utils import convert, AverageMeter
+from project.utils.utils import convert, AverageMeter, Logger
 from settings import DEFAULT_DEVICE, SEED
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
@@ -35,23 +35,16 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
     check_transl_every = check_translations_every
 
+    mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
+    total_samples = [batch for i, batch in enumerate(samples_iter)]
+
     for epoch in range(epochs):
         start_time = time.time()
-        if samples_iter:
-            if epoch == (epochs-1):
-                samples = [batch for i, batch in enumerate(samples_iter)]
-            else:
-                samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
-        else:
-            ### samples are none if model is trained with e.g. iwlst corpus
-            samples=None
 
         if epoch % check_transl_every == 0:
 
-            tr_logger.log("Translation check. Epoch {}".format(epoch+1))
-            avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
-                                   optimizer=optimizer, device=device, logger=logger,
-                                   SRC=SRC, TRG=TRG, samples=samples, tr_logger=tr_logger, teacher=teacher)
+            avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
+                                   device=device)
 
             train_losses.append(avg_train_loss)
             train_ppl = math.exp(avg_train_loss)
@@ -71,6 +64,12 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
                 logger.save_model(model.state_dict())
                 logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
 
+            #### checking translations
+            if samples_iter:
+                tr_logger.log("Translation check. Epoch {}".format(epoch + 1))
+                check_translation(mini_samples, model, SRC, TRG, tr_logger)
+
+
             end_epoch_time = time.time()
 
             total_epoch = convert(end_epoch_time - start_time)
@@ -82,9 +81,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
 
         else:
-            avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion,
-                                   optimizer=optimizer, device=device, logger=logger,
-                                   SRC=SRC, TRG=TRG, samples=None, tr_logger=tr_logger, teacher=teacher)
+            avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
+                                   device=device)
 
             train_losses.append(avg_train_loss)
             train_ppl = math.exp(avg_train_loss)
@@ -119,7 +117,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
 
 
-def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logger=None, samples = None, tr_logger=None, teacher=False):
+def train(train_iter, model, criterion, optimizer, device="cuda"):
 
     model.train()
     losses = AverageMeter()
@@ -127,7 +125,6 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
 
     for i, batch in enumerate(train_iter):
 
-        condition = i == len(train_iter)-1
         #print(device)
         # Use GPU
         src = batch.src.to(device)
@@ -137,13 +134,7 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
         model.zero_grad()
         scores = model(src, trg) #teacher forcing during training.
 
-        if samples:
-            raw_scores = scores.clone()
-        else: raw_scores = None
-        # Remove <s> from trg and </s> from scores
-        if teacher:
-            scores = scores[1:] # must be so, because during dec unrolling, we use SOS as the start token
-        else: scores = scores[:-1]
+        scores = scores[:-1]
         trg = trg[1:]
 
         # Reshape for loss function
@@ -159,9 +150,6 @@ def train(train_iter, model, criterion, optimizer, SRC, TRG, device="cuda", logg
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         optimizer.step()
-        if condition:
-            check_translation(samples, raw_scores, model,SRC=SRC, TRG=TRG, logger=tr_logger)
-
     return losses.avg
 
 
@@ -324,13 +312,12 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
     # print("BLEU", batch_bleu)
     return [nlkt_bleu, perl_bleu]
 
-def check_translation(samples, scores, model, SRC, TRG, logger):
+def check_translation(samples, model, SRC, TRG, logger):
     """
     Readapted from Luke Melas Machine-Translation project:
     https://github.com/lukemelas/Machine-Translation/blob/master/training/train.py#L50
     :param src:
     :param trg:
-    :param scores:
     :param model:
     :param SRC:
     :param TRG:
@@ -354,13 +341,13 @@ def check_translation(samples, scores, model, SRC, TRG, logger):
             predictions_beam5 = model.predict(src_bs1, beam_size=5)
             predictions_beam12 = model.predict(src_bs1, beam_size=12)
 
-            model.train()  # test mode
-            probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
+            #model.train()  # test mode
+            #probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
             src_sent = ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
 
             logger.log('Source: {}'.format(src_sent), stdout=False)
             logger.log('Target: {}'.format(' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)), stdout=False)
-            logger.log('Training Pred (Greedy): {}'.format(' '.join(TRG.vocab.itos[x] for x in maxwords)), stdout=False)
+           # logger.log('Training Pred (Greedy): {}'.format(' '.join(TRG.vocab.itos[x] for x in maxwords)), stdout=False)
             logger.log('Validation Greedy Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions)),stdout=False)
             logger.log('Validation Beam (2) Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions_beam)),stdout=False)
             logger.log('Validation Beam (5) Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions_beam5)),stdout=False)
@@ -381,10 +368,6 @@ def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
     logger.log('Source: ' + ' '.join([SRC.vocab.itos[index] for index in sent_indices]))
     # Predict five sentences with beam search
     pred = model.predict(sent, 5) # returns list of 5 lists of word indices
-    #for i, pred in enumerate(preds): # loop over top 5 sentences
-     #   pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
-      #  out = str(i+1) + ': ' + ' '.join([TRG.vocab.itos[index] for index in pred])
-       # logger.log(out)
     pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
     out = ' '.join(TRG.vocab.itos[idx] for idx in pred)
     logger.log(out)

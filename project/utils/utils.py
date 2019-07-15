@@ -62,22 +62,11 @@ class Logger():
           #  print(keys)
             labels = [keys[0], keys[1]]
             values = list(metric.values())
-            assert len(values) == 2 # one array for train, one for validation
-            if len(values[0]) != len(values[1]):
-                if(len(values[0])) > len(values[1]):
-                    idx = np.arange(0, len(values[1]))*log_every
-                    x1 = np.take(values[0], idx)
-                    x2 = np.linspace(0, 1, len(values[1]))
-                else:
-                    idx = np.arange(0, len(values[0]))*log_every
-                    x2 = np.take(values[1], idx)
-                    x1 = np.linspace(0, 1, len(values[0]))
-            else:
-                x1 = np.linspace(0, 1, len(values[0]))
-                x2 = np.linspace(0, 1, len(values[1]))
-            #x1 = np.arange(len(values[0]))
-            plt.plot(x1, metric.get(labels[0]), color="r", label = labels[0])
-            plt.plot(x2, metric.get(labels[1]), color="b", label = labels[1])
+            assert len(values) == 2  # one array for train, one for validation
+            assert len(values[0]) == len(values[1])
+            x = np.arange(len(values[0]))
+            plt.plot(x, metric.get(labels[0]), color="r", label=labels[0])
+            plt.plot(x, metric.get(labels[1]), color="b", label=labels[1])
             plt.legend(loc='upper right')
             plt.savefig(save_path, format="png", dpi=300)
             plt.close()

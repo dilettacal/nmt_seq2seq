@@ -13,7 +13,7 @@ from project.utils.experiment import Experiment
 from project.model.models import count_parameters, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.vocabulary import get_vocabularies_iterators, print_data_info
-from project.utils.training import train_model, beam_predict
+from project.utils.training import train_model, beam_predict, check_translation
 from project.utils.utils import convert, Logger, Metric, load_embeddings
 from settings import MODEL_STORE
 
@@ -176,22 +176,20 @@ def main():
                                  epochs=experiment.epochs, logger=logger, device=experiment.get_device(),
                                  tr_logger=translation_logger, samples_iter=samples_iter, check_translations_every=log_every)
 
-    ### metrics metrics.({"loss": train_losses, "ppl": train_ppls})
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
-  # perl_bleu_metric = Metric("bleu_perl", list(bleus.values())[1])
     train_loss = Metric("train_loss", list(metrics.values())[0])
     train_perpl = Metric("train_ppl", list(metrics.values())[1])
-    #metric, title, ylabel, file
-    #title="Validation nltk BLEU/Epochs", ylabel="BLEU", file="nltk_bleu"
-   # logger.plot(dict({"Train PPL": list(metrics.values())[1], "BLEU": list(bleus.values())[0]}),
-    #            title="Training PPL/BLEU over the epochs", ylabel="PPL/BLEU",
-     #           file="train_metrics", log_every=log_every)
-
 
     logger.pickle_obj(nltk_bleu_metric.get_dict(), "nltk_bleus")
-   # logger.pickle_obj(perl_bleu_metric.get_dict(), "perl_bleus")
     logger.pickle_obj(train_loss.get_dict(), "train_losses")
     logger.pickle_obj(train_perpl.get_dict(), "train_ppl")
+
+    ### plot ppl and bleu + train and bleu
+    ppl_bleus = dict({"ppl": train_perpl.values, "bleu": nltk_bleu_metric.values})
+    train_bleus = dict({"train": train_loss.values, "bleu": nltk_bleu_metric.values})
+
+    logger.plot(ppl_bleus, title="Train PPL vs. Val BLEU", ylabel="PPL/BLEU", file="ppl_bleu")
+    logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="ppl_bleu")
 
 
 
@@ -227,6 +225,11 @@ def main():
 
     logger.log('Finished in {}'.format(convert(time.time() - start_time)))
 
+
+    ########## testing model against all samples translations
+
+    final_translation = Logger(file_name="final_translations", path=experiment_path)
+    check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter)
 
     return
 
