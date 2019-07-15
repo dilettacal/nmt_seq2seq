@@ -107,11 +107,20 @@ class Seq2Seq(nn.Module):
 
         # Attend
         context = self.attention(encoder_outputs, decoder_outputs) #seq_len, bs, hid_dim
+        print("Shapes:", context.shape, decoder_outputs.shape)
+       # print("Context:", context)
+        #print("Decoder out:", decoder_outputs)
         out_cat = torch.cat((decoder_outputs, context), dim=2)
+        #print("Concat:", out_cat)
+
         # Predict (returns probabilities)
         x = self.linear1(out_cat)
         x = self.dropout(self.tanh(x))
+       # print("Results:", x)
+        #print(x.shape)
         x = self.linear2(x) #seq_len, bs, trg_vocab_size
+        #print("Results:", x)
+        #print(x.shape)
         return x
 
 
