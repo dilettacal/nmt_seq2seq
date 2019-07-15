@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-cd ..
-
 echo "Baseline models with best parameters as baseline search + TIED"
 
 echo "0.002"

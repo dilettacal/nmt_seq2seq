@@ -373,13 +373,6 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False):
         logger.log("*"*100, stdout=False)
     if persist:
         logger.log("Total checks: {}".format(len(all_trg)))
-        print(len(all_src))
-        print(len(all_trg))
-        print(len(all_beam1))
-        print(len(all_beam2))
-        print(len(all_beam5))
-        print(len(all_beam10))
-
         final_translations = dict({"SRC": all_src, "TRG":all_trg, "BEAM1": all_beam1, "BEAM2":all_beam2, "BEAM5": all_beam5, "BEAM10": all_beam10})
         filename = os.path.join(logger.path, "final.csv")
         df = pd.DataFrame(final_translations, columns=final_translations.keys())

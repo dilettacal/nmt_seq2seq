@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-cd ..
-
 echo "Baseline model based on Sutskever"
 echo "Fixed params: 300 embedding, hidden, patience:10"
 echo "Language combination: German>English, dataset: Europarl"
