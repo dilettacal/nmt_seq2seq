@@ -27,6 +27,8 @@ VALID_MODELS = ["custom", "s"]
 
 SEED = 42
 
+VALIDATION_BEAM = 5
+
 
 #### Suffixes ####
 

@@ -18,10 +18,9 @@ from project.utils.experiment import Experiment
 from project.utils.training import predict_from_input
 from project.utils.utils import load_embeddings, Logger
 from project.utils.vocabulary import get_vocabularies_iterators
-from settings import RESULTS_DIR, ROOT
+from settings import RESULTS_DIR, ROOT, DATA_DIR
 
-
-path_to_exp = os.path.join(RESULTS_DIR, "baseline", "de_en/s/2/uni/2019-07-07-16-27-12/")
+path_to_exp = os.path.join(RESULTS_DIR, "de_en/s/2/uni/2019-07-15-12-13-12/")
 
 path_to_model = os.path.join(path_to_exp, "model.pkl")
 print(path_to_model)
@@ -51,8 +50,6 @@ logger.pickle_obj(TRG, "trg")
 
 """
 
-
-
 SRC_loaded = torch.load(os.path.join(path_to_exp, "src.pkl"))
 TRG_loaded = torch.load(os.path.join(path_to_exp, "trg.pkl"))
 
@@ -64,15 +61,8 @@ print(len(SRC_loaded.vocab))
 
 print(len(TRG_loaded.vocab))
 
-
-Sent = "Hallo, der Mann will arbeiten in der EU"
-
-tokenized = SRC_loaded.tokenize(Sent)
-print(tokenized)
-idx = [SRC_loaded.vocab.stoi[word] if word in SRC_loaded.vocab.stoi else SRC_loaded.vocab.stoi['<unk>'] for word in tokenized]
-
-print(idx)
-
+samples_sentences = open(os.path.join(DATA_DIR, "preprocessed", "europarl", "de", "splits", "30", "samples.tok.de"), encoding="utf-8", mode="r").readlines()
+print("Total sentences:", len(samples_sentences))
 
 ### loading model
 
@@ -85,7 +75,14 @@ model = model.to(experiment.get_device())
 
 print(experiment.__dict__)
 logger = Logger(path_to_exp, "live_transl.log")
-predict_from_input(input_sentence=Sent, SRC=SRC_loaded, TRG=TRG_loaded, model=model, device=experiment.get_device(), logger=logger)
+
+for sent in samples_sentences:
+    predict_from_input(input_sentence=sent, SRC=SRC_loaded, TRG=TRG_loaded, model=model, device=experiment.get_device(),
+                       logger=logger)
+
+
+
+
 
 
 

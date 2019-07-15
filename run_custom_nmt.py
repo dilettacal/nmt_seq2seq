@@ -116,7 +116,7 @@ def main():
     experiment.src_vocab_size = len(SRC.vocab)
     experiment.trg_vocab_size = len(TRG.vocab)
     data_logger = Logger(path=experiment_path, file_name="data.log")
-    translation_logger = Logger(path=experiment_path, file_name="translations.log")
+    translation_logger = Logger(path=experiment_path, file_name="train_translations.log")
 
     print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, experiment)
 
@@ -149,7 +149,7 @@ def main():
     # Create loss function and optimizer
     criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=20, verbose=True, min_lr=1e-6, cooldown=1, factor=0.25)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=20, verbose=True, min_lr=1e-6, factor=0.25)
 
 
     logger.log('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),
@@ -189,7 +189,7 @@ def main():
     train_bleus = dict({"train": train_loss.values, "bleu": nltk_bleu_metric.values})
 
     logger.plot(ppl_bleus, title="Train PPL vs. Val BLEU", ylabel="PPL/BLEU", file="ppl_bleu")
-    logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="ppl_bleu")
+    logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="loss_bleu")
 
 
 
@@ -228,8 +228,8 @@ def main():
 
     ########## testing model against all samples translations
 
-    final_translation = Logger(file_name="final_translations", path=experiment_path)
-    check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter)
+    final_translation = Logger(file_name="final_translations.log", path=experiment_path)
+    check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter, persist=True)
 
     return
 

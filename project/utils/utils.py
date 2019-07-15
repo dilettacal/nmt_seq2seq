@@ -68,7 +68,7 @@ class Logger():
             plt.plot(x, metric.get(labels[0]), color="r", label=labels[0])
             plt.plot(x, metric.get(labels[1]), color="b", label=labels[1])
             plt.legend(loc='upper right')
-            plt.savefig(save_path, format="png", dpi=300)
+            plt.savefig(save_path, format="png", dpi=500)
             plt.close()
             self.log("Plot saved: {}".format(save_path))
 
@@ -78,7 +78,7 @@ class Logger():
             plt.xlabel('epoch')
             plt.plot(metric, label=ylabel, color="b")
             plt.legend(loc='upper right')
-            plt.savefig(save_path,  format="png", dpi=300)
+            plt.savefig(save_path,  format="png", dpi=500)
             plt.close()
             self.log("Plot saved: {}".format(save_path))
 

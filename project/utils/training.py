@@ -5,7 +5,7 @@ Code inspirations:
 - Ben Trevett 2018: https://github.com/bentrevett/pytorch-seq2seq/
 
 """
-
+import os
 import time
 
 import torch
@@ -15,8 +15,10 @@ import math
 from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert, AverageMeter, Logger
-from settings import DEFAULT_DEVICE, SEED
+from settings import DEFAULT_DEVICE, SEED, VALIDATION_BEAM
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
+
+import pandas as pd
 
 import random
 random.seed(SEED)
@@ -172,8 +174,7 @@ def validate(val_iter, model, device, TRG):
 
 
             # Get model prediction (from beam search)
-            out = model.predict(src, max_len=trg.size(0),
-                                beam_size=1)  # list of ints (word indices) from greedy search
+            out = model.predict(src, max_len=trg.size(0), beam_size=VALIDATION_BEAM)  ### the beam value is the best value from the baseline study
             # print(out.size())
             ref = list(trg.data.squeeze())
             # Prepare sentence for bleu script
@@ -312,7 +313,7 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
     # print("BLEU", batch_bleu)
     return [nlkt_bleu, perl_bleu]
 
-def check_translation(samples, model, SRC, TRG, logger):
+def check_translation(samples, model, SRC, TRG, logger,persist=False):
     """
     Readapted from Luke Melas Machine-Translation project:
     https://github.com/lukemelas/Machine-Translation/blob/master/training/train.py#L50
@@ -328,6 +329,10 @@ def check_translation(samples, model, SRC, TRG, logger):
         return
     logger.log("*" * 100,stdout=False)
 
+
+    all_src, all_trg, all_beam1, all_beam2, all_beam5, all_beam10 = [],[],[],[], [],[]
+    final_translations = None
+
     for i, batch in enumerate(samples):
         logger.log("Batch {}".format(str(i)), stdout=False)
         src = batch.src.to(model.device)
@@ -339,21 +344,39 @@ def check_translation(samples, model, SRC, TRG, logger):
             predictions = model.predict(src_bs1, beam_size=1)
             predictions_beam = model.predict(src_bs1, beam_size=2)
             predictions_beam5 = model.predict(src_bs1, beam_size=5)
-            predictions_beam12 = model.predict(src_bs1, beam_size=12)
+            predictions_beam12 = model.predict(src_bs1, beam_size=10)
 
             #model.train()  # test mode
             #probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
             src_sent = ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
+            trg_sent = ' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)
+            beam1 = ' '.join(TRG.vocab.itos[x] for x in predictions)
+            beam2 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam)
+            beam5 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam5)
+            beam10 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam12)
 
             logger.log('Source: {}'.format(src_sent), stdout=False)
-            logger.log('Target: {}'.format(' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)), stdout=False)
-           # logger.log('Training Pred (Greedy): {}'.format(' '.join(TRG.vocab.itos[x] for x in maxwords)), stdout=False)
-            logger.log('Validation Greedy Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions)),stdout=False)
-            logger.log('Validation Beam (2) Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions_beam)),stdout=False)
-            logger.log('Validation Beam (5) Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions_beam5)),stdout=False)
-            logger.log('Validation Beam (12) Pred: {}'.format(' '.join(TRG.vocab.itos[x] for x in predictions_beam12)),stdout=False)
+            logger.log('Target: {}'.format(trg_sent), stdout=False)
+            logger.log('Validation Greedy Pred: {}'.format(beam1),stdout=False)
+            logger.log('Validation Beam (2) Pred: {}'.format(beam2),stdout=False)
+            logger.log('Validation Beam (5) Pred: {}'.format(beam5),stdout=False)
+            logger.log('Validation Beam (10) Pred: {}'.format(beam10),stdout=False)
             logger.log("",stdout=False)
+
+            if persist:
+                all_src.append(src_sent)
+                all_trg.append(trg_sent)
+                all_beam1.append(beam1)
+                all_beam5.append(beam5)
+                all_beam10.append(beam10)
         logger.log("*"*100, stdout=False)
+    if persist:
+        logger.log("Total checks: {}".format(len(all_trg)))
+        final_translations = dict({"SRC": all_src, "TRG":all_trg, "BEAM1": all_beam1, "BEAM2":all_beam2, "BEAM5": all_beam5, "BEAM10": all_beam10})
+        filename = os.path.join(logger.path, "final.csv")
+        df = pd.DataFrame(final_translations, columns=final_translations.keys())
+        df.to_csv(filename, sep=",", columns=final_translations.keys(), encoding="utf-8")
+
 
 
 def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
