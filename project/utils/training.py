@@ -380,22 +380,22 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False):
 
 
 
-def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda"):
+def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda", stdout=False):
 
     #### Changed from original ###
     #input_sent = input_sentence.split(' ') # sentence --> list of words
-    input_sent = SRC.tokenize(input_sentence.lower())
-    sent_indices = [SRC.vocab.stoi[word] if word in SRC.vocab.stoi else SRC.vocab.stoi[UNK_TOKEN] for word in input_sent]
+   # input_sent = SRC.tokenize(input_sentence.lower())
+    sent_indices = [SRC.vocab.stoi[word] if word in SRC.vocab.stoi else SRC.vocab.stoi[UNK_TOKEN] for word in input_sentence]
     sent = torch.LongTensor([sent_indices])
     sent = sent.to(device)
     sent = sent.view(-1,1) # reshape to sl x bs
-    logger.log('SRC  >>> ' + ' '.join([SRC.vocab.itos[index] for index in sent_indices]))
+    logger.log('SRC  >>> ' + ' '.join([SRC.vocab.itos[index] for index in sent_indices]), stdout=stdout)
     # Predict five sentences with beam search
     pred = model.predict(sent, 5) # returns list of 5 lists of word indices
     pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
     out = ' '.join(TRG.vocab.itos[idx] for idx in pred)
-    logger.log('PRED >>> ' + out)
-    return
+    logger.log('PRED >>> ' + out, stdout=stdout)
+    return out
 
 
 def get_gradient_norm(m):

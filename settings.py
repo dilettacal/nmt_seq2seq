@@ -29,6 +29,8 @@ SEED = 42
 
 VALIDATION_BEAM = 5
 
+BEST_MODEL_PATH = ""
+
 
 #### Suffixes ####
 
