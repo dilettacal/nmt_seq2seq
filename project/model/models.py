@@ -64,15 +64,20 @@ class Seq2Seq(nn.Module):
 
         self.attention = Attention(bidirectional=self.enc_bi, attn_type=self.att_type, h_dim=self.hid_dim)
 
-        self.linear1 = nn.Linear(2*self.hid_dim, self.emb_size)
+
+        #### This additional preoutput layer should reduce the bottleneck problem at the output layer on which
+        #### the softmax operation is performed (here this operation is done by the CrossEntropyLoss object
+        self.preoutput = nn.Linear(2 * self.hid_dim, self.emb_size)
         self.tanh = nn.Tanh()
         self.dropout = nn.Dropout(experiment_config.dp)
-        self.linear2 = nn.Linear(self.emb_size, self.trg_vocab_size) #emb size of target
+
+        #### output layer
+        self.output = nn.Linear(self.emb_size, self.trg_vocab_size) #emb size of target
 
         ### This part is used in the original code
-        if self.weight_tied and self.decoder.embedding.weight.size() == self.linear2.weight.size():
+        if self.weight_tied and self.decoder.embedding.weight.size() == self.output.weight.size():
             print('Weight tying!')
-            self.linear2.weight = self.decoder.embedding.weight
+            self.output.weight = self.decoder.embedding.weight
 
         ### create encoder and decoder
     def load_pretrained_embeddings(self, pretrained_src, pretraiend_trg):
@@ -103,24 +108,17 @@ class Seq2Seq(nn.Module):
         encoder_outputs, final_e = self.encoder(enc_input) #final_e is [2*num_layers, bs, hid_dim] if bidiretional, else [num_layers, bs, hid_dim]
 
         # Decode
+        ### iniitalize decoder with the final hidden states of the encoder
         decoder_outputs, final_d = self.decoder(dec_input, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
 
         # Attend
         context = self.attention(encoder_outputs, decoder_outputs) #seq_len, bs, hid_dim
-        print("Shapes:", context.shape, decoder_outputs.shape)
-       # print("Context:", context)
-        #print("Decoder out:", decoder_outputs)
         out_cat = torch.cat((decoder_outputs, context), dim=2)
-        #print("Concat:", out_cat)
 
         # Predict (returns probabilities)
-        x = self.linear1(out_cat)
+        x = self.preoutput(out_cat)
         x = self.dropout(self.tanh(x))
-       # print("Results:", x)
-        #print(x.shape)
-        x = self.linear2(x) #seq_len, bs, trg_vocab_size
-        #print("Results:", x)
-        #print(x.shape)
+        x = self.output(x) #seq_len, bs, trg_vocab_size
         return x
 
 
@@ -161,10 +159,10 @@ class Seq2Seq(nn.Module):
                     # Attend
                     context = self.attention(outputs_e, outputs_d)
                     out_cat = torch.cat((outputs_d, context), dim=2)
-                    x = self.linear1(out_cat)
+                    x = self.preoutput(out_cat)
                     ###########################################
                     x = self.dropout(self.tanh(x))
-                    x = self.linear2(x)
+                    x = self.output(x)
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
