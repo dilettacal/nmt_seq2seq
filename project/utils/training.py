@@ -26,7 +26,7 @@ random.seed(SEED)
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, check_translations_every=5, teacher=False):
+                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, check_translations_every=5, beam_size=5):
     best_bleu_score = 0
 
     metrics = dict()
@@ -39,7 +39,6 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     check_transl_every = check_translations_every
 
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
-    total_samples = [batch for i, batch in enumerate(samples_iter)]
 
     for epoch in range(epochs):
         start_time = time.time()
@@ -53,7 +52,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             train_ppl = math.exp(avg_train_loss)
             train_ppls.append(train_ppl)
 
-            avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG)
+            avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
             nltk_bleus.append(avg_bleu_val[0])
             perl_bleus.append(avg_bleu_val[1])
             bleu = avg_bleu_val[0]
@@ -91,7 +90,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             train_ppl = math.exp(avg_train_loss)
             train_ppls.append(train_ppl)
 
-            avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG)
+            avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
             nltk_bleus.append(avg_bleu_val[0])
             perl_bleus.append(avg_bleu_val[1])
             bleu = avg_bleu_val[0]
@@ -156,7 +155,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
     return losses.avg
 
 
-def validate(val_iter, model, device, TRG):
+def validate(val_iter, model, device, TRG, beam_size=5):
     model.eval()
     val_iter.init_epoch()
 
@@ -175,7 +174,7 @@ def validate(val_iter, model, device, TRG):
 
 
             # Get model prediction (from beam search)
-            out = model.predict(src, max_len=trg.size(0), beam_size=VALIDATION_BEAM)  ### the beam value is the best value from the baseline study
+            out = model.predict(src, max_len=trg.size(0), beam_size=beam_size)  ### the beam value is the best value from the baseline study
             # print(out.size())
             ref = list(trg.data.squeeze())
             # Prepare sentence for bleu script

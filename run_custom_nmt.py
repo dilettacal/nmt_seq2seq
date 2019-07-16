@@ -67,6 +67,8 @@ def experiment_parser():
                         help="Tie weights between input and output in decoder.")
     parser.add_argument('--pretrained', default="False", type=str2bool,
                         help="Initialize embeddings weights with pre-trained embeddings")
+
+    parser.add_argument('--beam', type=int, default=5, help="Beam size used during the model validation.")
     return parser
 
 def main():
@@ -174,7 +176,7 @@ def main():
     bleus, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
                                  optimizer=optimizer, scheduler=scheduler, SRC=SRC, TRG=TRG,
                                  epochs=experiment.epochs, logger=logger, device=experiment.get_device(),
-                                 tr_logger=translation_logger, samples_iter=samples_iter, check_translations_every=log_every)
+                                 tr_logger=translation_logger, samples_iter=samples_iter, check_translations_every=log_every, beam_size = experiment.val_beam_size)
 
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
     train_loss = Metric("train_loss", list(metrics.values())[0])

@@ -66,6 +66,8 @@ class Experiment(object):
 
         self.tok = self.args.tok
 
+        self.val_beam_size = self.args.beam
+
     def get_args(self):
         return self.args
 
