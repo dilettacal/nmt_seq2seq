@@ -381,7 +381,7 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False):
 
 
 
-def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda", stdout=False):
+def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda", stdout=False, beam_size = 5):
 
     #### Changed from original ###
     sent_indices = [SRC.vocab.stoi[word] if word in SRC.vocab.stoi else SRC.vocab.stoi[UNK_TOKEN] for word in input_sentence]
@@ -390,7 +390,7 @@ def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda", s
     sent = sent.view(-1,1) # reshape to sl x bs
     logger.log('SRC  >>> ' + ' '.join([SRC.vocab.itos[index] for index in sent_indices]), stdout=stdout)
     ### predict sentences with beam search 5
-    pred = model.predict(sent, beam_size=5)
+    pred = model.predict(sent, beam_size=beam_size)
     pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
     out = ' '.join(TRG.vocab.itos[idx] for idx in pred)
     logger.log('PRED >>> ' + out, stdout=stdout)

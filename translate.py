@@ -4,8 +4,6 @@ This script is used to run a trained model on a source file.
 Load the model with torch.load, retrieve model information from the checkpoint.
 Open the file and process each sentence with the method "predict_from_input".
 
-TODO
-
 """
 import argparse
 import datetime
@@ -36,7 +34,7 @@ logger.pickle_obj(TRG, "trg")
 """
 
 
-def translate(root=RESULTS_DIR, path="", predict_from_file=""):
+def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     use_cuda = True if torch.cuda.is_available() else False
     device = "cuda" if use_cuda else "cpu"
 
@@ -76,7 +74,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file=""):
             tok_sample = src_tokenizer.tokenize(sample)
             _ = predict_from_input(input_sentence=tok_sample, SRC=SRC_vocab, TRG=TRG_vocab, model=model,
                                device=experiment.get_device(),
-                               logger=logger, stdout=True)
+                               logger=logger, stdout=True, beam_size=beam_size)
     else:
         input_sequence = ""
         while (1):
@@ -85,7 +83,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file=""):
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
                 input_sequence = src_tokenizer.tokenize(input_sequence.lower())
-                out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu")
+                out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu", beam_size=beam_size)
                 if out:
                     print("Translation > ", out)
                 else: print("Error while translating!")
@@ -101,6 +99,7 @@ def translation_parser():
                         help='experiment path')
     parser.add_argument('--file', type=str2bool, default="False",
                         help="Translate from keyboard (False) or from samples file (True)")
+    parser.add_argument('--beam', type=int, default=5, help="beam size")
     return parser
 
 
@@ -109,5 +108,5 @@ BEST_BASELINE_TIED = "best_baseline_tied/de_en/s/2/uni/2019-07-15-14-03-30"
 
 if __name__ == '__main__':
     parser = translation_parser().parse_args()
-    parser.path = BEST_BASELINE_TIED
-    translate(os.path.expanduser(os.path.join(RESULTS_DIR)), path=parser.path, predict_from_file=parser.file)
+    #parser.path = BEST_BASELINE_TIED
+    translate(os.path.expanduser(os.path.join(RESULTS_DIR)), path=parser.path, predict_from_file=parser.file, beam_size = parser.beam)
