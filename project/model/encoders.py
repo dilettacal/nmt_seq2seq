@@ -51,7 +51,7 @@ class Encoder(nn.Module):
             h0 = (init) # h0 = h
 
         # Pass through RNN
-        out, h = self.rnn(x, h0)  # h is a tuple, if lstm else single
+        out, states = self.rnn(x, h0)  # states is a tuple, if lstm else single
 
-        return out, h
+        return out, states
 

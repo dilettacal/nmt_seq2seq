@@ -45,18 +45,23 @@ class Attention(nn.Module):
             attn = encoder_outputs.bmm(decoder_outputs.transpose(1, 2)) # (b x sl x hd) (b x hd x tl) --> (b x sl x tl)
         elif self.attn_type == 'additive':
             # Resize output tensors for efficient matrix multiplication, then apply additive attention
-            bs_sl_tl_hdim = (encoder_outputs.size(0), encoder_outputs.size(1), decoder_outputs.size(1), encoder_outputs.size(2))
-            out_e_resized = encoder_outputs.unsqueeze(2).expand(bs_sl_tl_hdim) # b x sl x tl x hd
-            out_d_resized = decoder_outputs.unsqueeze(1).expand(bs_sl_tl_hdim) # b x sl x tl x hd
+            ### tensor must have the dimension: batch_size, src_len, trg_len, hidden_dim to consider all the sequences in the batch, the length of H and the actual hidden states of the decoder
+            batch_size_src_len_trg_len_hid_dim = (encoder_outputs.size(0), encoder_outputs.size(1), decoder_outputs.size(1), encoder_outputs.size(2))
+            out_e_resized = encoder_outputs.unsqueeze(2).expand(batch_size_src_len_trg_len_hid_dim) # b x sl x tl x hd
+            out_d_resized = decoder_outputs.unsqueeze(1).expand(batch_size_src_len_trg_len_hid_dim) # b x sl x tl x hd
             attn = self.linear(torch.cat((out_e_resized, out_d_resized), dim=3)) # --> b x sl x tl x hd
             attn = self.tanh(attn) @ self.vector # --> b x sl x tl
 
         # Softmax and reshape
+        #### The attention weights must sum to 1 and be interpreted as a probab distribution
         attn = attn.exp() / attn.exp().sum(dim=1, keepdim=True)
         attn = attn.transpose(1,2) # --> b x tl x sl
 
         # Get attention distribution
+        ### context weights are then multiplied with the encoder outputs
         context = attn.bmm(encoder_outputs) # --> b x tl x hd
+
+        #### Reshaping to seq_len x batch_size x hid_dim as the model works with batch_first = False
         context = context.transpose(0,1) # --> tl x b x hd
 
         return context, attn

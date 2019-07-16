@@ -36,5 +36,5 @@ class Decoder(nn.Module):
     def forward(self, x, h0):
         x = self.embedding(x) #1,1,256
         x = self.dropout(x)
-        out, h = self.rnn(x, h0)
-        return out, h
+        out, states = self.rnn(x, h0)
+        return out, states

@@ -4,16 +4,14 @@ Credits for this source code:
 Class Seq2Seq (with or w/o Attention) - modified version from this code:
 Author: Luke Melas
 Title: Machine Translation with Recurrent Neural Networks
-URL: https://lukemelas.github.io/machine-translation.html and https://github.com/lukemelas/Machine-Translation/blob/master/models/Seq2seq.py (on the courtesy of the author)
-
-
+URL: https://lukemelas.github.io/machine-translation.html
+and https://github.com/lukemelas/Machine-Translation/blob/master/models/Seq2seq.py
+(Code from the github repository is used on the courtesy of the author)
 """
 import random
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
 from project.utils.experiment import Experiment
 from project.model.decoders import Decoder
 from project.model.encoders import Encoder
@@ -33,6 +31,7 @@ class Seq2Seq(nn.Module):
     def __init__(self, experiment_config: Experiment, tokens_bos_eos_pad_unk):
         super(Seq2Seq, self).__init__()
 
+        #### Setup configuration ###
         self.model_type = experiment_config.model_type
         self.hid_dim = experiment_config.hid_dim
         self.emb_size = experiment_config.emb_size
@@ -55,6 +54,8 @@ class Seq2Seq(nn.Module):
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
+        #### Define main elements of the Seq2Seq model ####
+
         self.encoder = Encoder(self.src_vocab_size, self.emb_size, self.hid_dim, self.num_layers,
                                dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
 
@@ -65,7 +66,7 @@ class Seq2Seq(nn.Module):
         self.attention = Attention(bidirectional=self.enc_bi, attn_type=self.att_type, h_dim=self.hid_dim)
 
 
-        #### This additional preoutput layer should reduce the bottleneck problem at the output layer on which
+        #### This additional preoutput layer should reduce the bottleneck problem at the final layer on which
         #### the softmax operation is performed (here this operation is done by the CrossEntropyLoss object
         self.preoutput = nn.Linear(2 * self.hid_dim, self.emb_size)
         self.tanh = nn.Tanh()
@@ -74,12 +75,13 @@ class Seq2Seq(nn.Module):
         #### output layer
         self.output = nn.Linear(self.emb_size, self.trg_vocab_size) #emb size of target
 
-        ### This part is used in the original code
+        ### Weight tying is a method to improve the language model perfomance
+        ### See: https://arxiv.org/abs/1608.05859
         if self.weight_tied and self.decoder.embedding.weight.size() == self.output.weight.size():
             print('Weight tying!')
             self.output.weight = self.decoder.embedding.weight
 
-        ### create encoder and decoder
+
     def load_pretrained_embeddings(self, pretrained_src, pretraiend_trg):
         assert pretrained_src.size(1) == pretraiend_trg.size(1)
         self.src_vocab_size, self.emb_size = pretrained_src.size()
@@ -89,7 +91,7 @@ class Seq2Seq(nn.Module):
         self.encoder.embedding.weight.data.copy_(enc_embedding)
 
         dec_embedding = nn.Embedding(self.trg_vocab_size, self.emb_size)
-        self.encoder.embedding.weight.data.copy_(dec_embedding)
+        self.decoder.embedding.weight.data.copy_(dec_embedding)
         print("Embeddings weights have been loaded!")
 
     def forward(self, enc_input, dec_input):
@@ -115,7 +117,7 @@ class Seq2Seq(nn.Module):
         context = self.attention(encoder_outputs, decoder_outputs) #seq_len, bs, hid_dim
         out_cat = torch.cat((decoder_outputs, context), dim=2)
 
-        # Predict (returns probabilities)
+        # Predict
         x = self.preoutput(out_cat)
         x = self.dropout(self.tanh(x))
         x = self.output(x) #seq_len, bs, trg_vocab_size
@@ -141,7 +143,7 @@ class Seq2Seq(nn.Module):
             src = src.index_select(0, inv_index)
         # Encode
         outputs_e, states = self.encoder(src)  # batch size = 1
-        # Start with '<s>'
+        # Start with '<sos>'
         init_lprob = -1e10
         init_sent = [self.bos_token]
         best_options = [(init_lprob, init_sent, states)]  # beam
@@ -157,6 +159,7 @@ class Seq2Seq(nn.Module):
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
                     outputs_d, new_state = self.decoder(last_word_input, current_state)
                     # Attend
+                    ### Attention is computed globally on all the encoder hidden states and on the current hidden state of the decder
                     context = self.attention(outputs_e, outputs_d)
                     out_cat = torch.cat((outputs_d, context), dim=2)
                     x = self.preoutput(out_cat)
@@ -166,8 +169,10 @@ class Seq2Seq(nn.Module):
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
-                    lprobs = torch.log(x.exp() / x.exp().sum())  # log softmax
-                    #lprobs = F.log_softmax(x, dim=-1)
+
+                    #### lprobs are the beam scores computed as log probs
+                    #### this step is also performed IN the CrossEntropyLoss criterion during the training phase
+                    lprobs = torch.log(x.exp() / x.exp().sum())
                     # Add top k candidates to options list for next word
                     for index in torch.topk(lprobs, k)[1]:
                         option = (float(lprobs[index]) + lprob, sentence + [index], new_state)
