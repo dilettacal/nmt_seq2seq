@@ -23,7 +23,7 @@ def experiment_parser():
     parser.add_argument('--lr', default=2e-3, type=float, metavar='N', help='learning rate, default: 2e-3')
     parser.add_argument('--hs', default=300, type=int, metavar='N', help='size of hidden state, default: 300')
     parser.add_argument('--emb', default=300, type=int, metavar='N', help='embedding size, default: 300')
-    parser.add_argument('--nlayers', default=4, type=int, metavar='N', help='number of layers in rnn, default: 2')
+    parser.add_argument('--nlayers', default=2, type=int, metavar='N', help='number of layers in rnn, default: 2')
     parser.add_argument('--dp', default=0.25, type=float, metavar='N', help='dropout probability, default: 0.30')
     parser.add_argument('--bi', type=str2bool, default=False,
                         help='use bidrectional encoder, default: false')
@@ -55,11 +55,11 @@ def experiment_parser():
 
     parser.add_argument('--rnn', metavar="STR", default="lstm")
 
-    parser.add_argument('--train', default=200000, type=int, help="Number of training examples")
-    parser.add_argument('--val', default=20000, type=int, help="Number of validation examples")
-    parser.add_argument('--test', default=10000, type=int, help="Number of test examples")
+    parser.add_argument('--train', default=170000, type=int, help="Number of training examples")
+    parser.add_argument('--val', default=1020, type=int, help="Number of validation examples")
+    parser.add_argument('--test', default=1190, type=int, help="Number of test examples")
     parser.add_argument('--data_dir', default=None, type=str, help="Data directory")
-    parser.add_argument('--tok', default="tok", type=str, help="tok files or clean files")
+    parser.add_argument('--tok', default="tok", type=str, help="File name: train.tok.de, or specify other: train.de ('')")
     parser.add_argument('--min', type=int, default=5,
                         help="Minimal word frequency. If min_freq < 0, then min_freq is set to default value")
     parser.add_argument('--tied', default="False", type=str2bool,
@@ -73,10 +73,7 @@ def experiment_parser():
 def main():
 
     experiment = Experiment(experiment_parser())
-
-    MAX_LEN = experiment.truncate
     print("Running experiment on:", experiment.get_device())
-   # args.corpus = "europarl"
     model_type = experiment.model_type
     print("Model Type", model_type)
     src_lang = experiment.get_src_lang()
@@ -111,7 +108,6 @@ def main():
 
     logger.pickle_obj(SRC, "src")
     logger.pickle_obj(TRG, "trg")
-
     logger.log("SRC and TRG objects persisted in the experiment directory.")
 
     experiment.src_vocab_size = len(SRC.vocab)
@@ -137,7 +133,6 @@ def main():
         model.load_pretrained_embeddings(pretraiend_src, pretrained_trg)
         logger.log("Pretrained embeddings loaded!")
 
-    exit()
     model = model.to(experiment.get_device())
 
     # Create weight to mask padding tokens for loss function
@@ -191,33 +186,33 @@ def main():
     logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="loss_bleu")
 
 
-
+    max_len = 30 if experiment.char_level == False else 250
     ### Evaluation on test set
     logger.log("Validation of test set")
     beam_size = 1
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=30)
+    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     nltk_b, perl_b = bleus
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
     beam_size = 2
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=30)
+    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     nltk_b, perl_b = bleus
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
     beam_size = 5
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=30)
+    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     nltk_b, perl_b = bleus
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
     beam_size = 10
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=30)
+    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     nltk_b, perl_b = bleus
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')

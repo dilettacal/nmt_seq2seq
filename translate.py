@@ -50,6 +50,17 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     SRC_vocab = torch.load(os.path.join(path_to_exp, "src.pkl"))
     TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
 
+    char_level = experiment.char_level
+    tok_level = "c" if char_level else "w"
+    src_tokenizer, trg_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), tok_level, spacy_pretok=False), \
+                                   get_custom_tokenizer(experiment.get_trg_lang(), tok_level, spacy_pretok=False)
+
+    SRC_vocab.tokenize = src_tokenizer.tokenize
+    TRG_vocab.tokenize = trg_tokenizer.tokenize
+
+    test_sent = "Ich bin's"
+    print(SRC_vocab.tokenize(test_sent))
+
     tokens_bos_eos_pad_unk = [TRG_vocab.vocab.stoi[SOS_TOKEN], TRG_vocab.vocab.stoi[EOS_TOKEN],
                               TRG_vocab.vocab.stoi[PAD_TOKEN], TRG_vocab.vocab.stoi[UNK_TOKEN]]
 
