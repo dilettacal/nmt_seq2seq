@@ -1,20 +1,8 @@
-import gzip
-import logging
 import os
-import shutil
-import tarfile
 import time
-import zipfile
-from urllib.request import urlretrieve
 import torch
-from torchtext import data, datasets, data as data
+from torchtext import datasets, data as data
 from torchtext.data import Field, Dataset
-import urllib.request
-import io
-import gzip
-
-from torchtext.utils import reporthook
-from tqdm import tqdm
 
 import project
 from project import get_full_path
@@ -36,27 +24,6 @@ and other functions to create vocabularies and print some information
 
 """
 
-logger = logging.getLogger(__name__)
-class EmbeddingLoader(vocab.Vectors):
-    def __init__(self, name, cache=None,
-                 url=None, unk_init=None, max_vectors=None):
-        self.name = name
-        super(EmbeddingLoader, self).__init__(name=name, cache=cache, url=url, unk_init=unk_init, max_vectors=max_vectors)
-
-    @classmethod
-    def download_embeddings(cls, url, file_name, cache, unk_init=None, max_vectors=None):
-        with tqdm(unit='B', unit_scale=True, miniters=1, desc=cache) as t:
-            try:
-                response = urlretrieve(url, cache, reporthook=reporthook(t))
-            except KeyboardInterrupt as e:  # remove the partial zip file
-                raise e
-
-            compressed_file = io.BytesIO(response.read())
-            decompressed_file = gzip.GzipFile(fileobj=compressed_file)
-            file_path = os.path.join(cache, file_name)
-            with open(file_path, 'wb') as outfile:
-                outfile.write(decompressed_file.read())
-        return cls(file_name, url=None, unk_init=unk_init, max_vectors=max_vectors)
 
 class Seq2SeqDataset(Dataset):
     """
