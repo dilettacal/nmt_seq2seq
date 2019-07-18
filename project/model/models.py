@@ -68,7 +68,10 @@ class Seq2Seq(nn.Module):
 
         #### This additional preoutput layer should reduce the bottleneck problem at the final layer on which
         #### the softmax operation is performed (here this operation is done by the CrossEntropyLoss object
-        self.preoutput = nn.Linear(2 * self.hid_dim, self.emb_size)
+        if self.att_type == "none":
+            self.preoutput = nn.Linear(self.hid_dim, self.emb_size)
+        else:
+            self.preoutput = nn.Linear(2 * self.hid_dim, self.emb_size)
         self.tanh = nn.Tanh()
         self.dropout = nn.Dropout(experiment_config.dp)
 
@@ -111,10 +114,11 @@ class Seq2Seq(nn.Module):
         # Decode
         ### iniitalize decoder with the final hidden states of the encoder
         decoder_outputs, final_d = self.decoder(dec_input, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
-
         # Attend
         context = self.attention(encoder_outputs, decoder_outputs) #seq_len, bs, hid_dim
-        out_cat = torch.cat((decoder_outputs, context), dim=2)
+        if self.att_type == "none":
+            out_cat = decoder_outputs
+        else: out_cat = torch.cat((decoder_outputs, context), dim=2)
 
         # Predict
         x = self.preoutput(out_cat)
@@ -160,7 +164,9 @@ class Seq2Seq(nn.Module):
                     # Attend
                     ### Attention is computed globally on all the encoder hidden states and on the current hidden state of the decder
                     context = self.attention(outputs_e, outputs_d)
-                    out_cat = torch.cat((outputs_d, context), dim=2)
+                    if self.att_type == "none":
+                        out_cat = outputs_d
+                    else: out_cat = torch.cat((outputs_d, context), dim=2)
                     x = self.preoutput(out_cat)
                     ###########################################
                     x = self.dropout(self.tanh(x))
