@@ -190,18 +190,6 @@ def cleanup_digits(line):
     return line
 
 
-def expand_contraction(sentence, mapping):
-    contractions_patterns = re.compile('({})'.format('|'.join(mapping.keys())), flags=re.IGNORECASE | re.DOTALL)
-
-    def replace_text(t):
-        txt = t.group(0)
-        if txt.lower() in mapping.keys():
-            return mapping[txt.lower()]
-
-    expanded_sentence = contractions_patterns.sub(replace_text, sentence)
-    return expanded_sentence
-
-
 ##### Generates splits from the main dataset ####
 
 def split_data(src_sents, trg_sents, val_ratio=0.1, train_ratio=0.8, seed=SEED):
