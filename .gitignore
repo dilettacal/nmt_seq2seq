@@ -153,3 +153,7 @@ scripts/floyd
 !de-en.log
 
 !data/preprocessed/europarl/de/splits/30/samples.*
+
+finaltraslations
+*.pt
+*.vec
