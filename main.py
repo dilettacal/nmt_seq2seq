@@ -4,7 +4,7 @@ import os
 import spacy
 import time
 
-from project.utils.utils import Logger, convert
+from project.utils.utils import Logger, convert_time_unit
 from settings import DATA_DIR
 
 if __name__ == '__main__':
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 				logger.log("ORG: {}".format(src_lines[i]))
 				logger.log("*"*100)
 
-	print(convert(time.time()-start))
+	print(convert_time_unit(time.time() - start))
 	import numpy as np
 	#np_src = np.array(src_lines)
 	#np_docs = np.array(testing_doc)

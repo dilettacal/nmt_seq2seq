@@ -21,7 +21,7 @@ from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
 from project.utils.data.download import maybe_download_and_extract
 from project.utils.preprocessing import get_custom_tokenizer
-from project.utils.utils import convert
+from project.utils.utils import convert_time_unit
 from settings import DATA_DIR_PREPRO, PRETRAINED_URL_EN, PRETRAINED_URL_LANG_CODE
 import random
 from torchtext import vocab
@@ -235,7 +235,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
                                         path=data_dir)
 
         end = time.time()
-        print("Duration: {}".format(convert(end - start)))
+        print("Duration: {}".format(convert_time_unit(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     else:
@@ -251,7 +251,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
 
         samples = None
         end = time.time()
-        print("Duration: {}".format(convert(end - start)))
+        print("Duration: {}".format(convert_time_unit(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     if voc_limit > 0:

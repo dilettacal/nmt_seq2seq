@@ -14,7 +14,7 @@ from project.model.models import count_parameters, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.vocabulary import get_vocabularies_iterators, print_data_info
 from project.utils.training import train_model, beam_predict, check_translation
-from project.utils.utils import convert, Logger, Metric, load_embeddings
+from project.utils.utils import convert_time_unit, Logger, Metric
 from settings import MODEL_STORE
 
 
@@ -22,8 +22,8 @@ from settings import MODEL_STORE
 def experiment_parser():
     parser = argparse.ArgumentParser(description='Neural Machine Translation')
     parser.add_argument('--lr', default=2e-3, type=float, metavar='N', help='learning rate, default: 2e-3')
-    parser.add_argument('--hs', default=512, type=int, metavar='N', help='size of hidden state, default: 300')
-    parser.add_argument('--emb', default=256, type=int, metavar='N', help='embedding size, default: 300')
+    parser.add_argument('--hs', default=300, type=int, metavar='N', help='size of hidden state, default: 300')
+    parser.add_argument('--emb', default=300, type=int, metavar='N', help='embedding size, default: 300')
     parser.add_argument('--nlayers', default=4, type=int, metavar='N', help='number of layers in rnn, default: 2')
     parser.add_argument('--dp', default=0.25, type=float, metavar='N', help='dropout probability, default: 0.30')
     parser.add_argument('--bi', type=str2bool, default=False,
@@ -126,21 +126,19 @@ def main():
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
 
     if experiment.pretrained:
-        np_lang_code_file = 'scripts/emb-{}-{}.npy'.format(len(SRC.vocab), experiment.lang_code)
-        np_en_file = 'scripts/emb-{}-en.npy'.format(len(TRG.vocab))
-        embedding_lang_code, embedding_EN = load_embeddings(np_lang_code_file, np_en_file)
-        if experiment.src_lang == "en":
-            pretraiend_src = embedding_EN
-            pretrained_trg = embedding_lang_code
-        else:
-            pretraiend_src = embedding_lang_code
-            pretrained_trg = embedding_EN
+        pretraiend_src = train_data.fields['src'].vocab.vectors
+        pretrained_trg = train_data.fields['trg'].vocab.vectors
         logger.log("Running experiment with pretrained embeddings!")
     else:
         pretraiend_src, pretrained_trg = None, None
 
-    model = get_nmt_model(experiment, tokens_bos_eos_pad_unk, pretraiend_src, pretrained_trg)
+    model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
     print(model)
+    if experiment.pretrained:
+        model.load_pretrained_embeddings(pretraiend_src, pretrained_trg)
+        logger.log("Pretrained embeddings loaded!")
+
+    exit()
     model = model.to(experiment.get_device())
 
     # Create weight to mask padding tokens for loss function
@@ -155,7 +153,7 @@ def main():
 
 
     logger.log('|src_vocab| = {}, |trg_vocab| = {}, Data Loading Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),
-                                                                       convert(end_time_data - time_data)))
+                                                                                   convert_time_unit(end_time_data - time_data)))
     logger.log(">>>> Path to model: {}".format(os.path.join(logger.path, "model.pkl")))
     logger.log('CLI-ARGS ' + ' '.join(sys.argv), stdout=False)
     logger.log('Args: {}\nOPTIM: {}\nLR: {}\nSCHED: {}\nMODEL: {}\n'.format(experiment.get_args(), optimizer, experiment.lr,
@@ -225,7 +223,7 @@ def main():
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
-    logger.log('Finished in {}'.format(convert(time.time() - start_time)))
+    logger.log('Finished in {}'.format(convert_time_unit(time.time() - start_time)))
 
 
     ########## testing model against all samples translations

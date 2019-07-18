@@ -32,7 +32,7 @@ import time
 from project.utils.data.europarl import maybe_download_and_extract_europarl
 from project.utils.preprocessing import get_custom_tokenizer, split_data, persist_txt
 from project.utils.tmx2corpus.tmx2corpus import Converter, FileOutput
-from project.utils.utils import Logger, convert
+from project.utils.utils import Logger, convert_time_unit
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 
 
@@ -153,7 +153,7 @@ def raw_preprocess(parser):
         print("Generating samples files...")
         persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
 
-    print("Total time:", convert(time.time() - start))
+    print("Total time:", convert_time_unit(time.time() - start))
 
 
 if __name__ == '__main__':
