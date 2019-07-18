@@ -28,10 +28,6 @@ class BaseSequenceTokenizer(object):
         raise NotImplementedError
 
     def tokenize(self, sequence):
-        if self.lang == "en":
-            sequence = expand_contraction(sequence, ENG_CONTRACTIONS_MAP)
-        elif self.lang == "de":
-            sequence = expand_contraction(sequence, UMLAUT_MAP)
         tokens = self._tokenize(sequence)
         # return ' '.join(tokens)
         return tokens
