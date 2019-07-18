@@ -80,7 +80,7 @@ def download(base_url, filename, download_dir):
         print(" Done!")
 
 
-def maybe_download_and_extract(url, download_dir, language_code="de"):
+def maybe_download_and_extract(url, download_dir, language_code="de", raw_file="{}-en.tmx"):
     """
     Download and extract the data if it doesn't already exist.
     Assumes the url is a tar-ball file.
@@ -97,17 +97,9 @@ def maybe_download_and_extract(url, download_dir, language_code="de"):
         Nothing.
     """
 
-    # Filename for saving the file downloaded from the internet.
-    # Use the filename from the URL and add it to the download_dir.
     filename = url.split('/')[-1]
     file_path = os.path.join(download_dir, filename) #e.g. ./data/raw/europarl/de/en-de.tmx.gz
-    print("File path:", file_path)
-
-   # print("Download directory:", download_dir)
-
-    # Check if the file already exists.
-    # If it exists then we assume it has also been extracted,
-    # otherwise we need to download and extract it now.
+ #   print("File path:", file_path)
     if not os.path.exists(file_path):
         # Check if the download directory exists, otherwise create it.
         if not os.path.exists(download_dir):
@@ -131,8 +123,8 @@ def maybe_download_and_extract(url, download_dir, language_code="de"):
             # Unpack the tar-ball.
             tarfile.open(name=file_path, mode="r:gz").extractall(download_dir)
         elif file_path.endswith(".gz"):
-            ### gz files are supposed to contain tmx files
-            raw_file = "{}-en.tmx".format(language_code) # de-en.tmx
+          ###### Modified for tmx files ############
+            raw_file = raw_file.format(language_code) # e.g. de-en.tmx
             download_dir = os.path.join(download_dir, raw_file)
             with gzip.open(file_path, 'rb') as gz:
                 with open(download_dir, 'wb') as uncompressed:
@@ -141,7 +133,8 @@ def maybe_download_and_extract(url, download_dir, language_code="de"):
 
         print("Done.")
     else:
-        print("Data has apparently already been downloaded and unpacked.")
+        print("Data already downloaded and unpacked.")
+        return filename
 
 
 ########################################################################

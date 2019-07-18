@@ -71,7 +71,6 @@ def maybe_download_and_extract_europarl(language_code="de", tmx=False):
             raw_file = download.maybe_download_and_extract(url=url, download_dir=data_dir, language_code=language_code)
             return raw_file
     else:
-
         ## http://opus.nlpl.eu/download.php?f=Europarl/v7/moses/de-en.txt.zip
         url = data_url_opus + language_code + "-" + "en"+".txt"+".zip"
         try:

@@ -6,7 +6,8 @@ This python file includes some special filter for a better preprocessing.
 """
 
 # Mapping for German language
-UMLAUT_MAP = {u'Ä': 'Ae',
+UMLAUT_MAP = {
+                     u'Ä': 'Ae',
                      u'Ö': 'Oe',
                      u'Ü': 'Ue',
                      u'ä': 'ae',
@@ -126,7 +127,7 @@ ENG_CONTRACTIONS_MAP = {
     u"you'd": "you would",
     u"you'd've": "you would have",
     u"you'll": "you will",
-    u"you'll've": "you shall have",
+    u"you'll've": "you will have",
     u"you're": "you are",
     u"you've": "you have",
     u"doin'": "doing",

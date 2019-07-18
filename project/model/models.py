@@ -86,15 +86,14 @@ class Seq2Seq(nn.Module):
 
 
     def load_pretrained_embeddings(self, pretrained_src, pretraiend_trg):
-        assert pretrained_src.size(1) == pretraiend_trg.size(1)
-        self.src_vocab_size, self.emb_size = pretrained_src.size()
-        self.trg_vocab_size, _ = pretraiend_trg.size()
-
-        enc_embedding = nn.Embedding(self.src_vocab_size, self.emb_size)
-        self.encoder.embedding.weight.data.copy_(enc_embedding)
-
-        dec_embedding = nn.Embedding(self.trg_vocab_size, self.emb_size)
-        self.decoder.embedding.weight.data.copy_(dec_embedding)
+        assert self.encoder.embedding.weight.size() == pretrained_src.size()
+        assert self.decoder.embedding.weight.size() == pretraiend_trg.size()
+        enc_w = self.encoder.embedding.weight.clone()
+        dec_w = self.decoder.embedding.weight.clone()
+        self.encoder.embedding.weight.data.copy_(pretrained_src)
+        self.decoder.embedding.weight.data.copy_(pretraiend_trg)
+        assert not torch.all(torch.eq(enc_w, self.encoder.embedding.weight))
+        assert not torch.all(torch.eq(dec_w, self.decoder.embedding.weight))
         print("Embeddings weights have been loaded!")
 
     def forward(self, enc_input, dec_input):
@@ -197,7 +196,7 @@ def count_parameters(model):
 
 ####### Use this function to set up a model from the main script #####
 #### Factory method to generate the model ####
-def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk, pretraiend_src=None, pretrained_trg =None):
+def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
     if model_type == "custom":
         if experiment_config.bi and experiment_config.reverse_input:

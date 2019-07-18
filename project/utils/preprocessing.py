@@ -131,7 +131,6 @@ class FastTokenizer(BaseSequenceTokenizer):
 
 
 class SplitTokenizer(BaseSequenceTokenizer):
-
     def _tokenize(self, text):
         text = re.sub(r"\s\s+", " ", text)
         return text.split(" ")

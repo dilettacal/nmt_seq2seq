@@ -15,7 +15,7 @@ import math
 
 from project.utils.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
-from project.utils.utils import convert, AverageMeter, Logger
+from project.utils.utils import convert_time_unit, AverageMeter, Logger
 from settings import DEFAULT_DEVICE, SEED, VALIDATION_BEAM
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
@@ -74,7 +74,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
             end_epoch_time = time.time()
 
-            total_epoch = convert(end_epoch_time - start_time)
+            total_epoch = convert_time_unit(end_epoch_time - start_time)
 
             logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
             logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
@@ -107,7 +107,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
             end_epoch_time = time.time()
 
-            total_epoch = convert(end_epoch_time - start_time)
+            total_epoch = convert_time_unit(end_epoch_time - start_time)
 
             logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
             logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
