@@ -154,11 +154,11 @@ def main():
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=20, verbose=True, min_lr=1e-6, factor=0.25)
 
 
-    logger.log('Loaded data. |SRC| = {}, |TRG| = {}, Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),
+    logger.log('|src_vocab| = {}, |trg_vocab| = {}, Data Loading Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),
                                                                        convert(end_time_data - time_data)))
     logger.log(">>>> Path to model: {}".format(os.path.join(logger.path, "model.pkl")))
-    logger.log('COMMAND ' + ' '.join(sys.argv), stdout=False)
-    logger.log('ARGS: {}\nOPTIMIZER: {}\nLEARNING RATE: {}\nSCHEDULER: {}\nMODEL: {}\n'.format(experiment.get_args(), optimizer, experiment.lr,
+    logger.log('CLI-ARGS ' + ' '.join(sys.argv), stdout=False)
+    logger.log('Args: {}\nOPTIM: {}\nLR: {}\nSCHED: {}\nMODEL: {}\n'.format(experiment.get_args(), optimizer, experiment.lr,
                                                                                                vars(scheduler), model),
                stdout=False)
 

@@ -33,18 +33,18 @@ from project.utils.data.europarl import maybe_download_and_extract_europarl
 from project.utils.preprocessing import get_custom_tokenizer, split_data, persist_txt
 from project.utils.tmx2corpus.tmx2corpus import Converter, FileOutput
 from project.utils.utils import Logger, convert
-from settings import DATA_DIR_PREPRO
+from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 
 
 def data_prepro_parser():
-    parser = argparse.ArgumentParser(description='Neural Machine Translation')
+    parser = argparse.ArgumentParser(description='Preprocess Europarl Dataset for NMT')
     parser.add_argument("--lang_code", default="de", type=str)
     #  parser.add_argument("--type", default="tmx", type=str, help="TMX")
-    parser.add_argument("--corpus", default="europarl", type=str, help="Corpus name")
+   # parser.add_argument("--corpus", default="europarl", type=str, help="Corpus name")
     parser.add_argument("--max_len", default=30, type=int, help="Filter sequences with a length <= max_len")
     parser.add_argument("--min_len", default=2, type=int, help="Filter sequences with a length >= min_len")
-    parser.add_argument('--path', default="data/raw/europarl/de", help="Path to raw data files")
-    parser.add_argument('--file', default="de-en.tmx", help="File name after extraction")
+   # parser.add_argument('--path', default="data/raw/europarl/de", help="Path to raw data files")
+   # parser.add_argument('--file', default="de-en.tmx", help="File name after extraction")
     return parser
 
 
@@ -52,13 +52,15 @@ def raw_preprocess(parser):
     #### preprocessing pipeline for tmx files
     ### download the files #####
     maybe_download_and_extract_europarl(language_code=parser.lang_code, tmx=True)
-    corpus_name = parser.corpus
+
+    corpus_name = "europarl"
     lang_code = parser.lang_code
     # file_type = parser.type
-    path_to_raw_file = parser.path
+    path_to_raw_file = os.path.join(DATA_DIR_RAW, corpus_name, lang_code)
     max_len, min_len = parser.max_len, parser.min_len
 
-    COMPLETE_PATH = os.path.join(path_to_raw_file, parser.file)
+    file_name = lang_code+"-"+"en"+".tmx"
+    COMPLETE_PATH = os.path.join(path_to_raw_file, file_name)
 
     STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), corpus_name, lang_code, "splits", str(max_len))
     os.makedirs(STORE_PATH, exist_ok=True)
@@ -71,7 +73,7 @@ def raw_preprocess(parser):
         print("TMX already converted!")
     else:
         print("Converting tmx to file...")
-        ### convert tmx to plain texts - no tokenization is performed
+           ### convert tmx to plain texts - no tokenization is performed
         converter = Converter(output=FileOutput(output_file_path))
         converter.convert([COMPLETE_PATH])
         print("Converted lines:", converter.output_lines)

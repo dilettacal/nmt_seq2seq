@@ -1,15 +1,31 @@
+import gzip
+import logging
 import os
+import shutil
+import tarfile
 import time
+import zipfile
+from urllib.request import urlretrieve
+import torch
 from torchtext import data, datasets, data as data
 from torchtext.data import Field, Dataset
+import urllib.request
+import io
+import gzip
+
+from torchtext.utils import reporthook
+from tqdm import tqdm
 
 import project
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
+from project.utils.data.download import maybe_download_and_extract
 from project.utils.preprocessing import get_custom_tokenizer
 from project.utils.utils import convert
-from settings import DATA_DIR_PREPRO
+from settings import DATA_DIR_PREPRO, PRETRAINED_URL_EN, PRETRAINED_URL_LANG_CODE
 import random
+from torchtext import vocab
+
 from settings import SEED
 random.seed(SEED)
 
@@ -20,6 +36,27 @@ and other functions to create vocabularies and print some information
 
 """
 
+logger = logging.getLogger(__name__)
+class EmbeddingLoader(vocab.Vectors):
+    def __init__(self, name, cache=None,
+                 url=None, unk_init=None, max_vectors=None):
+        self.name = name
+        super(EmbeddingLoader, self).__init__(name=name, cache=cache, url=url, unk_init=unk_init, max_vectors=max_vectors)
+
+    @classmethod
+    def download_embeddings(cls, url, file_name, cache, unk_init=None, max_vectors=None):
+        with tqdm(unit='B', unit_scale=True, miniters=1, desc=cache) as t:
+            try:
+                response = urlretrieve(url, cache, reporthook=reporthook(t))
+            except KeyboardInterrupt as e:  # remove the partial zip file
+                raise e
+
+            compressed_file = io.BytesIO(response.read())
+            decompressed_file = gzip.GzipFile(fileobj=compressed_file)
+            file_path = os.path.join(cache, file_name)
+            with open(file_path, 'wb') as outfile:
+                outfile.write(decompressed_file.read())
+        return cls(file_name, url=None, unk_init=unk_init, max_vectors=max_vectors)
 
 class Seq2SeqDataset(Dataset):
     """
@@ -128,6 +165,8 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     print("Required samples:")
     print(experiment.train_samples, experiment.val_samples, experiment.test_samples)
 
+    src_vec, trg_vec = None, None
+
     ### Define tokenizers ####
     if char_level:
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c"), get_custom_tokenizer("de", "c")
@@ -150,10 +189,26 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
             assert isinstance(src_tokenizer, project.utils.preprocessing.SpacyTokenizer)
             assert isinstance(trg_tokenizer, project.utils.preprocessing.SpacyTokenizer)
 
+    if experiment.pretrained:
+        ### retrieve word vectors
+        embedding_dir = os.path.join(DATA_DIR_PREPRO, "embeddings")
+        os.makedirs(embedding_dir, exist_ok=True)
+
+        maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_LANG_CODE.format(language_code),
+                                   raw_file='cc.{}.300.vec'.format(language_code))
+        maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_EN,
+                                   raw_file='cc.en.300.vec')
+        init_unk = torch.Tensor.normal_
+        if experiment.get_src_lang() == "en":
+            src_vec = vocab.Vectors(name='cc.en.300.vec', cache=embedding_dir, unk_init = init_unk)
+            trg_vec = vocab.Vectors(name='cc.{}.300.vec'.format(language_code), cache=embedding_dir, unk_init = init_unk)
+
+        else:
+            src_vec = vocab.Vectors('cc.{}.300.vec'.format(language_code), embedding_dir, unk_init = init_unk)
+            trg_vec = vocab.Vectors('cc.en.300.vec', embedding_dir, unk_init = init_unk)
 
     src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
     trg_vocab = Field(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
-
     print("Fields created!")
 
     ####### create splits ##########
@@ -200,15 +255,23 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
     if voc_limit > 0:
-        src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
-        trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
+        if experiment.pretrained:
+            src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit, vectors=src_vec)
+            trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit, vectors=trg_vec)
+        else:
+            src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
+            trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
         print("Vocabularies created!")
     else:
-        src_vocab.build_vocab(train, min_freq=min_freq)
-        trg_vocab.build_vocab(train, min_freq=min_freq)
+        if experiment.pretrained:
+            src_vocab.build_vocab(train, min_freq=min_freq, vectors=src_vec)
+            trg_vocab.build_vocab(train, min_freq=min_freq, vectors=trg_vec)
+        else:
+            src_vocab.build_vocab(train, min_freq=min_freq)
+            trg_vocab.build_vocab(train, min_freq=min_freq)
         print("Vocabularies created!")
 
-
+    #print(trg_vocab.vocab.vectors[trg_vocab.vocab.stoi["the"]])
     #### Iterators #####
 
     # Create iterators to process text in batches of approx. the same length
@@ -262,4 +325,3 @@ def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_fi
     logger.log("Total TRG words in the training dataset: {}".format(sum(trg_field.vocab.freqs.values())))
 
     logger.log("Minimal word frequency (src/trg): {}".format(experiment.min_freq))
-
