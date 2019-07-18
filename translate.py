@@ -12,12 +12,11 @@ import os
 import torch
 
 from project.model.models import get_nmt_model
-from project.utils.arg_parse import str2bool
 from project.utils.preprocessing import get_custom_tokenizer
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
 from project.utils.training import predict_from_input
-from project.utils.utils import Logger
+from project.utils.utils import Logger, str2bool
 from settings import RESULTS_DIR,BEST_MODEL_PATH
 
 

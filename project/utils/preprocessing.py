@@ -2,7 +2,6 @@ import os
 import random
 import string
 import re
-from project.utils.mappings import ENG_CONTRACTIONS_MAP, UMLAUT_MAP
 from settings import SUPPORTED_LANGS, SEED
 from project.utils.tmx2corpus.tmx2corpus import glom_urls
 
@@ -44,10 +43,6 @@ class BaseSequenceTokenizer(object):
         text = re.sub(space_before_punct, r"\1", text)
         #  text = re.sub(before_apos, r"\1", text)
         text = re.sub(after_apos, r"\1\2", text)
-        if self.lang == "en":
-            text = expand_contraction(text, ENG_CONTRACTIONS_MAP)
-        elif self.lang == "de":
-            text = expand_contraction(text, UMLAUT_MAP)
         # text = cleanup_digits(text)
         return text
 
