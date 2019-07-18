@@ -40,6 +40,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
 
+    print("Validation Beam: ", beam_size)
+
     for epoch in range(epochs):
         start_time = time.time()
 
