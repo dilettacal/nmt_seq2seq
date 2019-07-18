@@ -87,7 +87,8 @@ def main():
 
     direction = "bi" if experiment.bi else "uni"
 
-    experiment_path = os.path.join(MODEL_STORE, lang_comb, model_type, str(layers),
+    rnn_type = experiment.rnn_type
+    experiment_path = os.path.join(MODEL_STORE, lang_comb, model_type, rnn_type, str(layers),
                                    direction,
                                    datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
     os.makedirs(experiment_path, exist_ok=True)
