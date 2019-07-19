@@ -33,7 +33,7 @@ class Logger():
             raise Exception('path does not exist')
 
     def log(self, info, stdout=True):
-        with open(os.path.join(self.path, self.file_name), "a") as f:
+        with open(os.path.join(self.path, self.file_name), "a", encoding="utf8") as f:
             print(info, file=f)
         if stdout:
             print(info)
