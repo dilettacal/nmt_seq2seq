@@ -81,8 +81,8 @@ def raw_preprocess(parser):
     target_file = "bitext.{}".format(lang_code)
     src_lines, trg_lines = [], []
 
-    with open(os.path.join(output_file_path, "bitext.en"), 'r') as src_file, \
-            open(os.path.join(output_file_path, target_file), 'r') as target_file:
+    with open(os.path.join(output_file_path, "bitext.en"), 'r', encoding="utf8") as src_file, \
+            open(os.path.join(output_file_path, target_file), 'r', encoding="utf8") as target_file:
         for src_line, trg_line in zip(src_file, target_file):
             src_line = src_line.strip()
             trg_line = trg_line.strip()
