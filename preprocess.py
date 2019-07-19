@@ -133,16 +133,16 @@ def raw_preprocess(parser):
                             filtered_src_lines.append(' '.join(src_l_spl))
                             filtered_trg_lines.append(' '.join(trg_l_spl))
 
-        assert len(filtered_src_lines) == len(filtered_trg_lines)
+            assert len(filtered_src_lines) == len(filtered_trg_lines)
 
-        src_lines, trg_lines = filtered_src_lines, filtered_trg_lines
-        print("Splitting files...")
-        train_data, val_data, test_data, samples_data = split_data(src_lines, trg_lines)
-        persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
-        persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
-        persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
-        print("Generating samples files...")
-        persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
+            src_lines, trg_lines = filtered_src_lines, filtered_trg_lines
+            print("Splitting files...")
+            train_data, val_data, test_data, samples_data = split_data(src_lines, trg_lines)
+            persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
+            persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
+            persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
+            print("Generating samples files...")
+            persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
     else:
 
         print("Splitting files...")
