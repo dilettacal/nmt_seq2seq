@@ -1,7 +1,8 @@
 @echo off
-REM Create virtualenv
-REM python -m virtualenv env
-REM ../env/Scripts/activate
+:: Create virtualenv
+:: python -m virtualenv env
+:: activate environment:
+:: ../env/Scripts/activate
 :: Install dependencies
 
 :: PyTorch stuff
