@@ -162,10 +162,14 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         embedding_dir = os.path.join(DATA_DIR_PREPRO, "embeddings")
         os.makedirs(embedding_dir, exist_ok=True)
 
-        maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_LANG_CODE.format(language_code),
-                                   raw_file='cc.{}.300.vec'.format(language_code))
-        maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_EN,
-                                   raw_file='cc.en.300.vec')
+        try:
+            maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_LANG_CODE.format(language_code),
+                                       raw_file='cc.{}.300.vec'.format(language_code))
+            maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_EN,
+                                       raw_file='cc.en.300.vec')
+        except Exception as e:
+            print("An error has occurred while downloading pretrained embeddings. Please download the files for 'en' and <lang_code> manually from: \n"
+                  "https://fasttext.cc/docs/en/pretrained-vectors.html")
         init_unk = torch.Tensor.normal_
         if experiment.get_src_lang() == "en":
             src_vec = vocab.Vectors(name='cc.en.300.vec', cache=embedding_dir, unk_init = init_unk)

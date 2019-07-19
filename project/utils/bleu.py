@@ -74,25 +74,30 @@ def get_moses_multi_bleu(hypotheses, references, lowercase=False):
     reference_file.flush()
 
     # Calculate BLEU using multi-bleu script
-    with open(hypothesis_file.name, "r") as read_pred:
-        bleu_cmd = [multi_bleu_path]
-        if lowercase:
-            bleu_cmd += ["-lc"]
-        bleu_cmd += [reference_file.name]
-        try:
-            bleu_out = subprocess.check_output(bleu_cmd, stdin=read_pred, stderr=subprocess.STDOUT)
-            bleu_out = bleu_out.decode("utf-8")
-            bleu_score = re.search(r"BLEU = (.+?),", bleu_out).group(1)
-            bleu_score = float(bleu_score)
-            bleu_score = np.float32(bleu_score)
-        except subprocess.CalledProcessError as error:
-            if error.output is not None:
-                logger.warning("multi-bleu.perl script returned non-zero exit code")
-                logger.warning(error.output)
-            bleu_score = None
+    try:
+        with open(hypothesis_file.name, "r") as read_pred:
+            bleu_cmd = [multi_bleu_path]
+            if lowercase:
+                bleu_cmd += ["-lc"]
+            bleu_cmd += [reference_file.name]
+            try:
+                bleu_out = subprocess.check_output(bleu_cmd, stdin=read_pred, stderr=subprocess.STDOUT)
+                bleu_out = bleu_out.decode("utf-8")
+                bleu_score = re.search(r"BLEU = (.+?),", bleu_out).group(1)
+                bleu_score = float(bleu_score)
+                bleu_score = np.float32(bleu_score)
+            except subprocess.CalledProcessError as error:
+                if error.output is not None:
+                    logger.warning("multi-bleu.perl script returned non-zero exit code")
+                    logger.warning(error.output)
+                bleu_score = None
 
-    # Close temp files
-    hypothesis_file.close()
-    reference_file.close()
+        # Close temp files
+        hypothesis_file.close()
+        reference_file.close()
+    except PermissionError as e:
+        #### this happened on Win10
+        print("Impossible to compute BLEU with the multi-bleu.perl. Permission problems:", e)
+        bleu_score = None
 
     return bleu_score

@@ -195,6 +195,7 @@ def main():
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
     bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     nltk_b, perl_b = bleus
+    if perl_b == None: perl_b = 0
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
@@ -202,6 +203,7 @@ def main():
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
     bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     nltk_b, perl_b = bleus
+    if perl_b == None: perl_b = 0
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
@@ -209,6 +211,7 @@ def main():
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
     bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     nltk_b, perl_b = bleus
+    if perl_b == None: perl_b = 0
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 
@@ -216,6 +219,7 @@ def main():
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
     bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     nltk_b, perl_b = bleus
+    if perl_b == None: perl_b = 0
     logger.log(
         f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
 

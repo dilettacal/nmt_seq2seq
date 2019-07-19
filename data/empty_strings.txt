@@ -1,4 +1,7 @@
 grep -cvP '\S' <file>
-grep -c ^$ <file>
+grep -c '^\s*$' <file>
 
 awk -F'[: \t]+' '{gsub(/^[: \t]+|[: \t]+$/, ""); print NF}' file
+
+check for empty lines (eventually with tabs)
+grep -E --line-number --with-filename '^\s*$' file.txt

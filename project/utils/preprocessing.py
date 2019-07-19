@@ -105,7 +105,7 @@ class SpacyTokenizer(BaseSequenceTokenizer):
 
 class FastTokenizer(BaseSequenceTokenizer):
     def __init__(self, lang):
-        super(BaseSequenceTokenizer, self).__init__(lang)
+        super(FastTokenizer, self).__init__(lang)
 
     def _tokenize(self, sequence):
         text = TAG_REGEX.sub('', sequence)

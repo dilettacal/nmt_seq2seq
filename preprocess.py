@@ -14,11 +14,11 @@ python preprocess.py --lang_code de --type tmx --corpus europarl --max_len 30 --
 Conversion:
 Converted lines: 1.916.030 (total sentences in the dataset)
 
-Total samples:  1155582
+Total samples:  1155573
 Shuffling data....
-Total train: 924465
-Total validation: 115558
-Total test: 115559
+Total train: 924458
+Total validation: 115557
+Total test: 115558
 
 Filtered by length:
 Total samples:  1.155.582 (total sentences, with minimum length "min_len" and maximum length "max_len")
@@ -51,7 +51,12 @@ def data_prepro_parser():
 def raw_preprocess(parser):
     #### preprocessing pipeline for tmx files
     ### download the files #####
-    maybe_download_and_extract_europarl(language_code=parser.lang_code, tmx=True)
+    try:
+        maybe_download_and_extract_europarl(language_code=parser.lang_code, tmx=True)
+    except Exception as e:
+        print("An error has occurred:", e)
+        print("Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
+              "\nby selecting the data from the upper-right triangle [en > de]")
 
     corpus_name = "europarl"
     lang_code = parser.lang_code
@@ -141,8 +146,8 @@ def raw_preprocess(parser):
             persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
             persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
             persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
-            print("Generating samples files...")
-            persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
+           # print("Generating samples files...")
+           # persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
     else:
 
         print("Splitting files...")
@@ -150,8 +155,8 @@ def raw_preprocess(parser):
         persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
         persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
         persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
-        print("Generating samples files...")
-        persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
+       # print("Generating samples files...")
+       # persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
 
     print("Total time:", convert_time_unit(time.time() - start))
 

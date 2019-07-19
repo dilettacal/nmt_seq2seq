@@ -1,15 +1,15 @@
-# Create virtualenv
-python -m virtualenv env
-cd ./env/Scripts
-./activate
-## Install dependencies ###
+@echo off
+REM Create virtualenv
+REM python -m virtualenv env
+REM ../env/Scripts/activate
+:: Install dependencies
 
-#### PyTorch stuff #####
+:: PyTorch stuff
 pip3 install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp37-cp37m-win_amd64.whl
 pip3 install https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp37-cp37m-win_amd64.whl
 pip install torchtext
 
-#### NLP Stuff ####
+:: NLP
 pip install -U spacy
 python -m spacy download en
 python -m spacy download de
@@ -22,8 +22,7 @@ python -m spacy download xx
 pip install -U nltk
 python -m nltk.downloader all
 
-
-#### datascience stuff ###
+:: Other stuff
 
 pip install -U numpy matplotlib pandas seaborn scipy scikit-learn dill
 
