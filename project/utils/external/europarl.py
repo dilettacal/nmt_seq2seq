@@ -23,7 +23,7 @@
 
 
 #data_dir = "data/europarl/" # original script
-from project.utils.data import download
+from project.utils.external import download
 from settings import DATA_DIR_PREPRO
 
 ########################################################################
@@ -63,7 +63,7 @@ def maybe_download_and_extract_europarl(language_code="de", tmx=False):
         ##http://opus.nlpl.eu/download.php?f=Europarl/v7/tmx/de-en.tmx.gz
         url = data_url_tmx_opus + language_code + "-"+ "en"+ ".tmx"+".gz"
         try:
-            raw_file = download.maybe_download_and_extract(url=url, download_dir=data_dir,language_code=language_code)
+            raw_file = download.maybe_download_and_extract(url=url, download_dir=data_dir, language_code=language_code)
             return raw_file
         except:
             ##http://opus.nlpl.eu/download.php?f=Europarl/v7/tmx/en-fr.tmx.gz

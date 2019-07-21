@@ -24,9 +24,6 @@ import tarfile
 import zipfile
 
 ########################################################################
-from project import get_full_path
-from settings import DATA_DIR_RAW
-
 
 def _print_download_progress(count, block_size, total_size):
     """

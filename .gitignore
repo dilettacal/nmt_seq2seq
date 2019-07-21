@@ -142,9 +142,9 @@ test.*
 *.tar
 *.pkl
 
-!project/utils/tmx2corpus/LICENSE.txt
-!project/utils/tmx2corpus/test.tmx
-!project/utils/tmx2corpus/README.rst
+!project/utils/tmx_to_text/LICENSE.txt
+!project/utils/tmx_to_text/test.tmx
+!project/utils/tmx_to_text/README.rst
 
 
 /floyd_train_models.sh

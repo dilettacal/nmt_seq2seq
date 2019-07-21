@@ -1,5 +1,5 @@
 from project import get_full_path
-from project.utils.preprocessing import SpacyTokenizer, FastTokenizer
+from project.utils.tokenizers import SpacyTokenizer, FastTokenizer
 import os
 import spacy
 import time

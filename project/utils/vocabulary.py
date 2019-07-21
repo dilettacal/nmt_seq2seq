@@ -8,8 +8,8 @@ from torchtext.data import Field, Dataset
 import project
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
-from project.utils.data.download import maybe_download_and_extract
-from project.utils.preprocessing import get_custom_tokenizer
+from project.utils.external.download import maybe_download_and_extract
+from project.utils.tokenizers import get_custom_tokenizer
 from project.utils.utils import convert_time_unit
 from settings import DATA_DIR_PREPRO, PRETRAINED_URL_EN, PRETRAINED_URL_LANG_CODE
 import random
@@ -151,11 +151,11 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer("de", "w", spacy_pretok=spacy_pretok) #
         #### TODO: Rimuovi prima di consegnare :-)
         if spacy_pretok:
-            assert isinstance(src_tokenizer, project.utils.preprocessing.SplitTokenizer)
-            assert isinstance(trg_tokenizer, project.utils.preprocessing.SplitTokenizer)
+            assert isinstance(src_tokenizer, project.utils.tokenizers.SplitTokenizer)
+            assert isinstance(trg_tokenizer, project.utils.tokenizers.SplitTokenizer)
         else:
-            assert isinstance(src_tokenizer, project.utils.preprocessing.SpacyTokenizer)
-            assert isinstance(trg_tokenizer, project.utils.preprocessing.SpacyTokenizer)
+            assert isinstance(src_tokenizer, project.utils.tokenizers.SpacyTokenizer)
+            assert isinstance(trg_tokenizer, project.utils.tokenizers.SpacyTokenizer)
 
     if experiment.pretrained:
         ### retrieve word vectors
