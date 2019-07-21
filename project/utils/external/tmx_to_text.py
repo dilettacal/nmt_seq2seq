@@ -1,4 +1,7 @@
 '''
+This file contains classes and functions from:  https://github.com/amake/tmx2corpus wit the following license
+
+######################################################################################################
 
 The MIT License (MIT)
 
@@ -34,12 +37,13 @@ To perform tokenization or to filter the output, use the convert() method
 with subclasses of the Tokenizer or Filter objects.
 @author: aaron.madlon-kay
 
-#########################################
+######################################################################################################
 
 Modifications by: Diletta Calussi
 
-Oriignal code: https://github.com/amake/tmx2corpus
-
+The Converter class has been simplified. It only performs the conversion task.
+As Output classes only FileOutput has been kept.
+As Tokenizers custom tokenizers are used (s. utils/tokenizers.py).
 '''
 
 import os
@@ -77,30 +81,11 @@ class FileOutput(object):
             out_file.close()
         self.files.clear()
 
-
-class BufferOutput(object):
-    def __init__(self):
-        self.buckets = {}
-
-    def init(self, language):
-        if language not in self.buckets:
-            self.buckets[language] = []
-
-    def write(self, language, content):
-        self.buckets[language].append(content)
-
-    def cleanup(self):
-        pass
-
-
 class Converter(object):
     """
     This object converts a bitext to plain text.
     Slightly modified from the original version.
-    In this version following has been removed:
-    - filters
-    - tokenizers
-
+    No filtering and tokenizing function, only simple conversion task.
     """
     def __init__(self, output):
         self.suppress_count = 0
@@ -232,9 +217,6 @@ def convert(paths,output=None):
         return 1
     return 0
 
-
-
-#### Removed main
 
 def glom_urls(tokens):
     result = []
