@@ -40,18 +40,12 @@ from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 def data_prepro_parser():
     parser = argparse.ArgumentParser(description='Preprocess Europarl Dataset for NMT')
     parser.add_argument("--lang_code", default="de", type=str)
-    #  parser.add_argument("--type", default="tmx", type=str, help="TMX")
-   # parser.add_argument("--corpus", default="europarl", type=str, help="Corpus name")
     parser.add_argument("--max_len", default=30, type=int, help="Filter sequences with a length <= max_len")
     parser.add_argument("--min_len", default=2, type=int, help="Filter sequences with a length >= min_len")
-   # parser.add_argument('--path', default="data/raw/europarl/de", help="Path to raw data files")
-   # parser.add_argument('--file', default="de-en.tmx", help="File name after extraction")
     return parser
 
 
 def raw_preprocess(parser):
-    #### preprocessing pipeline for tmx files
-    ### download the files #####
     try:
         maybe_download_and_extract_europarl(language_code=parser.lang_code, tmx=True)
     except Exception as e:
@@ -61,7 +55,6 @@ def raw_preprocess(parser):
 
     corpus_name = "europarl"
     lang_code = parser.lang_code
-    # file_type = parser.type
     path_to_raw_file = os.path.join(DATA_DIR_RAW, corpus_name, lang_code)
     max_len, min_len = parser.max_len, parser.min_len
 
