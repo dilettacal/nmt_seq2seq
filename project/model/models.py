@@ -193,9 +193,6 @@ class Seq2Seq(nn.Module):
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-
-####### Use this function to set up a model from the main script #####
-#### Factory method to generate the model ####
 def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
     model_type = experiment_config.model_type
     if model_type == "custom":
@@ -203,9 +200,7 @@ def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
             experiment_config.reverse_input = False
         model =  Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
-    else: ### sutskever model
-        #### This returs a model like in Sutskever et al. ####
-        #### The architecture was multilayered, thus layers are automatically set to 2 and input sequences were reversed (this is handled in the vocabulary class)
+    else:
         if not experiment_config.reverse_input: experiment_config.reverse_input = True
         if experiment_config.nlayers < 2: experiment_config.nlayers = 2
         model =  Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
