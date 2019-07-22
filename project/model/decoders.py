@@ -34,7 +34,7 @@ class Decoder(nn.Module):
         self.dropout = nn.Dropout(self.dropout_p)
 
     def forward(self, x, h0):
-        x = self.embedding(x) #1,1,256
+        x = self.embedding(x)
         x = self.dropout(x)
         out, states = self.rnn(x, h0)
         return out, states
