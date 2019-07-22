@@ -10,10 +10,6 @@ from torch import nn
 
 
 class Decoder(nn.Module):
-    """
-    This is a general decoder.
-    It can be used in the Seq2Seq class. It can be multilayered and works on both lstm and gru cells.
-    """
     def __init__(self, trg_vocab_size, embedding, h_dim, num_layers, dropout_p=0.0, rnn_cell="lstm"):
         super(Decoder, self).__init__()
         self.vocab_size, self.embedding_size = trg_vocab_size, embedding
