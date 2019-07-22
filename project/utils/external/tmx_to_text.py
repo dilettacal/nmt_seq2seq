@@ -87,7 +87,7 @@ class Converter(object):
     Slightly modified from the original version.
     No filtering and tokenizing function, only simple conversion task.
     """
-    def __init__(self, output):
+    def __init__(self, output:FileOutput):
         self.suppress_count = 0
         self.output = output
         self.output_lines = 0

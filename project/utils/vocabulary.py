@@ -84,7 +84,7 @@ class Seq2SeqDataset(Dataset):
 
     @classmethod
     def splits(cls, path=None, root='', train=None, validation=None,
-               test=None, reduce = [0,0,0], reverse_input = False, **kwargs):
+               test=None, reduce = [0,0,0], **kwargs):
 
         exts = kwargs["exts"]
         reduce_samples = reduce
