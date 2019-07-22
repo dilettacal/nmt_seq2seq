@@ -9,7 +9,6 @@ and https://github.com/lukemelas/Machine-Translation/blob/master/models/Seq2seq.
 (Code from the github repository is used on the courtesy of the author)
 """
 import random
-
 import torch
 import torch.nn as nn
 from project.utils.experiment import Experiment
@@ -18,12 +17,6 @@ from project.model.encoders import Encoder
 from project.model.layers import Attention
 from settings import VALID_CELLS, SEED
 
-"""
-Parameters:
-- Maxout (500 units): 73,303,508
-- 4 layers, 500, 500: 57,270,504
-- 4 layers, 1000, 1000: 146,511,004
-"""
 
 random.seed(SEED)
 
