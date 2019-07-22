@@ -36,22 +36,17 @@ class Encoder(nn.Module):
         self.dropout = nn.Dropout(dropout_p)
 
     def forward(self, x):
-        # Embed text
         x = self.embedding(x)
         x = self.dropout(x)
-
-        ## initialize encoder hidden states to be 0 at every batch iteration
         num_layers = self.num_layers * 2 if self.bidirectional else self.num_layers
         init = torch.zeros(num_layers, x.size(1), self.h_dim)
         init = init.to(self.device)
-        ## create tensor for hidden state
         if self.rnn_type == "lstm":
             h0 = (init, init.clone()) # h0 = (h, c)
         else:
             h0 = (init) # h0 = h
 
-        # Pass through RNN
-        out, states = self.rnn(x, h0)  # states is a tuple, if lstm else single
+        out, states = self.rnn(x, h0)
 
         return out, states
 
