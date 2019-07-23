@@ -70,7 +70,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     model.load_state_dict(torch.load(path_to_model))
     model = model.to(device)
 
-    src_tokenizer = get_custom_tokenizer(lang="de", mode="w", fast=False, spacy_pretok=False)
+    src_tokenizer = get_custom_tokenizer(lang="de", mode="w", spacy_pretok=False)
 
     logger = Logger(path_to_exp, "live_transl.log")
     logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)

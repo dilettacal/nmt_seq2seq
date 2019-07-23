@@ -27,10 +27,10 @@ de_sp = SpacyTokenizer("de", de_nlp)
 
 for fr in frasi:
     print("Spacy:")
-    print(', '.join(en_sp.tokenize(fr)))
+    print(' | '.join(en_sp.tokenize(fr)))
     print([(ent.text, ent.label_) for ent in en_nlp(fr).ents])
     print([(tok.text, tok.pos_) for tok in en_nlp(fr)])
     print("Fast")
-    print(', '.join(fast_tok.tokenize(fr)))
+    print(' | '.join(fast_tok.tokenize(fr)))
     print("NLTK")
-    print(', '.join(nltk.word_tokenize(fr)))
+    print(' | '.join(nltk.word_tokenize(fr)))

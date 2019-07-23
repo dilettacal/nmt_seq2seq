@@ -126,28 +126,42 @@ class SplitTokenizer(BaseSequenceTokenizer):
 
 
 ##### Factory method ########
-def get_custom_tokenizer(lang, mode="w", fast=False, spacy_pretok=True):
+def get_custom_tokenizer(lang, mode="w", spacy_pretok=False, prepro=True):
+    """
+    This function returns the tokenizer based on the configurations. The function is used either during the first preprocessing phase and during training time
+    :param lang: the tokenizer language (relevant for spacy)
+    :param mode: Char-based ("c") or Word-based ("w")
+    :param spacy_pretok:
+    :param prepro:
+    :return:
+    """
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
     tokenizer = None
-    if mode == "c":
+    if mode == "c" and spacy_pretok or not prepro:
         tokenizer = CharBasedTokenizer(lang)
-    else:
-        if fast:
-            tokenizer = FastTokenizer(lang)
-        elif spacy_pretok:
+    elif mode == "c" and prepro:
+        tokenizer = FastTokenizer(lang)
+    elif mode == "w":
+        if spacy_pretok:
+            # if spacy tokenization already performed, then sentences can be splitted on spaces
             tokenizer = SplitTokenizer(lang)
         else:
-            ## this may last more than 1 hour
-            if lang in SUPPORTED_LANGS.keys():
-                try:
-                    import spacy
-                    nlp = spacy.load(SUPPORTED_LANGS[lang], disable=["parser", "tagger", "textcat"])  # makes it faster
-                    tokenizer = SpacyTokenizer(lang, nlp)
-                except ImportError or Exception:
-                    print(
-                        "Spacy not installed or model for the requested language has not been downloaded.\nStandard tokenizer is used")
+            if not prepro:
+                tokenizer = FastTokenizer(lang)
+            else:
+                if lang in SUPPORTED_LANGS.keys():
+                    try:
+                        import spacy
+                        nlp = spacy.load(SUPPORTED_LANGS[lang],
+                                         disable=["parser", "tagger", "textcat"])  # makes it faster
+                        tokenizer = SpacyTokenizer(lang, nlp)
+                    except ImportError or Exception:
+                        print(
+                            "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
+                        tokenizer = FastTokenizer(lang)
+                else:
                     tokenizer = FastTokenizer(lang)
-                    tokenizer.set_mode(True)
+
     return tokenizer
 
 

@@ -29,6 +29,7 @@ import os
 import re
 import time
 
+from project.utils.tokenizers import SpacyTokenizer, FastTokenizer
 from project.utils.external.europarl import maybe_download_and_extract_europarl
 from project.utils.tokenizers import get_custom_tokenizer
 from project.utils.data import split_data, persist_txt
@@ -92,9 +93,22 @@ def raw_preprocess(parser):
     ### tokenize lines ####
     assert len(src_lines) == len(trg_lines), "Different lengths!"
 
-    src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=False), get_custom_tokenizer("de",
-                                                                                                             "w",
-                                                                                                             spacy_pretok=False)  # spacy is used
+    TOKENIZATION_MODE = "w"
+    PREPRO_PHASE = True
+    SPACY_PRETOK_ALREADY_PERFORMED = False
+
+    src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", TOKENIZATION_MODE,
+                                                        spacy_pretok=SPACY_PRETOK_ALREADY_PERFORMED,
+                                                        prepro=PREPRO_PHASE), \
+                                   get_custom_tokenizer(lang_code, TOKENIZATION_MODE,
+                                                        spacy_pretok=SPACY_PRETOK_ALREADY_PERFORMED,
+                                                        prepro=PREPRO_PHASE)
+
+
+    assert isinstance(src_tokenizer, SpacyTokenizer) or isinstance(src_tokenizer, FastTokenizer)
+    assert isinstance(trg_tokenizer, SpacyTokenizer) or isinstance(trg_tokenizer, FastTokenizer)
+
+
     src_logger = Logger(output_file_path, file_name="bitext.tok.en")
     trg_logger = Logger(output_file_path, file_name="bitext.tok.{}".format(lang_code))
 

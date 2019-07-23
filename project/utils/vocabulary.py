@@ -139,16 +139,9 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     if char_level:
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c"), get_custom_tokenizer("de", "c")
     else:
-        ### equivalent to str.split(" ") but it considers punctuation and not only spaces as token boundaries. It also removes duplicate spaces.
-        '''sent = "( DE ) Mr President , starting the agenda in this way with a brief debate on the Berlin statement is a good choice ."
-           src_tokenizer.tokenize(sent) -->  
-           ['(', 'DE', ')', 'Mr', 'President', ',', 'starting', 'the', 'agenda', 'in', 'this', 'way', 'with', 'a', 'brief', 'debate', 'on', 'the', 'Berlin', 'statement', 'is', 'a', 'good', 'choice', '.']
-           
-           sent.split(" ")
-           ['(', 'DE', ')', 'Mr', 'President', ',', 'starting', 'the', 'agenda', 'in', 'this', 'way', 'with', 'a', 'brief', 'debate', 'on', 'the', 'Berlin', 'statement', 'is', 'a', 'good', 'choice', '.']
-        '''
         spacy_pretok = True if corpus == "europarl" else False
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer("de", "w", spacy_pretok=spacy_pretok) #
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer(
+            "de", "w", spacy_pretok=spacy_pretok)  #
         #### TODO: Rimuovi prima di consegnare :-)
         if spacy_pretok:
             assert isinstance(src_tokenizer, project.utils.tokenizers.SplitTokenizer)
