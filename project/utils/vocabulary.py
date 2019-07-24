@@ -19,12 +19,6 @@ from settings import SEED
 random.seed(SEED)
 
 
-"""
-This script contains the Seq2SeqDataset class to access bilingual text files
-and other functions to create vocabularies and print some information 
-
-"""
-
 
 class Seq2SeqDataset(Dataset):
     """
@@ -142,35 +136,6 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         spacy_pretok = True if corpus == "europarl" else False
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer(
             "de", "w", spacy_pretok=spacy_pretok)  #
-        #### TODO: Rimuovi prima di consegnare :-)
-        if spacy_pretok:
-            assert isinstance(src_tokenizer, project.utils.tokenizers.SplitTokenizer)
-            assert isinstance(trg_tokenizer, project.utils.tokenizers.SplitTokenizer)
-        else:
-            assert isinstance(src_tokenizer, project.utils.tokenizers.SpacyTokenizer)
-            assert isinstance(trg_tokenizer, project.utils.tokenizers.SpacyTokenizer)
-
-    if experiment.pretrained:
-        ### retrieve word vectors
-        embedding_dir = os.path.join(DATA_DIR_PREPRO, "embeddings")
-        os.makedirs(embedding_dir, exist_ok=True)
-
-        try:
-            maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_LANG_CODE.format(language_code),
-                                       raw_file='cc.{}.300.vec'.format(language_code))
-            maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_EN,
-                                       raw_file='cc.en.300.vec')
-        except Exception as e:
-            print("An error has occurred while downloading pretrained embeddings. Please download the files for 'en' and <lang_code> manually from: \n"
-                  "https://fasttext.cc/docs/en/pretrained-vectors.html")
-        init_unk = torch.Tensor.normal_
-        if experiment.get_src_lang() == "en":
-            src_vec = vocab.Vectors(name='cc.en.300.vec', cache=embedding_dir, unk_init = init_unk)
-            trg_vec = vocab.Vectors(name='cc.{}.300.vec'.format(language_code), cache=embedding_dir, unk_init = init_unk)
-
-        else:
-            src_vec = vocab.Vectors('cc.{}.300.vec'.format(language_code), embedding_dir, unk_init = init_unk)
-            trg_vec = vocab.Vectors('cc.en.300.vec', embedding_dir, unk_init = init_unk)
 
     src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
     trg_vocab = Field(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
@@ -219,6 +184,29 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         print("Duration: {}".format(convert_time_unit(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
+    if experiment.pretrained:
+        ### retrieve word vectors
+        embedding_dir = os.path.join(DATA_DIR_PREPRO, "embeddings")
+        os.makedirs(embedding_dir, exist_ok=True)
+
+        try:
+            maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_LANG_CODE.format(language_code),
+                                       raw_file='cc.{}.300.vec'.format(language_code))
+            maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_EN,
+                                       raw_file='cc.en.300.vec')
+        except Exception as e:
+            print(
+                "An error has occurred while downloading pretrained embeddings. Please download the files for 'en' and <lang_code> manually from: \n"
+                "https://fasttext.cc/docs/en/pretrained-vectors.html")
+        init_unk = torch.Tensor.normal_
+        if experiment.get_src_lang() == "en":
+            src_vec = vocab.Vectors(name='cc.en.300.vec', cache=embedding_dir, unk_init=init_unk)
+            trg_vec = vocab.Vectors(name='cc.{}.300.vec'.format(language_code), cache=embedding_dir, unk_init=init_unk)
+
+        else:
+            src_vec = vocab.Vectors('cc.{}.300.vec'.format(language_code), embedding_dir, unk_init=init_unk)
+            trg_vec = vocab.Vectors('cc.en.300.vec', embedding_dir, unk_init=init_unk)
+
     if voc_limit > 0:
         if experiment.pretrained:
             src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit, vectors=src_vec)
@@ -236,9 +224,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
             trg_vocab.build_vocab(train, min_freq=min_freq)
         print("Vocabularies created!")
 
-    #print(trg_vocab.vocab.vectors[trg_vocab.vocab.stoi["the"]])
     #### Iterators #####
-
     # Create iterators to process text in batches of approx. the same length
     train_iter = data.BucketIterator(train, batch_size=experiment.batch_size, device=device, repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)), shuffle=True)
     val_iter = data.BucketIterator(val, 1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=True)

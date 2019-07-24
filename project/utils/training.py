@@ -119,7 +119,6 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     return bleus, metrics
 
 
-
 def train(train_iter, model, criterion, optimizer, device="cuda"):
 
     model.train()
@@ -186,8 +185,8 @@ def validate(val_iter, model, device, TRG, beam_size=5):
             sent_candidates.append(sent_out)
             sent_references.append(sent_ref)
 
-
-        smooth = SmoothingFunction()  # if there are less than 4 ngrams
+        # smoothing technique for any cases
+        smooth = SmoothingFunction()
         nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
                                 hypotheses=[hyp.split() for hyp in sent_candidates],
                                 smoothing_function=smooth.method4) * 100
@@ -201,82 +200,6 @@ def validate(val_iter, model, device, TRG, beam_size=5):
             perl.update(perl_bleu)
 
     return [bleu.val, perl.val]
-
-
-def validate_test_set(val_iter, model, criterion, device, TRG, beam_size = 1, max_len=30):
-    model.eval()
-    losses = AverageMeter()
-    sent_candidates = []
-    sent_references = []
-    with torch.no_grad():
-        for i, batch in enumerate(val_iter):
-            src = batch.src.to(device)
-            tgt = batch.trg.to(device)
-            ### compute normal scores
-            scores = model(src, tgt)
-
-            scores = scores[:-1]
-            tgt = tgt[1:]
-
-            # Reshape for loss function
-            scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
-
-            ##### top1 = output.max(1)[1]
-            tgt = tgt.view(scores.size(0))
-
-            # Calculate loss
-            loss = criterion(scores, tgt)
-            losses.update(loss.item())
-
-            #### BLEU
-            # compute scores with greedy search
-            out = model.predict(src, beam_size=beam_size, max_len=max_len)  # out is a list
-
-            ## Prepare sentences for BLEU
-            ref = list(tgt.data.squeeze())
-            # Prepare sentence for bleu script
-            remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
-            out = [w for w in out if w not in remove_tokens]
-            ref = [w for w in ref if w not in remove_tokens]
-            sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
-            sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
-            sent_candidates.append(sent_out)
-            sent_references.append(sent_ref)
-
-    smooth = SmoothingFunction() #if there are less than 4 ngrams
-    nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
-                            hypotheses=[hyp.split() for hyp in sent_candidates],
-                            smoothing_function=smooth.method4)*100
-    try:
-        perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
-    except TypeError or Exception as e:
-        print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
-        perl_bleu = 0
-
-    # print("BLEU", batch_bleu)
-    return losses.avg, [nlkt_bleu, perl_bleu]
-
-def validate_losses(val_iter, model, criterion, logger):
-    '''Calculate losses by teacher forcing on the validation set'''
-    model.eval()
-    losses = AverageMeter()
-    for i, batch in enumerate(val_iter):
-        src = batch.src.to(model.device)
-        trg = batch.trg.to(model.device)
-        # Forward
-        scores = model(src, trg)
-        scores = scores[:-1]
-        trg = trg[1:]
-        # Reshape for loss function
-        scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
-        trg = trg.view(scores.size(0))
-        num_words = (trg != 0).float().sum()
-        # Calculate loss
-        loss = criterion(scores, trg)
-        losses.update(loss.data[0])
-    logger.log('Average loss on validation: {:.3f}'.format(losses.avg))
-    return losses.avg
-
 
 def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
     model.eval()
@@ -421,4 +344,36 @@ def get_gradient_statistics(model):
     mean_stats = np.mean([p.grad.mean().cpu().numpy() for p in parameters])
 
     return {"min": min_stats, "max": max_stats, "mean": mean_stats}
+
+
+###### other functions #######
+
+### validate with teacher forcing (not used in any experiment)
+def validate_scores_tf(val_iter, model, criterion, logger):
+    '''
+    Computes standard teacher forcing on the validation set
+    :param val_iter:
+    :param model:
+    :param criterion:
+    :param logger:
+    :return:
+    '''
+    model.eval()
+    losses = AverageMeter()
+    for i, batch in enumerate(val_iter):
+        src = batch.src.to(model.device)
+        trg = batch.trg.to(model.device)
+        # Forward
+        scores = model(src, trg)
+        scores = scores[:-1]
+        trg = trg[1:]
+        # Reshape for loss function
+        scores = scores.view(scores.size(0) * scores.size(1), scores.size(2))
+        trg = trg.view(scores.size(0))
+        num_words = (trg != 0).float().sum()
+        # Calculate loss
+        loss = criterion(scores, trg)
+        losses.update(loss.data[0])
+    logger.log('Average loss on validation: {:.3f}'.format(losses.avg))
+    return losses.avg
 
