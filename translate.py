@@ -20,18 +20,6 @@ from project.utils.utils import Logger, str2bool
 from settings import RESULTS_DIR,BEST_MODEL_PATH
 
 
-"""
-SRC, TRG, train_iter, val_iter, test_iter, train_data, val_data, test_data, samples, samples_iter = \
-        get_vocabularies_iterators(experiment, None)
-
-logger = Logger(path_to_exp, file_name="test.log")
-logger.pickle_obj(SRC, "src")
-logger.pickle_obj(TRG, "trg")
-
-
-"""
-
-
 def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     use_cuda = True if torch.cuda.is_available() else False
     device = "cuda" if use_cuda else "cpu"
@@ -52,14 +40,20 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
 
     char_level = experiment.char_level
     tok_level = "c" if char_level else "w"
-    src_tokenizer, trg_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), tok_level, spacy_pretok=False), \
-                                   get_custom_tokenizer(experiment.get_trg_lang(), tok_level, spacy_pretok=False)
+
+    src_word_pre_tokenizer, trg_word_pre_tokenizer = \
+        get_custom_tokenizer(experiment.get_src_lang(), "w", spacy_pretok=False), \
+        get_custom_tokenizer(experiment.get_trg_lang(), "w", spacy_pretok=False)
+
+
+    if tok_level == "c":
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), "c"), get_custom_tokenizer(experiment.get_trg_lang(), "c")
+    else:
+        src_tokenizer = src_word_pre_tokenizer
+        trg_tokenizer = trg_word_pre_tokenizer
 
     SRC_vocab.tokenize = src_tokenizer.tokenize
     TRG_vocab.tokenize = trg_tokenizer.tokenize
-
-    test_sent = "Ich bin's"
-    print(SRC_vocab.tokenize(test_sent))
 
     tokens_bos_eos_pad_unk = [TRG_vocab.vocab.stoi[SOS_TOKEN], TRG_vocab.vocab.stoi[EOS_TOKEN],
                               TRG_vocab.vocab.stoi[PAD_TOKEN], TRG_vocab.vocab.stoi[UNK_TOKEN]]
@@ -70,7 +64,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     model.load_state_dict(torch.load(path_to_model))
     model = model.to(device)
 
-    src_tokenizer = get_custom_tokenizer(lang="de", mode="w", spacy_pretok=False)
+    src_word_pre_tokenizer = get_custom_tokenizer(lang="de", mode="w", spacy_pretok=False)
 
     logger = Logger(path_to_exp, "live_transl.log")
     logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)
@@ -80,7 +74,9 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
         path_to_file = os.path.join(root, predict_from_file)
         samples = open(path_to_file, encoding="utf-8", mode="r").readlines()
         for sample in samples:
-            tok_sample = src_tokenizer.tokenize(sample)
+            tok_sample = src_word_pre_tokenizer.tokenize(sample)
+            if tok_level == "c":
+                tok_sample = src_tokenizer.tokenize(' '.join(tok_sample))
             _ = predict_from_input(input_sentence=tok_sample, SRC=SRC_vocab, TRG=TRG_vocab, model=model,
                                device=experiment.get_device(),
                                logger=logger, stdout=True, beam_size=beam_size)
@@ -91,8 +87,11 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
                 input_sequence = input("Source > ")
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
-                input_sequence = src_tokenizer.tokenize(input_sequence.lower())
-                out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu", beam_size=beam_size)
+                input_sequence = src_word_pre_tokenizer.tokenize(input_sequence.lower())
+                if tok_level == "c":
+                    input_sequence = src_tokenizer.tokenize(' '.join(input_sequence))
+                out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu",
+                                         beam_size=beam_size)
                 if out:
                     print("Translation > ", out)
                 else: print("Error while translating!")
