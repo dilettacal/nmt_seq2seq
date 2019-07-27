@@ -68,6 +68,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
                 best_bleu_score = bleu
                 logger.save_model(model.state_dict())
                 logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
+                check_point_bleu = True
             else: check_point_bleu = False
 
             if epoch % 50 and not check_point_bleu:
