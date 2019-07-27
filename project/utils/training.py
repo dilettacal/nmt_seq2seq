@@ -27,117 +27,64 @@ random.seed(SEED)
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
                 device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, check_translations_every=5, beam_size=5):
     best_bleu_score = 0
-
     metrics = dict()
     train_losses = []
     train_ppls = []
-
     nltk_bleus, perl_bleus = [], []
     bleus = dict()
-
-    last_loss = 100
-
+    checkpoint_loss = 100
     check_transl_every = check_translations_every if epochs <= 80 else check_translations_every*2
-
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
-
     check_point_bleu = True
-
     print("Validation Beam: ", beam_size)
 
     for epoch in range(epochs):
         start_time = time.time()
+        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
+                               device=device)
+        avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
+
+        train_losses.append(avg_train_loss)
+        train_ppl = math.exp(avg_train_loss)
+        train_ppls.append(train_ppl)
+        nltk_bleus.append(avg_bleu_val[0])
+        perl_bleus.append(avg_bleu_val[1])
+        bleu = avg_bleu_val[0]
+        perl_b = avg_bleu_val[1]
+
+        ### scheduler monitors val loss value
+        scheduler.step(bleu)  # input bleu score
+
+        if bleu > best_bleu_score:
+            best_bleu_score = bleu
+            logger.save_model(model.state_dict())
+            logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
+            check_point_bleu = True
+        else:
+            check_point_bleu = False
+
+        if not check_point_bleu:
+            if epoch % 25 == 0 and avg_train_loss <= checkpoint_loss:
+                logger.save_model(model.state_dict())
+                logger.log('Checkpoint - Last BLEU: {:.3f}'.format(best_bleu_score))
+
+        checkpoint_loss = avg_train_loss #update checkpoint loss to last avg loss
 
         if epoch % check_transl_every == 0:
-
-            avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
-                                   device=device)
-
-            train_losses.append(avg_train_loss)
-            train_ppl = math.exp(avg_train_loss)
-            train_ppls.append(train_ppl)
-
-            avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
-            nltk_bleus.append(avg_bleu_val[0])
-            perl_bleus.append(avg_bleu_val[1])
-            bleu = avg_bleu_val[0]
-            perl_b = avg_bleu_val[1]
-
-            ### scheduler monitors val loss value
-            scheduler.step(bleu)  # input bleu score
-
-            if bleu > best_bleu_score:
-                best_bleu_score = bleu
-                logger.save_model(model.state_dict())
-                logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
-                check_point_bleu = True
-            else:
-                check_point_bleu = False
-
-            if not check_point_bleu:
-                if epoch % 25 == 0 and avg_train_loss <= last_loss:
-                    logger.save_model(model.state_dict())
-                    logger.log('Checkpoint - Last BLEU: {:.3f}'.format(best_bleu_score))
-
-            last_loss = avg_train_loss
-
             #### checking translations
             if samples_iter:
                 tr_logger.log("Translation check. Epoch {}".format(epoch + 1))
                 check_translation(mini_samples, model, SRC, TRG, tr_logger)
 
+        end_epoch_time = time.time()
 
-            end_epoch_time = time.time()
+        total_epoch = convert_time_unit(end_epoch_time - start_time)
 
-            total_epoch = convert_time_unit(end_epoch_time - start_time)
+        logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
+        logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
 
-            logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
-            logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
-
-            metrics.update({"loss": train_losses, "ppl": train_ppls})
-            bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
-
-        else:
-            avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
-                                   device=device)
-
-            train_losses.append(avg_train_loss)
-            train_ppl = math.exp(avg_train_loss)
-            train_ppls.append(train_ppl)
-
-            avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
-            nltk_bleus.append(avg_bleu_val[0])
-            perl_bleus.append(avg_bleu_val[1])
-            bleu = avg_bleu_val[0]
-            perl_b = avg_bleu_val[1]
-
-            ### scheduler monitors val loss value
-            scheduler.step(bleu)  # input bleu score
-
-            if bleu > best_bleu_score:
-                best_bleu_score = bleu
-                logger.save_model(model.state_dict())
-                logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
-                check_point_bleu = True
-            else:
-                check_point_bleu = False
-
-            if not check_point_bleu:
-                if epoch % 25 == 0 and avg_train_loss <= last_loss:
-                    logger.save_model(model.state_dict())
-                    logger.log('Checkpoint - Last BLEU: {:.3f}'.format(best_bleu_score))
-
-            last_loss = avg_train_loss
-
-            end_epoch_time = time.time()
-
-            total_epoch = convert_time_unit(end_epoch_time - start_time)
-
-            logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
-            logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
-
-            metrics.update({"loss": train_losses, "ppl": train_ppls})
-            bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
+        metrics.update({"loss": train_losses, "ppl": train_ppls})
+        bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
 
     return bleus, metrics
 
