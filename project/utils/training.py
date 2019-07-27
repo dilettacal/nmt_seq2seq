@@ -62,10 +62,17 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             ### scheduler monitors val loss value
             scheduler.step(bleu)  # input bleu score
 
+            check_point_bleu = True
+
             if bleu > best_bleu_score:
                 best_bleu_score = bleu
                 logger.save_model(model.state_dict())
                 logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
+            else: check_point_bleu = False
+
+            if epoch % 50 and not check_point_bleu:
+                logger.save_model(model.state_dict())
+                logger.log('Checkpoint - Last BLEU: {:.3f}'.format(best_bleu_score))
 
             #### checking translations
             if samples_iter:
