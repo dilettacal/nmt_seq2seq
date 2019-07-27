@@ -75,7 +75,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
                 check_point_bleu = False
 
             if not check_point_bleu:
-                if epoch % 50 == 0 and avg_train_loss <= last_loss:
+                if epoch % 30 == 0 and avg_train_loss <= last_loss:
                     logger.save_model(model.state_dict())
                     logger.log('Checkpoint - Last BLEU: {:.3f}'.format(best_bleu_score))
 
