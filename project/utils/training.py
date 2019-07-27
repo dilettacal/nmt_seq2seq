@@ -41,6 +41,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
 
+    check_point_bleu = True
+
     print("Validation Beam: ", beam_size)
 
     for epoch in range(epochs):
@@ -64,14 +66,13 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             ### scheduler monitors val loss value
             scheduler.step(bleu)  # input bleu score
 
-            check_point_bleu = True
-
             if bleu > best_bleu_score:
                 best_bleu_score = bleu
                 logger.save_model(model.state_dict())
                 logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
                 check_point_bleu = True
-            else: check_point_bleu = False
+            else:
+                check_point_bleu = False
 
             if not check_point_bleu:
                 if epoch % 50 == 0 and avg_train_loss <= last_loss:
