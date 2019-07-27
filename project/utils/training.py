@@ -35,6 +35,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     nltk_bleus, perl_bleus = [], []
     bleus = dict()
 
+    last_loss = 100
+
     check_transl_every = check_translations_every if epochs <= 80 else check_translations_every*2
 
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
@@ -71,9 +73,12 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
                 check_point_bleu = True
             else: check_point_bleu = False
 
-            if epoch % 50 and not check_point_bleu:
-                logger.save_model(model.state_dict())
-                logger.log('Checkpoint - Last BLEU: {:.3f}'.format(best_bleu_score))
+            if not check_point_bleu:
+                if epoch % 50 == 0 and avg_train_loss <= last_loss:
+                    logger.save_model(model.state_dict())
+                    logger.log('Checkpoint - Last BLEU: {:.3f}'.format(best_bleu_score))
+
+            last_loss = avg_train_loss
 
             #### checking translations
             if samples_iter:
