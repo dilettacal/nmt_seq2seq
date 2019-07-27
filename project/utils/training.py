@@ -141,8 +141,6 @@ def validate(val_iter, model, device, TRG, beam_size=5):
             # Use GPU
             src = batch.src.to(device)
             trg = batch.trg.to(device)
-
-
             # Get model prediction (from beam search)
             out = model.predict(src, max_len=trg.size(0), beam_size=beam_size)  ### the beam value is the best value from the baseline study
             # print(out.size())
