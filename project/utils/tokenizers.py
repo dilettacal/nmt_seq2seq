@@ -169,7 +169,7 @@ def get_custom_tokenizer(lang, mode="w", spacy_pretok=False, prepro=True):
                 else:
                     try:
                         import spacy
-                        nlp = spacy.load("xx",
+                        nlp = spacy.load("xx_ent_wiki_sm", #model name for multi-languge models 'xx'
                                          disable=["parser", "tagger", "textcat"])  # makes it faster
                         tokenizer = SpacyTokenizer(lang, nlp)
                     except OSError:

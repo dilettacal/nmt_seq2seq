@@ -126,7 +126,8 @@ def raw_preprocess(parser):
     else:
         for i, sent in enumerate(src_lines):
             tok_sent = src_tokenizer.tokenize(sent)
-            temp_src_toks.append(' '.join(tok_sent))
+            tok_sent = ' '.join(tok_sent)
+            temp_src_toks.append(tok_sent)
             src_logger.log(tok_sent, stdout=True if i % 100000 == 0 else False)
 
 
@@ -140,7 +141,8 @@ def raw_preprocess(parser):
     else:
         for i, sent in enumerate(trg_lines):
             tok_sent = trg_tokenizer.tokenize(sent)
-            temp_src_toks.append(' '.join(tok_sent))
+            tok_sent = ' '.join(tok_sent)
+            temp_src_toks.append(tok_sent)
             src_logger.log(tok_sent, stdout=True if i % 100000 == 0 else False)
 
     if max_len > 0:
