@@ -170,7 +170,7 @@ def main():
                                  optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
                                  logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
                                  samples_iter=samples_iter, check_translations_every=log_every,
-                                 beam_size=experiment.val_beam_size, char_level=experiment.char_level)
+                                 beam_size=experiment.val_beam_size)
 
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
     train_loss = Metric("train_loss", list(metrics.values())[0])
@@ -229,7 +229,7 @@ def main():
     ########## testing model against all samples translations
 
     final_translation = Logger(file_name="final_translations.log", path=experiment_path)
-    check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter, persist=True, char_level=experiment.char_level)
+    check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter, persist=True)
 
     return
 

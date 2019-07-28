@@ -25,7 +25,7 @@ random.seed(SEED)
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5, char_level=False):
+                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5):
     best_bleu_score = 0
     metrics = dict()
     train_losses = []
@@ -75,7 +75,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             #### checking translations
             if samples_iter:
                 tr_logger.log("Translation check. Epoch {}".format(epoch + 1))
-                check_translation(mini_samples, model, SRC, TRG, tr_logger, char_level=char_level)
+                check_translation(mini_samples, model, SRC, TRG, tr_logger)
 
         end_epoch_time = time.time()
 
@@ -126,7 +126,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
     return losses.avg
 
 
-def validate(val_iter, model, device, TRG, beam_size=5, char_level=False):
+def validate(val_iter, model, device, TRG, beam_size=5):
     model.eval()
     val_iter.init_epoch()
 
@@ -143,8 +143,7 @@ def validate(val_iter, model, device, TRG, beam_size=5, char_level=False):
             src = batch.src.to(device)
             trg = batch.trg.to(device)
             # Get model prediction (from beam search)
-            max_len = trg.size(0) if not char_level else 250
-            out = model.predict(src, max_len=max_len, beam_size=beam_size)  ### the beam value is the best value from the baseline study
+            out = model.predict(src, max_len=trg.size(0), beam_size=beam_size)  ### the beam value is the best value from the baseline study
             # print(out.size())
             ref = list(trg.data.squeeze())
             # Prepare sentence for bleu script
@@ -207,7 +206,7 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
     # print("BLEU", batch_bleu)
     return [nlkt_bleu, perl_bleu]
 
-def check_translation(samples, model, SRC, TRG, logger,persist=False, char_level=False):
+def check_translation(samples, model, SRC, TRG, logger,persist=False):
     """
     Readapted from Luke Melas Machine-Translation project:
     https://github.com/lukemelas/Machine-Translation/blob/master/training/train.py#L50
@@ -227,8 +226,6 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False, char_level
     all_src, all_trg, all_beam1, all_beam2, all_beam5, all_beam10 = [],[],[],[], [],[]
     final_translations = None
 
-
-
     for i, batch in enumerate(samples):
         logger.log("Batch {}".format(str(i)), stdout=False)
         src = batch.src.to(model.device)
@@ -236,12 +233,11 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False, char_level
         for k in range(src.size(1)): #actually src.size(1) is always set to 1
             src_bs1 = src.select(1, k).unsqueeze(1)
             trg_bs1 = trg.select(1, k).unsqueeze(1)
-            max_len = trg_bs1.size(0) if not char_level else 250
             model.eval()  # predict mode
-            predictions = model.predict(src_bs1, beam_size=1, max_len=max_len)
-            predictions_beam = model.predict(src_bs1, beam_size=2, max_len=max_len)
-            predictions_beam5 = model.predict(src_bs1, beam_size=5,max_len=max_len)
-            predictions_beam10 = model.predict(src_bs1, beam_size=10,max_len=max_len)
+            predictions = model.predict(src_bs1, beam_size=1, max_len=trg_bs1.size(0))
+            predictions_beam = model.predict(src_bs1, beam_size=2, max_len=trg_bs1.size(0))
+            predictions_beam5 = model.predict(src_bs1, beam_size=5,max_len=trg_bs1.size(0))
+            predictions_beam10 = model.predict(src_bs1, beam_size=10,max_len=trg_bs1.size(0))
 
             #model.train()  # test mode
             #probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
