@@ -25,7 +25,7 @@ random.seed(SEED)
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger = None, samples_iter = None, check_translations_every=5, beam_size=5):
+                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5):
     best_bleu_score = 0
     metrics = dict()
     train_losses = []
@@ -234,10 +234,10 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False):
             src_bs1 = src.select(1, k).unsqueeze(1)
             trg_bs1 = trg.select(1, k).unsqueeze(1)
             model.eval()  # predict mode
-            predictions = model.predict(src_bs1, beam_size=1)
-            predictions_beam = model.predict(src_bs1, beam_size=2)
-            predictions_beam5 = model.predict(src_bs1, beam_size=5)
-            predictions_beam10 = model.predict(src_bs1, beam_size=10)
+            predictions = model.predict(src_bs1, beam_size=1, max_len=trg_bs1.size(0))
+            predictions_beam = model.predict(src_bs1, beam_size=2, max_len=trg_bs1.size(0))
+            predictions_beam5 = model.predict(src_bs1, beam_size=5,max_len=trg_bs1.size(0))
+            predictions_beam10 = model.predict(src_bs1, beam_size=10,max_len=trg_bs1.size(0))
 
             #model.train()  # test mode
             #probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
