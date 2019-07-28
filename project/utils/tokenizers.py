@@ -155,9 +155,16 @@ def get_custom_tokenizer(lang, mode="w", spacy_pretok=False, prepro=True):
                         nlp = spacy.load(SUPPORTED_LANGS[lang],
                                          disable=["parser", "tagger", "textcat"])  # makes it faster
                         tokenizer = SpacyTokenizer(lang, nlp)
-                    except ImportError or OSError or Exception:
+
+                    except OSError:
+                        print("Spacy model for language {} not found. Please install it.".format(lang))
+                        tokenizer = FastTokenizer(lang)
+                    except ImportError:
                         print(
                             "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
+                        tokenizer = FastTokenizer(lang)
+                    except Exception as e:
+                        print("Something went wrong: {}".format(e))
                         tokenizer = FastTokenizer(lang)
                 else:
                     try:
@@ -165,9 +172,15 @@ def get_custom_tokenizer(lang, mode="w", spacy_pretok=False, prepro=True):
                         nlp = spacy.load("xx",
                                          disable=["parser", "tagger", "textcat"])  # makes it faster
                         tokenizer = SpacyTokenizer(lang, nlp)
-                    except ImportError or OSError or Exception:
+                    except OSError:
+                        print("Spacy model for language xx not installed.")
+                        tokenizer = FastTokenizer(lang)
+                    except ImportError:
                         print(
                             "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
+                        tokenizer = FastTokenizer(lang)
+                    except Exception as e:
+                        print("Something went wrong: {}".format(e))
                         tokenizer = FastTokenizer(lang)
                     #tokenizer = FastTokenizer(lang)
 
