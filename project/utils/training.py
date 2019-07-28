@@ -25,7 +25,8 @@ random.seed(SEED)
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5):
+                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5,
+                char_level=False):
     best_bleu_score = 0
     metrics = dict()
     train_losses = []
@@ -75,7 +76,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             #### checking translations
             if samples_iter:
                 tr_logger.log("Translation check. Epoch {}".format(epoch + 1))
-                check_translation(mini_samples, model, SRC, TRG, tr_logger)
+                check_translation(mini_samples, model, SRC, TRG, tr_logger, char_level=char_level)
 
         end_epoch_time = time.time()
 
@@ -170,7 +171,7 @@ def validate(val_iter, model, device, TRG, beam_size=5):
 
     return [bleu.val, perl.val]
 
-def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
+def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30, char_level=False):
     model.eval()
     sent_candidates = []
     sent_references = []
@@ -188,8 +189,12 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
             remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
             out = [w for w in out if w not in remove_tokens]
             ref = [w for w in ref if w not in remove_tokens]
-            sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
-            sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+            if not char_level:
+                sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
+                sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
+            else:
+                sent_out = ''.join(TRG.vocab.itos[j] for j in out)
+                sent_ref = ''.join(TRG.vocab.itos[j] for j in ref)
             sent_candidates.append(sent_out)
             sent_references.append(sent_ref)
 
@@ -206,7 +211,7 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
     # print("BLEU", batch_bleu)
     return [nlkt_bleu, perl_bleu]
 
-def check_translation(samples, model, SRC, TRG, logger,persist=False):
+def check_translation(samples, model, SRC, TRG, logger,persist=False, char_level=False):
     """
     Readapted from Luke Melas Machine-Translation project:
     https://github.com/lukemelas/Machine-Translation/blob/master/training/train.py#L50
@@ -241,12 +246,20 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False):
 
             #model.train()  # test mode
             #probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
-            src_sent = ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
-            trg_sent = ' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)
-            beam1 = ' '.join(TRG.vocab.itos[x] for x in predictions)
-            beam2 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam)
-            beam5 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam5)
-            beam10 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam10)
+            if not char_level:
+                src_sent = ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
+                trg_sent = ' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)
+                beam1 = ' '.join(TRG.vocab.itos[x] for x in predictions)
+                beam2 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam)
+                beam5 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam5)
+                beam10 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam10)
+            else:
+                src_sent = ''.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
+                trg_sent = ''.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)
+                beam1 = ''.join(TRG.vocab.itos[x] for x in predictions)
+                beam2 = ''.join(TRG.vocab.itos[x] for x in predictions_beam)
+                beam5 = ''.join(TRG.vocab.itos[x] for x in predictions_beam5)
+                beam10 = ''.join(TRG.vocab.itos[x] for x in predictions_beam10)
 
             logger.log('Source: {}'.format(src_sent), stdout=False)
             logger.log('Target: {}'.format(trg_sent), stdout=False)

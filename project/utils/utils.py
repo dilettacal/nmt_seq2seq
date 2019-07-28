@@ -77,7 +77,7 @@ class Logger():
             ax.plot(x, metric.get(labels[1]), color="b", label=labels[1])
             ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
                       ncol=2, fancybox=True, shadow=True)
-            plt.savefig(save_path, format="png", dpi=500)
+            fig.savefig(save_path, format="png", dpi=500)
             plt.close()
             self.log("Plot saved: {}".format(save_path))
         elif isinstance(metric, list):

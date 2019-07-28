@@ -170,7 +170,7 @@ def main():
                                  optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
                                  logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
                                  samples_iter=samples_iter, check_translations_every=log_every,
-                                 beam_size=experiment.val_beam_size)
+                                 beam_size=experiment.val_beam_size, char_level=experiment.char_level)
 
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
     train_loss = Metric("train_loss", list(metrics.values())[0])
@@ -195,7 +195,7 @@ def main():
     logger.log("Validation of test set")
     beam_size = 1
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
+    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len, char_level=experiment.char_level)
     nltk_b, perl_b = bleus
     if perl_b == None: perl_b = 0
     logger.log(
@@ -203,7 +203,7 @@ def main():
 
     beam_size = 2
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
+    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
     nltk_b, perl_b = bleus
     if perl_b == None: perl_b = 0
     logger.log(
@@ -211,7 +211,7 @@ def main():
 
     beam_size = 5
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
+    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
     nltk_b, perl_b = bleus
     if perl_b == None: perl_b = 0
     logger.log(
@@ -219,7 +219,7 @@ def main():
 
     beam_size = 10
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
+    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
     nltk_b, perl_b = bleus
     if perl_b == None: perl_b = 0
     logger.log(
@@ -231,7 +231,7 @@ def main():
     ########## testing model against all samples translations
 
     final_translation = Logger(file_name="final_translations.log", path=experiment_path)
-    check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter, persist=True)
+    check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter, persist=True, char_level=experiment.char_level)
 
     return
 
