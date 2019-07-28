@@ -144,7 +144,7 @@ def main():
     # Create loss function and optimizer
     criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=20, verbose=True, min_lr=1e-6, factor=0.25)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=20, verbose=True, min_lr=2e-7, factor=0.1)
 
 
     logger.log('|src_vocab| = {}, |trg_vocab| = {}, Data Loading Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),

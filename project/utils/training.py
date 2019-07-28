@@ -36,6 +36,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     check_transl_every = check_translations_every if epochs <= 80 else check_translations_every*2
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
     check_point_bleu = True
+    CHECKPOINT = 20
     print("Validation Beam: ", beam_size)
 
     for epoch in range(epochs):
@@ -64,7 +65,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             check_point_bleu = False
 
         if not check_point_bleu:
-            if epoch % 25 == 0 and avg_train_loss <= checkpoint_loss:
+            if epoch % CHECKPOINT == 0 and avg_train_loss <= checkpoint_loss:
                 logger.save_model(model.state_dict())
                 logger.log('Training Checkpoint - BLEU: {:.3f}'.format(bleu))
 
