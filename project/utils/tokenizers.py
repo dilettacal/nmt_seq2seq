@@ -155,7 +155,7 @@ def get_custom_tokenizer(lang, mode="w", spacy_pretok=False, prepro=True):
                         nlp = spacy.load(SUPPORTED_LANGS[lang],
                                          disable=["parser", "tagger", "textcat"])  # makes it faster
                         tokenizer = SpacyTokenizer(lang, nlp)
-                    except ImportError or Exception:
+                    except ImportError or IOError or Exception:
                         print(
                             "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
                         tokenizer = FastTokenizer(lang)
@@ -165,7 +165,7 @@ def get_custom_tokenizer(lang, mode="w", spacy_pretok=False, prepro=True):
                         nlp = spacy.load("xx",
                                          disable=["parser", "tagger", "textcat"])  # makes it faster
                         tokenizer = SpacyTokenizer(lang, nlp)
-                    except ImportError or Exception:
+                    except ImportError or IOError or Exception:
                         print(
                             "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
                         tokenizer = FastTokenizer(lang)
