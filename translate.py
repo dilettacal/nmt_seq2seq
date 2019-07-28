@@ -13,9 +13,9 @@ import torch
 
 from project.model.models import get_nmt_model
 from project.utils.prepro.tokenizers import get_custom_tokenizer
-from project.utils.training.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
-from project.utils.training.experiment import Experiment
-from project.utils.training import predict_from_input
+from project.utils.train.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
+from project.utils.train.experiment import Experiment
+from project.utils.train import predict_from_input
 from project.utils.utils import Logger, str2bool
 from settings import RESULTS_DIR,BEST_MODEL_PATH
 

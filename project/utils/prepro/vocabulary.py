@@ -6,7 +6,7 @@ from torchtext import datasets, data as data
 from torchtext.data import Field, Dataset
 
 from project import get_full_path
-from project.utils.training.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
+from project.utils.train.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
 from project.utils.external.download import maybe_download_and_extract
 from project.utils.prepro.tokenizers import get_custom_tokenizer
 from project.utils.utils import convert_time_unit

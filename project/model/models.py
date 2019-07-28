@@ -11,7 +11,7 @@ and https://github.com/lukemelas/Machine-Translation/blob/master/models/Seq2seq.
 import random
 import torch
 import torch.nn as nn
-from project.utils.training.experiment import Experiment
+from project.utils.train.experiment import Experiment
 from project.model.decoders import Decoder
 from project.model.encoders import Encoder
 from project.model.layers import Attention

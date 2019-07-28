@@ -8,11 +8,11 @@ import os, datetime, time, sys
 import torch
 import torch.nn as nn
 
-from project.utils.training.experiment import Experiment
+from project.utils.train.experiment import Experiment
 from project.model.models import count_parameters, get_nmt_model
-from project.utils.training.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
+from project.utils.train.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.prepro.vocabulary import get_vocabularies_iterators, print_info
-from project.utils.training import train_model, beam_predict, check_translation
+from project.utils.train.training import train_model, beam_predict, check_translation
 from project.utils.utils import convert_time_unit, Logger, Metric, str2bool
 from settings import MODEL_STORE
 
