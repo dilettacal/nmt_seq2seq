@@ -104,7 +104,7 @@ def main():
     time_data = time.time()
     SRC, TRG, train_iter, val_iter, test_iter, train_data, val_data, test_data, samples, samples_iter = \
         get_vocabularies_iterators(experiment, data_dir)
-    
+
     end_time_data = time.time()
 
     logger.pickle_obj(SRC, "src")
@@ -187,8 +187,10 @@ def main():
     logger.plot(ppl_bleus, title="Train PPL vs. Val BLEU", ylabel="PPL/BLEU", file="ppl_bleu")
     logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="loss_bleu")
 
+    FIXED_WORD_LEVEL_LEN = 30
+    FIXED_CHAR_LEVEL_LEN = 250
 
-    max_len = 30 if experiment.char_level == False else 250
+    max_len = FIXED_WORD_LEVEL_LEN if experiment.char_level == False else FIXED_CHAR_LEVEL_LEN
     ### Evaluation on test set
     logger.log("Validation of test set")
     beam_size = 1
