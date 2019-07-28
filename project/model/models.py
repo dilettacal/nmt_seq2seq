@@ -129,8 +129,6 @@ class Seq2Seq(nn.Module):
 
     def beam_search(self, src, beam_size, max_len, remove_tokens=[]):
         '''Returns top beam_size sentences using beam search. Works only when src has batch size 1.
-
-            Slightly modified from: https://lukemelas.github.io/machine-translation.html
         '''
         src = src.to(self.device)
         if self.reverse_input:
