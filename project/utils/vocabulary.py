@@ -248,7 +248,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test, samples, samples_iter
 
 
-def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_field, experiment):
+def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, experiment):
     """ This prints some useful stuff about our data sets. """
     if experiment.corpus == "":
         corpus_name = "IWLST"

@@ -11,7 +11,7 @@ import torch.nn as nn
 from project.utils.experiment import Experiment
 from project.model.models import count_parameters, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
-from project.utils.vocabulary import get_vocabularies_iterators, print_data_info
+from project.utils.vocabulary import get_vocabularies_iterators, print_info
 from project.utils.training import train_model, beam_predict, check_translation
 from project.utils.utils import convert_time_unit, Logger, Metric, str2bool
 from settings import MODEL_STORE
@@ -116,7 +116,7 @@ def main():
     data_logger = Logger(path=experiment_path, file_name="data.log")
     translation_logger = Logger(path=experiment_path, file_name="train_translations.log")
 
-    print_data_info(data_logger, train_data, val_data, test_data, SRC, TRG, experiment)
+    print_info(data_logger, train_data, val_data, test_data, SRC, TRG, experiment)
 
     # Create model
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
