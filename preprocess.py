@@ -111,6 +111,9 @@ def raw_preprocess(parser):
     src_logger = Logger(output_file_path, file_name="bitext.tok.en")
     trg_logger = Logger(output_file_path, file_name="bitext.tok.{}".format(lang_code))
 
+    print(type(src_tokenizer))
+    print(type(trg_tokenizer))
+
     temp_src_toks, temp_trg_toks = [], []
 
     if isinstance(src_tokenizer, SpacyTokenizer):
@@ -168,8 +171,9 @@ def raw_preprocess(parser):
             persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
             persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
             persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
-           # print("Generating samples files...")
-           # persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
+            if lang_code != "de":
+                print("Generating samples files...")
+                persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
     else:
 
         print("Splitting files...")
@@ -177,8 +181,10 @@ def raw_preprocess(parser):
         persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
         persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
         persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
-       # print("Generating samples files...")
-       # persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
+
+        if lang_code != "de":
+            print("Generating samples files...")
+            persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
 
     print("Total time:", convert_time_unit(time.time() - start))
 
