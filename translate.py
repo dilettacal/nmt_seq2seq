@@ -23,6 +23,8 @@ from settings import RESULTS_DIR,BEST_MODEL_PATH
 def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     use_cuda = True if torch.cuda.is_available() else False
     device = "cuda" if use_cuda else "cpu"
+    FIXED_WORD_LEVEL_LEN = 30
+    FIXED_CHAR_LEVEL_LEN = 250
 
     if not path:
         path = BEST_MODEL_PATH
@@ -48,9 +50,11 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
 
     if tok_level == "c":
         src_tokenizer, trg_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), "c"), get_custom_tokenizer(experiment.get_trg_lang(), "c")
+        MAX_LEN = FIXED_CHAR_LEVEL_LEN
     else:
         src_tokenizer = src_word_pre_tokenizer
         trg_tokenizer = trg_word_pre_tokenizer
+        MAX_LEN = FIXED_WORD_LEVEL_LEN
 
     SRC_vocab.tokenize = src_tokenizer.tokenize
     TRG_vocab.tokenize = trg_tokenizer.tokenize
@@ -79,7 +83,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
                 tok_sample = src_tokenizer.tokenize(' '.join(tok_sample))
             _ = predict_from_input(input_sentence=tok_sample, SRC=SRC_vocab, TRG=TRG_vocab, model=model,
                                device=experiment.get_device(),
-                               logger=logger, stdout=True, beam_size=beam_size)
+                               logger=logger, stdout=True, beam_size=beam_size, max_len=MAX_LEN)
     else:
         input_sequence = ""
         while (1):
@@ -91,7 +95,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
                 if tok_level == "c":
                     input_sequence = src_tokenizer.tokenize(' '.join(input_sequence))
                 out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu",
-                                         beam_size=beam_size)
+                                         beam_size=beam_size, max_len=MAX_LEN)
                 if out:
                     print("Translation > ", out)
                 else: print("Error while translating!")
