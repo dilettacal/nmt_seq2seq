@@ -1,15 +1,11 @@
-# coding=utf-8
-# This code is taken from Tensor2Tensor
-# The download part has been removed, as the file is stored in the given directory.
-#
-# Copyright 2017 The Tensor2Tensor Authors.
+# -*- coding: utf-8 -*-
 # Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+BLEU metric implementation.
+"""
 
 import os
 import re
@@ -38,7 +37,7 @@ def get_moses_multi_bleu(hypotheses, references, lowercase=False):
     This method uses the perl script from mosesdecoder, available at:
      https://raw.githubusercontent.com/moses-smt/mosesdecoder/master/scripts/generic/multi-bleu.perl
 
-    The python computation is taken from the Google seq2seq implementation.
+    The function is taken from the Google seq2seq implementation.
     The download part has been removed, as it is not needed within this project.
 
     See original code at: https://github.com/google/seq2seq/blob/master/seq2seq/metrics/bleu.py
