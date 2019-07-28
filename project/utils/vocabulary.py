@@ -9,7 +9,7 @@ import project
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
 from project.utils.external.download import maybe_download_and_extract
-from project.utils.tokenizers import get_custom_tokenizer
+from project.utils.tokenizers import get_custom_tokenizer, CharBasedTokenizer
 from project.utils.utils import convert_time_unit
 from settings import DATA_DIR_PREPRO, PRETRAINED_URL_EN, PRETRAINED_URL_LANG_CODE
 import random
@@ -130,12 +130,23 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     src_vec, trg_vec = None, None
 
     ### Define tokenizers ####
-    if char_level:
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c"), get_custom_tokenizer("de", "c")
+    if corpus == "europarl":
+        spacy_pretok = True
+        print(spacy_pretok)
+        # tokenized files already preprocesed
     else:
-        spacy_pretok = True if corpus == "europarl" else False
+        # this is for training with iwslt corpus
+        # if training is performed at char level, no pretokenization at word level is performed. TOkenizer splits based on chars.
+        # otherwise pretokenization is performed with spacy tokenizer (if available for langauge comb)
+        spacy_pretok = False if not experiment.char_level else True
+
+    if char_level:
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c", spacy_pretok=spacy_pretok), get_custom_tokenizer("de", "c", spacy_pretok=spacy_pretok)
+       # assert isinstance(src_tokenizer, CharBasedTokenizer)
+      #  assert isinstance(src_tokenizer, CharBasedTokenizer)
+    else:
         src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer(
-            "de", "w", spacy_pretok=spacy_pretok)  #
+            "de", "w", spacy_pretok=spacy_pretok)
 
     src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
     trg_vocab = Field(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
@@ -237,7 +248,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test, samples, samples_iter
 
 
-def print_data_info(logger, train_data, valid_data, test_data, src_field, trg_field, experiment):
+def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, experiment):
     """ This prints some useful stuff about our data sets. """
     if experiment.corpus == "":
         corpus_name = "IWLST"
