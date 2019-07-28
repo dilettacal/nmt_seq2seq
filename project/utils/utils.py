@@ -51,29 +51,37 @@ class Logger():
         if not os.path.isfile(os.path.join(self.path, self.file_name)): raise Exception("File does not exist!")
         return open(os.path.join(self.path, self.file_name)).read().split("\n")
 
-    def plot(self, metric, title, ylabel, file, log_every=None):
-        import matplotlib.pyplot as plt
+    def plot(self, metric, title, ylabel, file):
+        print("Pltting with new plotting style")
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError or ModuleNotFoundError:
+            print("Module matplotlib not found. Please install matplotlib!")
+            return
         name = str(file + ".png")
         save_path = os.path.join(self.path, name)
         if isinstance(metric, dict):
+            ### this plots 2 metrics
             plt.title(title)
             plt.ylabel(ylabel)
             plt.xlabel('epoch')
             keys = list(metric.keys())
-          #  print(keys)
             labels = [keys[0], keys[1]]
             values = list(metric.values())
-            assert len(values) == 2  # one array for train, one for validation
+            assert len(values) == 2
             assert len(values[0]) == len(values[1])
+            fig = plt.figure()
+            ax = plt.subplot(111)
             x = np.arange(len(values[0]))
-            plt.plot(x, metric.get(labels[0]), color="r", label=labels[0])
-            plt.plot(x, metric.get(labels[1]), color="b", label=labels[1])
-            plt.legend(loc='upper right')
+            ax.plot(x, metric.get(labels[0]), color="r", label=labels[0])
+            ax.plot(x, metric.get(labels[1]), color="b", label=labels[1])
+            ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+                      ncol=2, fancybox=True, shadow=True)
             plt.savefig(save_path, format="png", dpi=500)
             plt.close()
             self.log("Plot saved: {}".format(save_path))
-
         elif isinstance(metric, list):
+            ### this plots one metric
             plt.title(title)
             plt.ylabel(ylabel)
             plt.xlabel('epoch')
@@ -83,7 +91,7 @@ class Logger():
             plt.close()
             self.log("Plot saved: {}".format(save_path))
 
-        else:raise Exception("Provide metric either as list or as dictionary.")
+        else:raise Exception("Provide metric either as list or as dictionary containing 2 metrics.")
 
 
 class Metric(object):
