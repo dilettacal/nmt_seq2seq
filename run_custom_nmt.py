@@ -167,10 +167,10 @@ def main():
     """
     log_every=5
     bleus, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
-                                 optimizer=optimizer, scheduler=scheduler, SRC=SRC, TRG=TRG,
-                                 epochs=experiment.epochs, logger=logger, device=experiment.get_device(),
-                                 tr_logger=translation_logger, samples_iter=samples_iter, check_translations_every=log_every,
-                                 beam_size = experiment.val_beam_size)
+                                 optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
+                                 logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
+                                 samples_iter=samples_iter, check_translations_every=log_every,
+                                 beam_size=experiment.val_beam_size)
 
     nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
     train_loss = Metric("train_loss", list(metrics.values())[0])
