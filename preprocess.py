@@ -108,23 +108,37 @@ def raw_preprocess(parser):
     assert isinstance(src_tokenizer, SpacyTokenizer) or isinstance(src_tokenizer, FastTokenizer)
     assert isinstance(trg_tokenizer, SpacyTokenizer) or isinstance(trg_tokenizer, FastTokenizer)
 
-
     src_logger = Logger(output_file_path, file_name="bitext.tok.en")
     trg_logger = Logger(output_file_path, file_name="bitext.tok.{}".format(lang_code))
 
     temp_src_toks, temp_trg_toks = [], []
 
-    with src_tokenizer.nlp.disable_pipes('ner'):
-        for i, doc in enumerate(src_tokenizer.nlp.pipe(src_lines, batch_size=1000)):
-            tok_doc = ' '.join([tok.text for tok in doc])
-            temp_src_toks.append(tok_doc)
-            src_logger.log(tok_doc, stdout=True if i % 100000 == 0 else False)
+    if isinstance(src_tokenizer, SpacyTokenizer):
+        print("Tokenization for source sequences is performed with spaCy")
+        with src_tokenizer.nlp.disable_pipes('ner'):
+            for i, doc in enumerate(src_tokenizer.nlp.pipe(src_lines, batch_size=1000)):
+                tok_doc = ' '.join([tok.text for tok in doc])
+                temp_src_toks.append(tok_doc)
+                src_logger.log(tok_doc, stdout=True if i % 100000 == 0 else False)
+    else:
+        for i, sent in enumerate(src_lines):
+            tok_sent = src_tokenizer.tokenize(sent)
+            temp_src_toks.append(' '.join(tok_sent))
+            src_logger.log(tok_sent, stdout=True if i % 100000 == 0 else False)
 
-    with trg_tokenizer.nlp.disable_pipes('ner'):
-        for i, doc in enumerate(trg_tokenizer.nlp.pipe(trg_lines, batch_size=1000)):
-            tok_doc = ' '.join([tok.text for tok in doc])
-            temp_trg_toks.append(tok_doc)
-            trg_logger.log(tok_doc, stdout=True if i % 100000 == 0 else False)
+
+    if isinstance(trg_tokenizer,SpacyTokenizer):
+        print("Tokenization for target sequences is performed with spaCy")
+        with trg_tokenizer.nlp.disable_pipes('ner'):
+            for i, doc in enumerate(trg_tokenizer.nlp.pipe(trg_lines, batch_size=1000)):
+                tok_doc = ' '.join([tok.text for tok in doc])
+                temp_trg_toks.append(tok_doc)
+                trg_logger.log(tok_doc, stdout=True if i % 100000 == 0 else False)
+    else:
+        for i, sent in enumerate(trg_lines):
+            tok_sent = trg_tokenizer.tokenize(sent)
+            temp_src_toks.append(' '.join(tok_sent))
+            src_logger.log(tok_sent, stdout=True if i % 100000 == 0 else False)
 
     if max_len > 0:
         files = ['.'.join(file.split(".")[:2]) for file in os.listdir(STORE_PATH) if
