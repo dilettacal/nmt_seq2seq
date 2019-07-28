@@ -29,10 +29,10 @@ import os
 import re
 import time
 
-from project.utils.tokenizers import SpacyTokenizer, FastTokenizer
+from project.utils.prepro.tokenizers import SpacyTokenizer, FastTokenizer
 from project.utils.external.europarl import maybe_download_and_extract_europarl
-from project.utils.tokenizers import get_custom_tokenizer
-from project.utils.data import split_data, persist_txt
+from project.utils.prepro.tokenizers import get_custom_tokenizer
+from project.utils.prepro.data import split_data, persist_txt
 from project.utils.external.tmx_to_text import Converter, FileOutput
 from project.utils.utils import Logger, convert_time_unit
 from settings import DATA_DIR_PREPRO, DATA_DIR_RAW

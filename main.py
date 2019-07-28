@@ -1,5 +1,4 @@
 from project import get_full_path
-from project.utils.tokenizers import SpacyTokenizer, FastTokenizer
 import os
 import spacy
 import time
@@ -59,8 +58,7 @@ if __name__ == '__main__':
 				logger.log("*"*100)
 
 	print(convert_time_unit(time.time() - start))
-	import numpy as np
-	#np_src = np.array(src_lines)
+    #np_src = np.array(src_lines)
 	#np_docs = np.array(testing_doc)
 	assert len(src_lines)==len(testing_doc)
 

@@ -1,10 +1,6 @@
-import os
-
-import project
-from project.utils.tokenizers import FastTokenizer, CharBasedTokenizer, SplitTokenizer, get_custom_tokenizer
-from project.utils.tokenizers import SpacyTokenizer
+from project.utils.prepro.tokenizers import FastTokenizer
+from project.utils.prepro.tokenizers import SpacyTokenizer
 import spacy
-from settings import DATA_DIR_PREPRO
 import nltk
 
 de_nlp = spacy.load("de")
