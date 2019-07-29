@@ -106,6 +106,7 @@ def main():
     # Create directory for logs, create logger, log hyperparameters
     logger = Logger(experiment_path)
     logger.log("Language combination ({}-{})".format(src_lang, trg_lang))
+    logger.log("Attention: {}".format(experiment.attn))
 
 
     # Load and process data
