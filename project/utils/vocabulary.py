@@ -1,11 +1,9 @@
-
 import os
 import time
 import torch
 from torchtext import datasets, data as data
 from torchtext.data import Field, Dataset
 
-import project
 from project import get_full_path
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, PAD_TOKEN
 from project.utils.external.download import maybe_download_and_extract
