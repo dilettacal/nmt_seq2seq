@@ -138,7 +138,6 @@ def main():
 
     model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
     print(model)
-    exit()
     if experiment.pretrained:
         model.load_pretrained_embeddings(pretraiend_src, pretrained_trg)
         logger.log("Pretrained embeddings loaded!")
