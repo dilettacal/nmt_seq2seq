@@ -97,12 +97,8 @@ def raw_preprocess(parser):
     PREPRO_PHASE = True
     SPACY_PRETOK_ALREADY_PERFORMED = False
 
-    src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", TOKENIZATION_MODE,
-                                                        pretok=SPACY_PRETOK_ALREADY_PERFORMED,
-                                                        prepro=PREPRO_PHASE), \
-                                   get_custom_tokenizer(lang_code, TOKENIZATION_MODE,
-                                                        pretok=SPACY_PRETOK_ALREADY_PERFORMED,
-                                                        prepro=PREPRO_PHASE)
+    src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", TOKENIZATION_MODE, prepro=PREPRO_PHASE), \
+                                   get_custom_tokenizer(lang_code, TOKENIZATION_MODE, prepro=PREPRO_PHASE)
 
 
     assert isinstance(src_tokenizer, SpacyTokenizer) or isinstance(src_tokenizer, FastTokenizer)

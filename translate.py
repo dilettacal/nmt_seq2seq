@@ -44,12 +44,12 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     tok_level = "c" if char_level else "w"
 
     src_word_pre_tokenizer, trg_word_pre_tokenizer = \
-        get_custom_tokenizer(experiment.get_src_lang(), "w", pretok=False), \
-        get_custom_tokenizer(experiment.get_trg_lang(), "w", pretok=False)
-
+        get_custom_tokenizer(experiment.get_src_lang(), "w", prepro=True), \
+        get_custom_tokenizer(experiment.get_trg_lang(), "w", prepro=True)
 
     if tok_level == "c":
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), "c"), get_custom_tokenizer(experiment.get_trg_lang(), "c")
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), "c", prepro=False), get_custom_tokenizer(
+            experiment.get_trg_lang(), "c", prepro=False)
         MAX_LEN = FIXED_CHAR_LEVEL_LEN
     else:
         src_tokenizer = src_word_pre_tokenizer
@@ -67,8 +67,6 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
     model.load_state_dict(torch.load(path_to_model))
     model = model.to(device)
-
-    src_word_pre_tokenizer = get_custom_tokenizer(lang="de", mode="w", pretok=False)
 
     logger = Logger(path_to_exp, "live_transl.log")
     logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)

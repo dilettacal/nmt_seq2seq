@@ -129,24 +129,14 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
 
     src_vec, trg_vec = None, None
 
-    ### Define tokenizers ####
-    if corpus == "europarl":
-        spacy_pretok = True
-        print(spacy_pretok)
-        # tokenized files already preprocesed
-    else:
-        # this is for training with iwslt corpus
-        # if training is performed at char level, no pretokenization at word level is performed. TOkenizer splits based on chars.
-        # otherwise pretokenization is performed with spacy tokenizer (if available for langauge comb)
-        spacy_pretok = False if not experiment.char_level else True
+    PREPRO = False if corpus == "europarl" else True
+    MODE = "c" if char_level else "w"
 
-    if char_level:
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c", pretok=spacy_pretok), get_custom_tokenizer("de", "c", pretok=spacy_pretok)
-       # assert isinstance(src_tokenizer, CharBasedTokenizer)
-      #  assert isinstance(src_tokenizer, CharBasedTokenizer)
-    else:
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", pretok=spacy_pretok), get_custom_tokenizer(
-            "de", "w", pretok=spacy_pretok)
+    if MODE == "c" and corpus != "europarl":
+        ### char based training on datasets loaded at runtime from TorchText are not pretokenized at word level!
+        PREPRO = False
+
+    src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", mode=MODE, prepro=PREPRO), get_custom_tokenizer(language_code, mode=MODE, prepro=PREPRO)
 
     src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
     trg_vocab = Field(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)

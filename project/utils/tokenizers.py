@@ -126,68 +126,67 @@ class SplitTokenizer(BaseSequenceTokenizer):
 
 
 ##### Factory method ########
-def get_custom_tokenizer(lang, mode="w", pretok=False, prepro=True):
+def get_custom_tokenizer(lang, mode="w", prepro=True):
     """
     This function returns the tokenizer based on the configurations. The function is used either during the first preprocessing phase and during training time
     :param lang: the tokenizer language (relevant for spacy)
     :param mode: Char-based ("c") or Word-based ("w")
-    :param pretok:
     :param prepro:
     :return:
     """
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
-    tokenizer = None
-    if pretok: prepro = False
-    if mode == "c" and pretok or not prepro:
-        tokenizer = CharBasedTokenizer(lang)
-    elif mode == "c" and prepro:
-        tokenizer = FastTokenizer(lang)
-    elif mode == "w":
-        if pretok:
-            # if spacy tokenization already performed, then sentences can be splitted on spaces
-            tokenizer = SplitTokenizer(lang)
+    if prepro:
+        mode = "w"
+    if mode == "w" and prepro:
+        return select_word_based_tokenizer(lang)
+    elif not prepro:
+        if mode == "c":
+            return CharBasedTokenizer(lang)
         else:
-            if not prepro:
-                tokenizer = FastTokenizer(lang)
-            else:
-                if lang in SUPPORTED_LANGS.keys():
-                    try:
-                        import spacy
-                        nlp = spacy.load(SUPPORTED_LANGS[lang],
-                                         disable=["parser", "tagger", "textcat"])  # makes it faster
-                        tokenizer = SpacyTokenizer(lang, nlp)
+            return SplitTokenizer(lang)
 
-                    except OSError:
-                        print("Spacy model for language {} not found. Please install it.".format(lang))
-                        tokenizer = FastTokenizer(lang)
-                    except ImportError:
-                        print(
-                            "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
-                        tokenizer = FastTokenizer(lang)
-                    except Exception as e:
-                        print("Something went wrong: {}".format(e))
-                        tokenizer = FastTokenizer(lang)
-                else:
-                    try:
-                        import spacy
-                        nlp = spacy.load("xx_ent_wiki_sm", #model name for multi-languge models 'xx'
-                                         disable=["parser", "tagger", "textcat"])  # makes it faster
-                        tokenizer = SpacyTokenizer(lang, nlp)
-                    except OSError:
-                        print("Spacy model for language xx not installed.")
-                        tokenizer = FastTokenizer(lang)
-                    except ImportError:
-                        print(
-                            "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
-                        tokenizer = FastTokenizer(lang)
-                    except Exception as e:
-                        print("Something went wrong: {}".format(e))
-                        tokenizer = FastTokenizer(lang)
-                    #tokenizer = FastTokenizer(lang)
 
+def select_word_based_tokenizer(lang):
+    """
+    This functions returns the SpacyTokenizer for the given language, if spaCy model is available.
+    If not, it returns standard FastTokenizer
+    :param lang:
+    :return:
+    """
+    if lang in SUPPORTED_LANGS.keys():
+        try:
+            import spacy
+            nlp = spacy.load(SUPPORTED_LANGS[lang],
+                             disable=["parser", "tagger", "textcat"])  # makes it faster
+            tokenizer = SpacyTokenizer(lang, nlp)
+
+        except OSError:
+            print("Spacy model for language {} not found. Please install it.".format(lang))
+            tokenizer = FastTokenizer(lang)
+        except ImportError:
+            print(
+                "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
+            tokenizer = FastTokenizer(lang)
+        except Exception as e:
+            print("Something went wrong: {}".format(e))
+            tokenizer = FastTokenizer(lang)
+    else:
+        try:
+            import spacy
+            nlp = spacy.load("xx_ent_wiki_sm",  # model name for multi-languge models 'xx'
+                             disable=["parser", "tagger", "textcat"])  # makes it faster
+            tokenizer = SpacyTokenizer(lang, nlp)
+        except OSError:
+            print("Spacy model for language xx not installed.")
+            tokenizer = FastTokenizer(lang)
+        except ImportError:
+            print(
+                "Spacy not installed or model for the requested language has not been downloaded.\nFast Tokenizer is used")
+            tokenizer = FastTokenizer(lang)
+        except Exception as e:
+            print("Something went wrong: {}".format(e))
+            tokenizer = FastTokenizer(lang)
     return tokenizer
-
-
 #### other tokenization utilities ###
 
 def remove_adjacent_same_label(line):
