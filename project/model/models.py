@@ -176,22 +176,6 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):
-    model_type = experiment_config.model_type
-    if experiment_config.bi or experiment_config.pretrained or experiment_config.attn != "none":
-        model_type = "custom"
-        experiment_config.model_type = model_type
-        experiment_config.reverse_input = False
-
-    if model_type == "custom":
-        if experiment_config.bi and experiment_config.reverse_input:
-            experiment_config.reverse_input = False
-        model =  Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
-    else:
-        ### configure standard (baseline) model
-        ### almost like in sutskever
-        if not experiment_config.reverse_input: experiment_config.reverse_input = True
-        if experiment_config.bi: experiment_config.bi = False
-        model =  Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
-    return model
+    return Seq2Seq(experiment_config, tokens_bos_eos_pad_unk)
 
 
