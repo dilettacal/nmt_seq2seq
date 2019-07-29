@@ -29,13 +29,6 @@ class Attention(nn.Module):
 
         # Deal with bidirectional encoder, move batches first
         if self.bidirectional: # sum hidden states for both directions
-            '''
-            out_e: [seq_len, bs, hid_dim*2]
-            out_e reshaped (encoder_outputs.contiguous().view(encoder_outputs.size(0), encoder_outputs.size(1), 2, -1)):
-            [seq_len, bs, 2, hid_dim]
-            Sum on 2nd dimensions (sum for all sequences as in bs): [seq_len, bs, hid_dim]
-            Final output shape: [seq_len, bs, hid_dim]
-            '''
             encoder_outputs = encoder_outputs.contiguous().view(encoder_outputs.size(0), encoder_outputs.size(1), 2, -1).sum(2).view(encoder_outputs.size(0), encoder_outputs.size(1), -1) # final shape: (30,64,300)
         encoder_outputs = encoder_outputs.transpose(0, 1) # b x sl x hd
         decoder_outputs = decoder_outputs.transpose(0, 1) # b x tl x hd
