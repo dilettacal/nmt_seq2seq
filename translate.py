@@ -47,8 +47,6 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
         get_custom_tokenizer(experiment.get_src_lang(), "w", prepro=True), \
         get_custom_tokenizer(experiment.get_trg_lang(), "w", prepro=True)
 
-    print(type(src_word_pre_tokenizer))
-    print(type(trg_word_pre_tokenizer))
     if tok_level == "c":
         src_tokenizer, trg_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), "c", prepro=False), get_custom_tokenizer(
             experiment.get_trg_lang(), "c", prepro=False)
@@ -57,9 +55,6 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
         src_tokenizer = src_word_pre_tokenizer
         trg_tokenizer = trg_word_pre_tokenizer
         MAX_LEN = FIXED_WORD_LEVEL_LEN
-
-    print(type(src_tokenizer))
-    print(type(trg_tokenizer))
 
     SRC_vocab.tokenize = src_tokenizer.tokenize
     TRG_vocab.tokenize = trg_tokenizer.tokenize
