@@ -1,8 +1,4 @@
-import itertools
 import os
-
-
-##### Directories ###########
 from project import get_full_path
 
 ###### Directory settings
@@ -26,8 +22,6 @@ VALID_CELLS = [LSTM, GRU]
 VALID_MODELS = ["custom", "s"]
 
 SEED = 42
-
-VALIDATION_BEAM = 5
 
 BEST_MODEL_PATH = ""
 
