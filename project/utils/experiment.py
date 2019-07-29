@@ -11,8 +11,6 @@ class Experiment(object):
         if isinstance(parser, Namespace):
             self.args = parser
         else: self.args = parser.parse_args()
-
-        assert self.args.model_type.lower() in VALID_MODELS
         #### Training configurations
         self.epochs = self.args.epochs
         self.batch_size = self.args.b
@@ -21,7 +19,7 @@ class Experiment(object):
         self.lang_code = self.args.lang_code
         self.reverse_lang_comb = self.args.reverse
         # print("Reverse?", self.reverse_lang_comb)
-        self.model_type = self.args.model_type
+        #self.model_type = self.args.model_type
         self.min_freq = self.args.min if self.args.min >= 0 else 5
         self.tied = self.args.tied
         self.pretrained = self.args.pretrained
@@ -30,11 +28,8 @@ class Experiment(object):
         self.attn = self.args.attn
 
         self.bi = self.args.bi
-        if self.model_type == "s":
-            self.reverse_input = True
-            self.bi = False
-        else:
-            self.reverse_input = self.args.reverse_input
+        self.reverse_input = self.args.reverse_input
+        self.reverse_input = True if not self.bi else False
 
         self.truncate = self.args.max_len
         self.data_dir = self.args.data_dir

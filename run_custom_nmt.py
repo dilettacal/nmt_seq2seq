@@ -36,7 +36,6 @@ def experiment_parser():
     parser.add_argument('--model', metavar='DIR', default=None, help='path to model, default: None')
 
     parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Sequence max length. Default 30 units.")
-    parser.add_argument('--model_type', default="custom", metavar='STR', help="Model type (custom, cho, sutskever)")
 
     parser.add_argument('--corpus', default="europarl", metavar='STR',
                         help="The corpus, where training should be performed. Possible values: \'europarl\' and \'simple'\ - the iwslt dataset from torchtext")
@@ -74,6 +73,18 @@ def main():
 
     experiment = Experiment(experiment_parser())
     print("Running experiment on:", experiment.get_device())
+    ### define model type:
+
+    if experiment.pretrained or experiment.attn != "none":
+        experiment.model_type = "custom"
+        experiment.reverse_input = False
+        experiment.bi = True
+
+    else:
+        experiment.model_type = "s"
+        if experiment.bi and experiment.reverse_input:
+            experiment.reverse_input = False
+
     model_type = experiment.model_type
     print("Model Type", model_type)
     src_lang = experiment.get_src_lang()
@@ -82,8 +93,6 @@ def main():
 
     lang_comb = "{}_{}".format(src_lang, trg_lang)
     layers = experiment.nlayers
-
-    experiment.bi = True if (experiment.bi and not experiment.reverse_input) else False
 
     direction = "bi" if experiment.bi else "uni"
 
@@ -130,6 +139,7 @@ def main():
 
     model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
     print(model)
+    exit()
     if experiment.pretrained:
         model.load_pretrained_embeddings(pretraiend_src, pretrained_trg)
         logger.log("Pretrained embeddings loaded!")
