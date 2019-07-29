@@ -58,9 +58,6 @@ class Seq2Seq(nn.Module):
 
         self.attention = Attention(bidirectional=self.enc_bi, attn_type=self.att_type, h_dim=self.hid_dim)
 
-
-        #### This additional preoutput layer should reduce the bottleneck problem at the final layer on which
-        #### the softmax operation is performed (here this operation is done by the CrossEntropyLoss object
         if self.att_type == "none":
             self.context_model = False
             self.preoutput = nn.Linear(self.hid_dim, self.emb_size)
@@ -100,17 +97,13 @@ class Seq2Seq(nn.Module):
             inv_index = inv_index.to(self.device)
             enc_input = enc_input.index_select(0, inv_index)
 
-        # Encode
-        ### bidirectional encoder hidden states are stacked: [fw1, bw1, fw2, bw2, ..., fwL, bwL] , L= num layers
-        ### Alternatively, decoder should take num_layers and encoder hidden states should be reduced to the last 2 (forelast forward, last one last bw step)
-        ### e.g. #hidden [-2, :, : ] (last FW)  and hidden [-1, :, : ] (last BW)
-        encoder_outputs, final_e = self.encoder(enc_input) #final_e is [2*num_layers, bs, hid_dim] if bidiretional, else [num_layers, bs, hid_dim]
+        encoder_outputs, final_e = self.encoder(enc_input)
 
         # Decode
         ### iniitalize decoder with the final hidden states of the encoder
-        decoder_outputs, final_d = self.decoder(dec_input, final_e) #[seq_len, bs, hid_dim], [num_layers, bs, hid_dim]
+        decoder_outputs, final_d = self.decoder(dec_input, final_e)
         # Attend
-        context = self.attention(encoder_outputs, decoder_outputs) #seq_len, bs, hid_dim
+        context = self.attention(encoder_outputs, decoder_outputs)
         if self.att_type == "none":
             out_cat = decoder_outputs
         else: out_cat = torch.cat((decoder_outputs, context), dim=2)
@@ -118,14 +111,14 @@ class Seq2Seq(nn.Module):
         # Predict
         x = self.preoutput(out_cat)
         x = self.dropout(self.tanh(x))
-        x = self.output(x) #seq_len, bs, trg_vocab_size
+        x = self.output(x)
         return x
 
 
     #### Original code #####
     def predict(self, src, beam_size=1, max_len=30, remove_tokens=[]):
         '''Predict top 1 sentence using beam search. Note that beam_size=1 is greedy search.'''
-        beam_outputs = self.beam_search(src, beam_size, max_len=max_len, remove_tokens=remove_tokens)  # returns top beam_size options (as list of tuples)
+        beam_outputs = self.beam_search(src, beam_size, max_len=max_len, remove_tokens=remove_tokens)
         top1 = beam_outputs[0][1]  # a list of word indices (as ints)
         return top1
 
@@ -148,10 +141,8 @@ class Seq2Seq(nn.Module):
         for length in range(max_len):  # maximum target length
             options = []  # candidates
             for lprob, sentence, current_state in best_options:
-                # Prepare last word
-                last_word = sentence[-1]
+                last_word = sentence[-1] #decoder input always last word
                 if last_word != self.eos_token:
-                    ### shape: [1] --> [1,1], needed as we are unrolling the decoder with bs 1
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
                     outputs_d, new_state = self.decoder(last_word_input, current_state)
                     # Attend
@@ -167,9 +158,7 @@ class Seq2Seq(nn.Module):
                     x = x.squeeze().data.clone()
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
-
-                    #### lprobs are the beam scores computed as log probs
-                    #### this step is also performed IN the CrossEntropyLoss criterion during the training phase
+                    #### scores the words with log_softmax
                     lprobs = torch.log(x.exp() / x.exp().sum())
                     # Add top k candidates to options list for next word
                     for index in torch.topk(lprobs, k)[1]:
