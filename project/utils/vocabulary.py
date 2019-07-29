@@ -23,7 +23,6 @@ class Seq2SeqDataset(Dataset):
     Defines a dataset for machine translation.
     Part of this code is taken from the original source code TranslationDatset:
     See: https://github.com/pytorch/text/blob/master/torchtext/datasets/translation.py#L10
-
     """
 
     @staticmethod
@@ -39,7 +38,6 @@ class Seq2SeqDataset(Dataset):
         src_path, trg_path = tuple(os.path.expanduser(path + x) for x in exts)
 
         examples = self._generate_examples(src_path, trg_path, fields, truncate=truncate, reduce=reduce)
-
         super(Seq2SeqDataset, self).__init__(examples, fields)
 
     def _generate_examples(self, src_path, trg_path, fields, truncate, reduce):
@@ -53,7 +51,6 @@ class Seq2SeqDataset(Dataset):
 
         assert len(src_lines) == len(trg_lines)
         combined = list(zip(src_lines, trg_lines))
-       # random.shuffle(combined)
 
         for i, (src_line, trg_line) in enumerate(combined):
             src_line, trg_line = src_line.strip(), trg_line.strip()
@@ -174,6 +171,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         path = get_full_path(DATA_DIR_PREPRO, "iwslt")
         os.makedirs(path, exist_ok=True)
         exts = (".en", ".de") if experiment.get_src_lang() == "en" else (".de", ".en")
+        ## see: https://lukemelas.github.io/machine-translation.html
         train, val, test = datasets.IWSLT.splits(root=path,
                                                  exts=exts, fields=(src_vocab, trg_vocab),
                                                  filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= experiment.truncate)
