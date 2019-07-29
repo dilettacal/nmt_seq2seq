@@ -141,12 +141,12 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         spacy_pretok = False if not experiment.char_level else True
 
     if char_level:
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c", spacy_pretok=spacy_pretok), get_custom_tokenizer("de", "c", spacy_pretok=spacy_pretok)
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "c", pretok=spacy_pretok), get_custom_tokenizer("de", "c", pretok=spacy_pretok)
        # assert isinstance(src_tokenizer, CharBasedTokenizer)
       #  assert isinstance(src_tokenizer, CharBasedTokenizer)
     else:
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", spacy_pretok=spacy_pretok), get_custom_tokenizer(
-            "de", "w", spacy_pretok=spacy_pretok)
+        src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", "w", pretok=spacy_pretok), get_custom_tokenizer(
+            "de", "w", pretok=spacy_pretok)
 
     src_vocab = Field(tokenize=lambda s: src_tokenizer.tokenize(s), include_lengths=False,init_token=None, eos_token=None, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)
     trg_vocab = Field(tokenize=lambda s: trg_tokenizer.tokenize(s), include_lengths=False,init_token=SOS_TOKEN, eos_token=EOS_TOKEN, pad_token=PAD_TOKEN, unk_token=UNK_TOKEN, lower=True)

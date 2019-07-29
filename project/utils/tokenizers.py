@@ -126,23 +126,24 @@ class SplitTokenizer(BaseSequenceTokenizer):
 
 
 ##### Factory method ########
-def get_custom_tokenizer(lang, mode="w", spacy_pretok=False, prepro=True):
+def get_custom_tokenizer(lang, mode="w", pretok=False, prepro=True):
     """
     This function returns the tokenizer based on the configurations. The function is used either during the first preprocessing phase and during training time
     :param lang: the tokenizer language (relevant for spacy)
     :param mode: Char-based ("c") or Word-based ("w")
-    :param spacy_pretok:
+    :param pretok:
     :param prepro:
     :return:
     """
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
     tokenizer = None
-    if mode == "c" and spacy_pretok or not prepro:
+    if pretok: prepro = False
+    if mode == "c" and pretok or not prepro:
         tokenizer = CharBasedTokenizer(lang)
     elif mode == "c" and prepro:
         tokenizer = FastTokenizer(lang)
     elif mode == "w":
-        if spacy_pretok:
+        if pretok:
             # if spacy tokenization already performed, then sentences can be splitted on spaces
             tokenizer = SplitTokenizer(lang)
         else:

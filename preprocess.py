@@ -98,10 +98,10 @@ def raw_preprocess(parser):
     SPACY_PRETOK_ALREADY_PERFORMED = False
 
     src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", TOKENIZATION_MODE,
-                                                        spacy_pretok=SPACY_PRETOK_ALREADY_PERFORMED,
+                                                        pretok=SPACY_PRETOK_ALREADY_PERFORMED,
                                                         prepro=PREPRO_PHASE), \
                                    get_custom_tokenizer(lang_code, TOKENIZATION_MODE,
-                                                        spacy_pretok=SPACY_PRETOK_ALREADY_PERFORMED,
+                                                        pretok=SPACY_PRETOK_ALREADY_PERFORMED,
                                                         prepro=PREPRO_PHASE)
 
 
