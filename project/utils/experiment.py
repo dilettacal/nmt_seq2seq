@@ -8,6 +8,7 @@ from settings import VALID_MODELS
 class Experiment(object):
     def __init__(self, parser):
         # self.args = experiment_parser().parse_args()
+        self.model_type = None
         if isinstance(parser, Namespace):
             self.args = parser
         else: self.args = parser.parse_args()

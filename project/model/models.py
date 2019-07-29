@@ -25,6 +25,7 @@ class Seq2Seq(nn.Module):
         super(Seq2Seq, self).__init__()
 
         #### Setup configuration ###
+        self.model_type = experiment_config.model_type
         self.hid_dim = experiment_config.hid_dim
         self.emb_size = experiment_config.emb_size
         self.src_vocab_size = experiment_config.src_vocab_size
