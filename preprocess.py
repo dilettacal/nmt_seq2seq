@@ -20,7 +20,7 @@ def data_prepro_parser():
 
 
 def raw_preprocess(parser):
-    # Download the raw txm file
+    # Download the raw tmx file
     try:
         print("Trying to download the file ...")
         maybe_download_and_extract_europarl(language_code=parser.lang_code, tmx=True)
