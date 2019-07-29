@@ -188,7 +188,7 @@ def main():
     logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="loss_bleu")
 
     FIXED_WORD_LEVEL_LEN = 30
-    FIXED_CHAR_LEVEL_LEN = 250
+    FIXED_CHAR_LEVEL_LEN = 1500
 
     max_len = FIXED_WORD_LEVEL_LEN if experiment.char_level == False else FIXED_CHAR_LEVEL_LEN
     ### Evaluation on test set
