@@ -42,7 +42,7 @@ class Seq2Seq(nn.Module):
         self.weight_tied = experiment_config.tied
         rnn_type = experiment_config.rnn_type
         self.cell = rnn_type
-        self.context_model = False
+
         self.att_type = experiment_config.attn
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
@@ -62,8 +62,10 @@ class Seq2Seq(nn.Module):
         #### This additional preoutput layer should reduce the bottleneck problem at the final layer on which
         #### the softmax operation is performed (here this operation is done by the CrossEntropyLoss object
         if self.att_type == "none":
+            self.context_model = False
             self.preoutput = nn.Linear(self.hid_dim, self.emb_size)
         else:
+            self.context_model = True
             self.preoutput = nn.Linear(2 * self.hid_dim, self.emb_size)
         self.tanh = nn.Tanh()
         self.dropout = nn.Dropout(experiment_config.dp)
