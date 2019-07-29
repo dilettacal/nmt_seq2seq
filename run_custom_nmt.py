@@ -79,7 +79,6 @@ def main():
         experiment.model_type = "custom"
         experiment.reverse_input = False
         experiment.bi = True
-
     else:
         experiment.model_type = "s"
         if experiment.bi and experiment.reverse_input:

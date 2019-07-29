@@ -27,6 +27,8 @@ class Experiment(object):
         assert self.args.attn in ["none", "additive", "dot"]
         self.attn = self.args.attn
 
+        ### setup either bidirectional or reverse_input
+        ### this step is also refined in run_custom_nmt.py
         self.bi = self.args.bi
         self.reverse_input = self.args.reverse_input
         self.reverse_input = True if not self.bi else False
