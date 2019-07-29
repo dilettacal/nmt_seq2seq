@@ -1,7 +1,5 @@
 import argparse
 import os
-import subprocess
-import sys
 import time
 
 import dill
@@ -16,15 +14,11 @@ np.random.seed(SEED)
 def convert_time_unit(seconds):
     return time.strftime("%H:%M:%S", time.gmtime(seconds))
 
-def epoch_duration(start_time, end_time):
-    elapsed_time = end_time - start_time
-    elapsed_mins = int(elapsed_time / 60)
-    elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
-    return elapsed_mins, elapsed_secs
-
-
 class Logger():
-    '''Prints to a log file and to standard output'''
+    """
+    The Logger objects logs information, pickles experiment objects and the model
+    """
+
     def __init__(self, path, file_name="log.log"):
         if os.path.exists(path):
             self.path = path
@@ -33,25 +27,40 @@ class Logger():
             raise Exception('path does not exist')
 
     def log(self, info, stdout=True):
+        """
+        Logs the given info to the file
+        :param info: The info to log
+        :param stdout: True if info should be displayed
+        """
         with open(os.path.join(self.path, self.file_name), "a", encoding="utf8") as f:
             print(info, file=f)
         if stdout:
             print(info)
 
     def save_model(self, model_dict):
+        """
+        Saves the model at the path
+        :param model_dict: the model dictionary
+        """
         torch.save(model_dict, os.path.join(self.path, "model.pkl"))
 
     def pickle_obj(self, obj_dict, name):
+        """
+        Saves the given object dictionary with the given name
+        :param obj_dict: object dictionary
+        :param name: file name without format, e.g. "src_vocab"
+        """
         torch.save(obj_dict, os.path.join(self.path, str(name + ".pkl")), pickle_module=dill)
 
-    def persist_translations(self, src, trg, preds):
-        pass
-
-    def load(self):
-        if not os.path.isfile(os.path.join(self.path, self.file_name)): raise Exception("File does not exist!")
-        return open(os.path.join(self.path, self.file_name)).read().split("\n")
 
     def plot(self, metric, title, ylabel, file):
+        """
+        Plots metrics as png images
+        :param metric: provided as list or dictionary of 2 metrics
+        :param title: the plot title
+        :param ylabel: the y label
+        :param file: file name
+        """
         print("Pltting with new plotting style")
         try:
             import matplotlib.pyplot as plt
@@ -96,6 +105,11 @@ class Logger():
 
 class Metric(object):
     def __init__(self, name, values):
+        """
+        Instantiates a metric object with the given name and the given values
+        :param name: name as string
+        :param values: values from training
+        """
         self.name = name
         self.values = values
 
@@ -123,25 +137,16 @@ class AverageMeter():
         self.count = self.count + n
         self.avg = self.sum / self.count
 
-
+### Function to handle with argument parsers ####
 def str2bool(v):
-    # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    """
+    Converts string boolean value to boolean value
+    :param v: Value as string
+    :return: True oder False
+    """
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
-
-
-def str2float(s):
-    try:
-        return float(s)
-    except ValueError:
-        return None
-
-
-def str2array(s):
-    if s:
-        s = s.split(" ")
-    return s
