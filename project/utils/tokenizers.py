@@ -1,3 +1,7 @@
+"""
+THis file contains all needed tokenizers for the preprocessing and training steps.
+"""
+
 import string
 import re
 from settings import SUPPORTED_LANGS
@@ -7,7 +11,7 @@ from project.utils.external.tmx_to_text import glom_urls
 space_before_punct = r'\s([?.!\'"](?:\s|$))'
 before_apos = r"\s+(['])"
 after_apos = r"(['])\s+([\w])"
-BOUNDARY_REGEX = re.compile(r'\b|\Z')  #
+BOUNDARY_REGEX = re.compile(r'\b|\Z')  # see tmx2corpus
 TAG_REGEX = re.compile(r'<[^>]+>')
 
 
@@ -20,13 +24,10 @@ class BaseSequenceTokenizer(object):
         self.type = "standard"
 
     def _tokenize(self, text):
-        '''Override this to implement the actual tokenization: Take string,
-                return list of tokens.'''
         raise NotImplementedError
 
     def tokenize(self, sequence):
         tokens = self._tokenize(sequence)
-        # return ' '.join(tokens)
         return tokens
 
     def set_mode(self, only_tokenize=True):
@@ -39,14 +40,11 @@ class BaseSequenceTokenizer(object):
         if isinstance(text, list):
             text = ' '.join(text)
         text = re.sub(space_before_punct, r"\1", text)
-        #  text = re.sub(before_apos, r"\1", text)
         text = re.sub(after_apos, r"\1\2", text)
-        # text = cleanup_digits(text)
         return text
 
 
 class CharBasedTokenizer(BaseSequenceTokenizer):
-
     def __init__(self, lang):
         super(CharBasedTokenizer, self).__init__(lang)
         self.type = "char"
@@ -66,46 +64,14 @@ class SpacyTokenizer(BaseSequenceTokenizer):
         self.only_tokenize = True
 
     def _tokenize(self, sequence):
-        if self.only_tokenize:
-            # doc = self.nlp(sequence)
-            return [tok.text for tok in self.nlp.tokenizer(sequence)]
-        else:
-            ### this takes really long ###
-            sequence = cleanup_digits(sequence)
-            doc = self.nlp(sequence)
-            ents = self.get_entities(doc)
-            tokens = [tok.text for tok in doc]
-            tokens = self.replace_text(tokens, ents)
-            tokens = [token if token.isupper() else token.lower() for token in tokens]
-            tokens = self._clean_text(tokens)
-            tokens = tokens.split(" ")
-        return tokens
-
-    ##### this could improve tokenization, not used in the project
-
-    def get_entities(self, doc):
-        text_ents = [(str(ent), "PERSON") for ent in doc.ents if ent.label_ in ["PER", "PERSON"]]
-        return text_ents
-
-    def replace_text(self, text, mapping):
-        if isinstance(text, list):
-            text = ' '.join(text)
-        for ent in mapping:
-            replacee = str(ent[0])
-            replacer = str(ent[1])
-            try:
-                text = text.replace(replacee, replacer)
-            except:
-                pass
-
-        return text.split(" ") if isinstance(text, str) else text
-
+        return [tok.text for tok in self.nlp.tokenizer(sequence)]
 
 class FastTokenizer(BaseSequenceTokenizer):
     def __init__(self, lang):
         super(FastTokenizer, self).__init__(lang)
 
     def _tokenize(self, sequence):
+        ## Tokenizer from https://github.com/amake/TMX2Corpus/blob/master/tokenizer.py#L45
         text = TAG_REGEX.sub('', sequence)
         text = re.sub(r"\s\s+", " ", text)
         tokens = []
@@ -131,8 +97,8 @@ def get_custom_tokenizer(lang, mode="w", prepro=True):
     This function returns the tokenizer based on the configurations. The function is used either during the first preprocessing phase and during training time
     :param lang: the tokenizer language (relevant for spacy)
     :param mode: Char-based ("c") or Word-based ("w")
-    :param prepro:
-    :return:
+    :param prepro: True during the preprocessing step, False during training preprocessing
+    :return: tokenizer
     """
     assert mode.lower() in ["c", "w"], "Please provide 'c' or 'w' as mode (char-level, word-level)."
     if prepro:
@@ -150,8 +116,8 @@ def select_word_based_tokenizer(lang):
     """
     This functions returns the SpacyTokenizer for the given language, if spaCy model is available.
     If not, it returns standard FastTokenizer
-    :param lang:
-    :return:
+    :param lang: lang_code
+    :return: a Spacy-Based Tokenizer or a FastTokenizer
     """
     if lang in SUPPORTED_LANGS.keys():
         try:
@@ -187,41 +153,3 @@ def select_word_based_tokenizer(lang):
             print("Something went wrong: {}".format(e))
             tokenizer = FastTokenizer(lang)
     return tokenizer
-#### other tokenization utilities ###
-
-def remove_adjacent_same_label(line):
-    if isinstance(line, str):
-        line = line.split(" ")
-    # Remove adjacent duplicate labels
-    toks = [line[i] for i in range(len(line)) if (i == 0) or line[i] != line[i - 1]]
-    line = ' '.join(toks).strip()
-    ### remove duplicate spaces
-    line = re.sub(r"\s\s+", " ", line)
-    return line.strip()  # as string
-
-
-def cleanup_digits(line):
-    """
-    Ex:
-    Turchi Report [A5-0303/2001] and Linkohr Report (A5-0297/2001) - am 20. Juni 2019
-
-    :param line:
-    :return:
-    """
-
-    line = line.translate(str.maketrans('', '', string.punctuation))
-    # Turchi Report A503032001 and Linkohr Report A502972001 am 20 Juni 2019
-    line = line.strip()
-    ### replace digits
-    # Turchi Report A503032001 and Linkohr Report A502972001 am NUM Juni NUM
-    nums = [n for n in re.split(r"\D+", line) if n]
-    line = ' '.join([word if not word in nums else "NUM" for word in line.split(" ")])
-    ### Clean up regulations
-    ### A503032001 --> LAW
-    line = re.sub(r'[a-zA-Z]+[0-9]+', "LAW", line)
-    line = remove_adjacent_same_label(line)
-    ## final string: Turchi Report LAW and Linkohr Report LAW am NUM Juni NUM
-    return line
-
-
-
