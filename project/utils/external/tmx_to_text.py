@@ -1,5 +1,6 @@
 '''
-This file contains classes and functions from:  https://github.com/amake/tmx2corpus wit the following license
+This file contains classes and functions from:
+https://github.com/amake/tmx2corpus
 
 ######################################################################################################
 
@@ -24,7 +25,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
+######################################################################################################
 Script description:
 
 A script to convert TMXs into parallel corpuses for machine
@@ -38,12 +39,6 @@ with subclasses of the Tokenizer or Filter objects.
 @author: aaron.madlon-kay
 
 ######################################################################################################
-
-Modifications by: Diletta Calussi
-
-The Converter class has been simplified. It only performs the conversion task.
-As Output classes only FileOutput has been kept.
-As Tokenizers custom tokenizers are used (s. utils/tokenizers.py).
 '''
 
 import os
