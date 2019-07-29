@@ -1,26 +1,21 @@
 from argparse import Namespace
-
 import torch
 
-from settings import VALID_MODELS
-
-
 class Experiment(object):
+    """
+    The Experiment class defines the configuration for a training experiment.
+    """
     def __init__(self, parser):
-        # self.args = experiment_parser().parse_args()
-        self.model_type = None
+        self.model_type = 'none' # setup in the run_custom_nmt script
         if isinstance(parser, Namespace):
             self.args = parser
         else: self.args = parser.parse_args()
-        #### Training configurations
         self.epochs = self.args.epochs
         self.batch_size = self.args.b
         self.voc_limit = self.args.v
         self.corpus = self.args.corpus
         self.lang_code = self.args.lang_code
         self.reverse_lang_comb = self.args.reverse
-        # print("Reverse?", self.reverse_lang_comb)
-        #self.model_type = self.args.model_type
         self.min_freq = self.args.min if self.args.min >= 0 else 5
         self.tied = self.args.tied
         self.pretrained = self.args.pretrained
