@@ -1,6 +1,9 @@
+"""
+This file contains functions to persist and split data.
+"""
+
 import os
 import random
-
 from settings import SEED
 
 
