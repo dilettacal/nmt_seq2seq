@@ -97,16 +97,14 @@ class Seq2Seq(nn.Module):
             inv_index = inv_index.to(self.device)
             enc_input = enc_input.index_select(0, inv_index)
 
-        encoder_outputs, final_e = self.encoder(enc_input)
-
-        # Decode
-        ### iniitalize decoder with the final hidden states of the encoder
-        decoder_outputs, final_d = self.decoder(dec_input, final_e)
-        # Attend
-        context = self.attention(encoder_outputs, decoder_outputs)
+        encoder_outputs, final_e = self.encoder(enc_input) # Encode
+        decoder_outputs, final_d = self.decoder(dec_input, final_e) # Decode
         if self.att_type == "none":
             out_cat = decoder_outputs
-        else: out_cat = torch.cat((decoder_outputs, context), dim=2)
+        else:
+            # Attend
+            context = self.attention(encoder_outputs, decoder_outputs)
+            out_cat = torch.cat((decoder_outputs, context), dim=2)
 
         # Predict
         x = self.preoutput(out_cat)
