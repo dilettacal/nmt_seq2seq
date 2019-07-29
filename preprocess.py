@@ -1,8 +1,17 @@
+
+"""
+This is the main script to preprocess the Europarl dataset.
+The script automatically downloads the dataset from the Opus Platform: http://opus.nlpl.eu/Europarl.php
+All TMX files are stored in the section "Statistics and TMX/Moses Downloads".
+The upper right triangle contains the tmx files. The lower left triangle the corresponding text files.
+
+Raw files should be extracted to: data/raw/europarl/<lang_code>
+"""
+
 import argparse
 import os
 import re
 import time
-
 from project.utils.tokenizers import SpacyTokenizer, FastTokenizer
 from project.utils.external.europarl import maybe_download_and_extract_europarl
 from project.utils.tokenizers import get_custom_tokenizer
