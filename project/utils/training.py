@@ -36,7 +36,6 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     last_avg_loss = 100
     check_transl_every = check_translations_every if epochs <= 80 else check_translations_every*2
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
-    check_point_bleu = True
     CHECKPOINT = 20
     TOLERANCE = 20
     no_train_improvements = 0
@@ -60,20 +59,15 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             best_bleu_score = bleu
             logger.save_model(model.state_dict())
             logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
-            check_point_bleu = True
-        else:
-            check_point_bleu = False
-
-        if epoch % CHECKPOINT == 0:
-            if not check_point_bleu:
-                if avg_train_loss < last_avg_loss:
-                    logger.save_model(model.state_dict())
-                    logger.log('Training Checkpoint - BLEU: {:.3f}'.format(bleu))
-
-        if avg_train_loss < last_avg_loss:
             no_train_improvements = 0
         else:
-            no_train_improvements +=1
+            if avg_train_loss < last_avg_loss:
+                if epoch % CHECKPOINT == 0:
+                    logger.save_model(model.state_dict())
+                    logger.log('Training Checkpoint - BLEU: {:.3f}'.format(bleu))
+                no_train_improvements = 0
+            else:
+                no_train_improvements += 1
 
         last_avg_loss = avg_train_loss #update checkpoint loss to last avg loss
 
@@ -95,7 +89,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         bleus.update({'nltk': nltk_bleus})
 
         if no_train_improvements == TOLERANCE:
-            print("No improvements. Leaving training.")
+            logger.log("No training improvements in the last {} epochs. Training stopped.".format(TOLERANCE))
             break
 
     return bleus, metrics
