@@ -64,13 +64,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         else:
             check_point_bleu = False
 
-        if avg_train_loss < checkpoint_loss:
-            no_train_improvements = 0
-        else:
-            no_train_improvements +=1
-
-        if not check_point_bleu:
-            if epoch % CHECKPOINT == 0:
+        if epoch % CHECKPOINT == 0:
+            if not check_point_bleu:
                 if avg_train_loss < checkpoint_loss:
                     logger.save_model(model.state_dict())
                     logger.log('Training Checkpoint - BLEU: {:.3f}'.format(bleu))
@@ -82,6 +77,11 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             if samples_iter:
                 tr_logger.log("Translation check. Epoch {}".format(epoch + 1))
                 check_translation(mini_samples, model, SRC, TRG, tr_logger, char_level=char_level)
+
+        if avg_train_loss < checkpoint_loss:
+            no_train_improvements = 0
+        else:
+            no_train_improvements +=1
 
         end_epoch_time = time.time()
 
