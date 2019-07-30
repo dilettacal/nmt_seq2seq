@@ -1,4 +1,3 @@
-
 """
 This is the main script to preprocess the Europarl dataset.
 The script automatically downloads the dataset from the Opus Platform: http://opus.nlpl.eu/Europarl.php
@@ -22,8 +21,10 @@ from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 
 
 def data_prepro_parser():
-    parser = argparse.ArgumentParser(description='Preprocess Europarl Dataset for NMT. \nThis script allows you to preprocess and tokenize the Europarl Dataset.')
-    parser.add_argument("--lang_code", default="de", type=str, help="First language is English. Specifiy with 'lang_code' the second language as language code (e.g. 'de').")
+    parser = argparse.ArgumentParser(
+        description='Preprocess Europarl Dataset for NMT. \nThis script allows you to preprocess and tokenize the Europarl Dataset.')
+    parser.add_argument("--lang_code", default="de", type=str,
+                        help="First language is English. Specifiy with 'lang_code' the second language as language code (e.g. 'de').")
     return parser
 
 
@@ -40,15 +41,15 @@ def raw_preprocess(parser):
         maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
     except Exception as e:
         print("An error has occurred:", e)
-        print("Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
-              "\nby selecting the data from the upper-right triangle (e.g. en > de])")
+        print(
+            "Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
+            "\nby selecting the data from the upper-right triangle (e.g. en > de])")
         return
 
-
     path_to_raw_file = os.path.join(DATA_DIR_RAW, corpus_name, lang_code)
-    MAX_LEN, MIN_LEN = 30, 2 # min_len is by defaul 2 tokens
+    MAX_LEN, MIN_LEN = 30, 2  # min_len is by defaul 2 tokens
 
-    file_name = lang_code+"-"+"en"+".tmx"
+    file_name = lang_code + "-" + "en" + ".tmx"
     COMPLETE_PATH = os.path.join(path_to_raw_file, file_name)
 
     STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), corpus_name, lang_code, "splits", str(MAX_LEN))
@@ -84,7 +85,6 @@ def raw_preprocess(parser):
     src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", TOKENIZATION_MODE, prepro=PREPRO_PHASE), \
                                    get_custom_tokenizer(lang_code, TOKENIZATION_MODE, prepro=PREPRO_PHASE)
 
-
     # Tokenisation is performed at word level, therefore only these Tokenizers are allowed
     assert isinstance(src_tokenizer, SpacyTokenizer) or isinstance(src_tokenizer, FastTokenizer)
     assert isinstance(trg_tokenizer, SpacyTokenizer) or isinstance(trg_tokenizer, FastTokenizer)
@@ -111,8 +111,7 @@ def raw_preprocess(parser):
             temp_src_toks.append(tok_sent)
             src_logger.log(tok_sent, stdout=True if i % 100000 == 0 else False)
 
-
-    if isinstance(trg_tokenizer,SpacyTokenizer):
+    if isinstance(trg_tokenizer, SpacyTokenizer):
         print("Tokenization for target sequences is performed with spaCy")
         with trg_tokenizer.nlp.disable_pipes('ner'):
             for i, doc in enumerate(trg_tokenizer.nlp.pipe(trg_lines, batch_size=1000)):
@@ -128,48 +127,34 @@ def raw_preprocess(parser):
             src_logger.log(tok_sent, stdout=True if i % 100000 == 0 else False)
 
     # Reduce lines by max_len
-    if MAX_LEN > 0:
-        files = ['.'.join(file.split(".")[:2]) for file in os.listdir(STORE_PATH) if
-                 file.endswith("tok.en") or file.endswith("tok." + lang_code)]
-        filtered_src_lines, filtered_trg_lines = [], []
+    filtered_src_lines, filtered_trg_lines = [], []
+    print("Reducing corpus to sequences of max length: {}".format(MAX_LEN))
 
-        print("Filtering by length...")
-        filtered_src_lines, filtered_trg_lines = [], []
-        for src_l, trg_l in zip(temp_src_toks, temp_trg_toks):
-            ### remove possible duplicate spaces
-            src_l_s = re.sub(' +', ' ', src_l)
-            trg_l_s = re.sub(' +', ' ', trg_l)
-            if src_l_s != "" and trg_l_s != "":
-                src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
-                if len(src_l_spl) <= MAX_LEN and len(trg_l_spl) <= MAX_LEN:
-                    if len(src_l_spl) >= MIN_LEN and len(trg_l_spl) >= MIN_LEN:
-                        filtered_src_lines.append(' '.join(src_l_spl))
-                        filtered_trg_lines.append(' '.join(trg_l_spl))
+    filtered_src_lines, filtered_trg_lines = [], []
+    for src_l, trg_l in zip(temp_src_toks, temp_trg_toks):
+        ### remove possible duplicate spaces
+        src_l_s = re.sub(' +', ' ', src_l)
+        trg_l_s = re.sub(' +', ' ', trg_l)
+        if src_l_s != "" and trg_l_s != "":
+            src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
+            if len(src_l_spl) <= MAX_LEN and len(trg_l_spl) <= MAX_LEN:
+                if len(src_l_spl) >= MIN_LEN and len(trg_l_spl) >= MIN_LEN:
+                    filtered_src_lines.append(' '.join(src_l_spl))
+                    filtered_trg_lines.append(' '.join(trg_l_spl))
 
-            assert len(filtered_src_lines) == len(filtered_trg_lines)
+        assert len(filtered_src_lines) == len(filtered_trg_lines)
 
-        src_lines, trg_lines = filtered_src_lines, filtered_trg_lines
-        print("Splitting files...")
-        train_data, val_data, test_data, samples_data = split_data(src_lines, trg_lines)
-        persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
-        persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
-        persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
-        if lang_code != "de": # for german language sample files are versioned with the program
-            print("Generating samples files...")
-            persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
-    else:
-        print("Splitting files...")
-        train_data, val_data, test_data, samples_data = split_data(src_lines, trg_lines)
-        persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
-        persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
-        persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
-
-        if lang_code != "de": # for german language sample files are versioned with the program
-            print("Generating samples files...")
-            persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
+    src_lines, trg_lines = filtered_src_lines, filtered_trg_lines
+    print("Splitting files...")
+    train_data, val_data, test_data, samples_data = split_data(src_lines, trg_lines)
+    persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
+    persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
+    persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
+    if lang_code != "de":  # for german language sample files are versioned with the program
+        print("Generating samples files...")
+        persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
 
     print("Total time:", convert_time_unit(time.time() - start))
-
 
 if __name__ == '__main__':
     raw_preprocess(data_prepro_parser().parse_args())
