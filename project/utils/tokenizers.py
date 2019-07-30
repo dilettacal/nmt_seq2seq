@@ -1,8 +1,6 @@
 """
 THis file contains all needed tokenizers for the preprocessing and training steps.
 """
-
-import string
 import re
 from settings import SUPPORTED_LANGS
 from project.utils.external.tmx_to_text import glom_urls
