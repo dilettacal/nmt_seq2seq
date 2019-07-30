@@ -1,9 +1,3 @@
-import os
-import sys
-sys.path.append(os.path.join(".", "TMX2Corpus"))
-
-
-
 from os.path import dirname, join
 
 PROJECT_ROOT = dirname(dirname(__file__))
