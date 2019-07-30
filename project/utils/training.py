@@ -31,7 +31,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     metrics = dict()
     train_losses = []
     train_ppls = []
-    nltk_bleus, perl_bleus = [], []
+    nltk_bleus =[]
     bleus = dict()
     checkpoint_loss = 100
     check_transl_every = check_translations_every if epochs <= 80 else check_translations_every*2
@@ -50,10 +50,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         train_ppl = math.exp(avg_train_loss)
         train_ppls.append(train_ppl)
         nltk_bleus.append(avg_bleu_val[0])
-        perl_bleus.append(avg_bleu_val[1])
         bleu = avg_bleu_val[0]
-        perl_b = avg_bleu_val[1]
-
         ### scheduler monitors val loss value
         scheduler.step(bleu)  # input bleu score
 
@@ -83,10 +80,10 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         total_epoch = convert_time_unit(end_epoch_time - start_time)
 
         logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
-        logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f} | Val. (perl) BLEU: {perl_b:.3f}')
+        logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f}')
 
         metrics.update({"loss": train_losses, "ppl": train_ppls})
-        bleus.update({'nltk': nltk_bleus, 'perl': perl_bleus})
+        bleus.update({'nltk': nltk_bleus})
 
     return bleus, metrics
 
@@ -133,7 +130,6 @@ def validate(val_iter, model, device, TRG, beam_size=5):
 
     # Iterate over words in validation batch.
     bleu = AverageMeter()
-    perl = AverageMeter()
     sent_candidates = []  # list of sentences from decoder
     sent_references = []  # list of target sentences
 
@@ -161,15 +157,8 @@ def validate(val_iter, model, device, TRG, beam_size=5):
                                 hypotheses=[hyp.split() for hyp in sent_candidates],
                                 smoothing_function=smooth.method4) * 100
         bleu.update(nlkt_bleu)
-        try:
-            perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
-            perl.update(perl_bleu)
-        except TypeError or Exception as e:
-            print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
-            perl_bleu = 0
-            perl.update(perl_bleu)
 
-    return [bleu.val, perl.val]
+    return bleu.val
 
 def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30, char_level=False):
     model.eval()
