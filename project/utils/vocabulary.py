@@ -141,7 +141,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
 
     if corpus == "europarl":
 
-        root = get_full_path(DATA_DIR_PREPRO)
+        root = os.path.expanduser(DATA_DIR_PREPRO)
         #print("Root:", root)
         if not data_dir:
             data_dir = os.path.join(root, corpus, language_code, "splits", str(max_len)) # local directory
