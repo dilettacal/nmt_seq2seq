@@ -150,10 +150,10 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         try:
             files = os.listdir(data_dir)
             if len(files) < 8:
-                print("Not enough files for training the model on the Europarl dataset.")
-                print("Please delete files in {} and rerun the script 'preprocess.py' for the given <lang_code>!".format(data_dir))
-        except FileNotFoundError as e:
-            print(e)
+                print("ERROR: Not enough training files found at {}!\nTraining the model on the Europarl dataset requires train, val, test and samples splits for each language!".format(data_dir))
+                print("Please drerun the script 'preprocess.py' for the given <lang_code>!")
+        except FileNotFoundError:
+            print("ERROR: Training files not found at {}!".format(data_dir))
             print("Please run the 'preprocess.py' script for the given <lang_code> before training the model!")
             exit(-1)
 
