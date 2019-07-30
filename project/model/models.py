@@ -10,6 +10,7 @@ and https://github.com/lukemelas/Machine-Translation/blob/master/models/Seq2seq.
 import random
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from project.utils.experiment import Experiment
 from project.model.decoders import Decoder
 from project.model.encoders import Encoder
@@ -155,7 +156,7 @@ class Seq2Seq(nn.Module):
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
                     #### scores the words with log_softmax
-                    lprobs = torch.log(x.exp() / x.exp().sum())
+                    lprobs = F.log_softmax(x, dim=0)
                     # Add top k candidates to options list for next word
                     for index in torch.topk(lprobs, k)[1]:
                         option = (float(lprobs[index]) + lprob, sentence + [index], new_state)
