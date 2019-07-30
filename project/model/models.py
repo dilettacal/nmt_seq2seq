@@ -1,6 +1,5 @@
 """
-Credits for this source code:
-
+Credits for parts of this source code:
 Class Seq2Seq (with or w/o Attention) - modified version from this code:
 Author: Luke Melas
 Title: Machine Translation with Recurrent Neural Networks
@@ -16,8 +15,6 @@ from project.model.decoders import Decoder
 from project.model.encoders import Encoder
 from project.model.layers import Attention
 from settings import VALID_CELLS, SEED
-
-
 random.seed(SEED)
 
 class Seq2Seq(nn.Module):
@@ -47,8 +44,6 @@ class Seq2Seq(nn.Module):
 
         assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
-        #### Define main elements of the Seq2Seq model ####
-
         self.encoder = Encoder(self.src_vocab_size, self.emb_size, self.hid_dim, self.num_layers,
                                dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
 
@@ -67,11 +62,7 @@ class Seq2Seq(nn.Module):
         self.tanh = nn.Tanh()
         self.dropout = nn.Dropout(experiment_config.dp)
 
-        #### output layer
-        self.output = nn.Linear(self.emb_size, self.trg_vocab_size) #emb size of target
-
-        ### Weight tying is a method to improve the language model perfomance
-        ### See: https://arxiv.org/abs/1608.05859
+        self.output = nn.Linear(self.emb_size, self.trg_vocab_size)
         if self.weight_tied and self.decoder.embedding.weight.size() == self.output.weight.size():
             print('Weight tying!')
             self.output.weight = self.decoder.embedding.weight
@@ -86,11 +77,17 @@ class Seq2Seq(nn.Module):
         self.decoder.embedding.weight.data.copy_(pretraiend_trg)
         assert not torch.all(torch.eq(enc_w, self.encoder.embedding.weight))
         assert not torch.all(torch.eq(dec_w, self.decoder.embedding.weight))
-        print("Embeddings weights have been loaded!")
+        print("Embeddings weights have been loaded in the model!")
 
     def forward(self, enc_input, dec_input):
+        """
+        Forward pass - Teacher forcing
+        :param enc_input: encoder inputs
+        :param dec_input: decoder inputs
+        :return: raw scares after output layer
+        """
         enc_input = enc_input.to(self.device)
-        dec_input = dec_input.to(self.device) #seq_len, bs
+        dec_input = dec_input.to(self.device)
 
         if self.reverse_input:
             inv_index = torch.arange(enc_input.size(0) - 1, -1, -1).long()
@@ -100,6 +97,7 @@ class Seq2Seq(nn.Module):
         encoder_outputs, final_e = self.encoder(enc_input) # Encode
         decoder_outputs, final_d = self.decoder(dec_input, final_e) # Decode
         if self.att_type == "none":
+            # no attention
             out_cat = decoder_outputs
         else:
             # Attend
@@ -170,7 +168,7 @@ class Seq2Seq(nn.Module):
         return best_options
 
 
-def count_parameters(model):
+def count_trainable_params(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 def get_nmt_model(experiment_config: Experiment, tokens_bos_eos_pad_unk):

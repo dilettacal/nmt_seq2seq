@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 
 from project.utils.experiment import Experiment
-from project.model.models import count_parameters, get_nmt_model
+from project.model.models import count_trainable_params, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.vocabulary import get_vocabularies_iterators, print_info
 from project.utils.training import train_model, beam_predict, check_translation
@@ -157,11 +157,8 @@ def main():
                                                                                    convert_time_unit(end_time_data - time_data)))
     logger.log(">>>> Path to model: {}".format(os.path.join(logger.path, "model.pkl")))
     logger.log('CLI-ARGS ' + ' '.join(sys.argv), stdout=False)
-    logger.log('Args: {}\nOPTIM: {}\nLR: {}\nSCHED: {}\nMODEL: {}\n'.format(experiment.get_args(), optimizer, experiment.lr,
-                                                                                               vars(scheduler), model),
-               stdout=False)
-
-    logger.log(f'Trainable parameters: {count_parameters(model):,}')
+    logger.log('Args: {}\nOPTIM: {}\nLR: {}\nSCHED: {}\nMODEL: {}\n'.format(experiment.get_args(), optimizer, experiment.lr, vars(scheduler), model), stdout=False)
+    logger.log(f'Trainable parameters: {count_trainable_params(model):,}')
 
     logger.pickle_obj(experiment.get_dict(), "experiment")
 
