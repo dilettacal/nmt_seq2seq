@@ -146,6 +146,17 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         if not data_dir:
             data_dir = os.path.join(root, corpus, language_code, "splits", str(max_len)) # local directory
 
+        # check if files have been preprocessed
+        try:
+            files = os.listdir(data_dir)
+            if len(files) < 8:
+                print("Not enough files for training the model on the Europarl dataset.")
+                print("Please delete files in {} and rerun the script 'preprocess.py' for the given <lang_code>!".format(data_dir))
+        except FileNotFoundError as e:
+            print(e)
+            print("Please run the 'preprocess.py' script for the given <lang_code> before training the model!")
+        exit()
+
         print("Loading data...")
         start = time.time()
         file_type = experiment.tok
