@@ -170,14 +170,14 @@ def main():
     # Train the model
 
     log_every=5
-    bleus, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
+    bleu, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
                                  optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
                                  logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
                                  samples_iter=samples_iter, check_translations_every=log_every,
                                  beam_size=experiment.val_beam_size, char_level=experiment.char_level)
 
     # persist metrics
-    nltk_bleu_metric = Metric("nltk_bleu", list(bleus.values())[0])
+    nltk_bleu_metric = Metric("nltk_bleu", list(bleu.values())[0])
     train_loss = Metric("train_loss", list(metrics.values())[0])
     train_perpl = Metric("train_ppl", list(metrics.values())[1])
 
@@ -203,38 +203,26 @@ def main():
     logger.log("Validation of test set")
     beam_size = 1
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len, char_level=experiment.char_level)
-    nltk_b, perl_b = bleus
-    if perl_b == None: perl_b = 0
-    logger.log(
-        f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
+    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len, char_level=experiment.char_level)
+    logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Beam 2
     beam_size = 2
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
-    nltk_b, perl_b = bleus
-    if perl_b == None: perl_b = 0
-    logger.log(
-        f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
+    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
+    logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Beam 5
     beam_size = 5
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
-    nltk_b, perl_b = bleus
-    if perl_b == None: perl_b = 0
-    logger.log(
-        f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
+    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
+    logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Beam 10
     beam_size = 10
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleus = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
-    nltk_b, perl_b = bleus
-    if perl_b == None: perl_b = 0
-    logger.log(
-        f'\t Test. (nltk) BLEU: {nltk_b:.3f} | Test. (perl) BLEU: {perl_b:.3f}')
+    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
+    logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     logger.log('Finished in {}'.format(convert_time_unit(time.time() - start_time)))
 

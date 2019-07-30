@@ -49,8 +49,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         train_losses.append(avg_train_loss)
         train_ppl = math.exp(avg_train_loss)
         train_ppls.append(train_ppl)
-        nltk_bleus.append(avg_bleu_val[0])
-        bleu = avg_bleu_val[0]
+        nltk_bleus.append(avg_bleu_val)
+        bleu = avg_bleu_val
         ### scheduler monitors val loss value
         scheduler.step(bleu)  # input bleu score
 
@@ -191,14 +191,8 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30, char_leve
     nlkt_bleu = corpus_bleu(list_of_references=[[sent.split()] for sent in sent_references],
                             hypotheses=[hyp.split() for hyp in sent_candidates],
                             smoothing_function=smooth.method4) * 100
-    try:
-        perl_bleu = get_moses_multi_bleu(sent_candidates, sent_references)
-    except TypeError or Exception as e:
-        print("Perl BLEU score set to 0. \tException in perl script: {}".format(e))
-        perl_bleu = 0
-
     # print("BLEU", batch_bleu)
-    return [nlkt_bleu, perl_bleu]
+    return nlkt_bleu
 
 def check_translation(samples, model, SRC, TRG, logger,persist=False, char_level=False):
     """
