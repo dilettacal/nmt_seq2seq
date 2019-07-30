@@ -4,16 +4,17 @@
 :: Install a new virtual environment
 :: python -m virtualenv env
 :: Then activate environment:
-:: ../env/Scripts/activate
+:: . ./env/Scripts/activate
 :: Install dependencies
 
-:: PyTorch stuff
-pip3 install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp37-cp37m-win_amd64.whl
-:: pip3 install https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp37-cp37m-win_amd64.whl
+:: PyTorch stuff - Uncomment the right version
+:: Cuda Version
+:: pip3 install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp37-cp37m-win_amd64.whl
+:: CPU version
+:: pip3 install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
 pip install torchtext
 
 :: spaCy
-:: Uncomment languages if needed
 pip install -U spacy
 :: Standard training requires englis
 python -m spacy download en
@@ -21,6 +22,7 @@ python -m spacy download en
 python -m spacy download de
 :: This is the multi-language model
 python -m spacy download xx
+
 :: Other models :::
 :: python -m spacy download fr
 :: python -m spacy download es
