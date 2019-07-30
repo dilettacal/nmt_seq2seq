@@ -155,7 +155,6 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         except FileNotFoundError as e:
             print(e)
             print("Please run the 'preprocess.py' script for the given <lang_code> before training the model!")
-        exit()
 
         print("Loading data...")
         start = time.time()
