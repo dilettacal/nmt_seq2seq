@@ -84,7 +84,7 @@ class Seq2Seq(nn.Module):
         Forward pass - Teacher forcing
         :param enc_input: encoder inputs
         :param dec_input: decoder inputs
-        :return: raw scares after output layer
+        :return: raw scores after output layer
         """
         enc_input = enc_input.to(self.device)
         dec_input = dec_input.to(self.device)
@@ -94,8 +94,8 @@ class Seq2Seq(nn.Module):
             inv_index = inv_index.to(self.device)
             enc_input = enc_input.index_select(0, inv_index)
 
-        encoder_outputs, final_e = self.encoder(enc_input) # Encode
-        decoder_outputs, final_d = self.decoder(dec_input, final_e) # Decode
+        encoder_outputs, final_states_enc = self.encoder(enc_input) # Encode
+        decoder_outputs, final_states_dec = self.decoder(dec_input, final_states_enc) # Decode
         if self.att_type == "none":
             # no attention
             out_cat = decoder_outputs
@@ -105,10 +105,10 @@ class Seq2Seq(nn.Module):
             out_cat = torch.cat((decoder_outputs, context), dim=2)
 
         # Predict
-        x = self.preoutput(out_cat)
-        x = self.dropout(self.tanh(x))
-        x = self.output(x)
-        return x
+        output = self.preoutput(out_cat)
+        output = self.dropout(self.tanh(output))
+        output = self.output(output)
+        return output
 
 
     #### Original code #####

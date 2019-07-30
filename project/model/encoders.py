@@ -42,11 +42,9 @@ class Encoder(nn.Module):
         init = torch.zeros(num_layers, x.size(1), self.h_dim)
         init = init.to(self.device)
         if self.rnn_type == "lstm":
-            h0 = (init, init.clone()) # h0 = (h, c)
+            h0 = (init, init.clone())
         else:
-            h0 = (init) # h0 = h
-
+            h0 = (init)
         out, states = self.rnn(x, h0)
-
         return out, states
 
