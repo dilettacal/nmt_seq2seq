@@ -30,7 +30,7 @@ def data_prepro_parser():
 
 def raw_preprocess(parser):
     # configurations
-    corpus_name = "europarl"
+    CORPUS_NAME = "europarl"
     lang_code = parser.lang_code.lower()
     if lang_code == "en":
         print("English is default language. Please provide the second language, e.g. 'de'.")
@@ -46,17 +46,17 @@ def raw_preprocess(parser):
             "\nby selecting the data from the upper-right triangle (e.g. en > de])")
         return
 
-    path_to_raw_file = os.path.join(DATA_DIR_RAW, corpus_name, lang_code)
+    path_to_raw_file = os.path.join(DATA_DIR_RAW, CORPUS_NAME, lang_code)
     MAX_LEN, MIN_LEN = 30, 2  # min_len is by defaul 2 tokens
 
     file_name = lang_code + "-" + "en" + ".tmx"
     COMPLETE_PATH = os.path.join(path_to_raw_file, file_name)
 
-    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), corpus_name, lang_code, "splits", str(MAX_LEN))
+    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), CORPUS_NAME, lang_code, "splits", str(MAX_LEN))
     os.makedirs(STORE_PATH, exist_ok=True)
 
     start = time.time()
-    output_file_path = os.path.join(DATA_DIR_PREPRO, corpus_name, lang_code)
+    output_file_path = os.path.join(DATA_DIR_PREPRO, CORPUS_NAME, lang_code)
 
     # Conversion tmx > text
     converter = Converter(output=FileOutput(output_file_path))
@@ -128,7 +128,7 @@ def raw_preprocess(parser):
 
     # Reduce lines by max_len
     filtered_src_lines, filtered_trg_lines = [], []
-    print("Reducing corpus to sequences of max length: {}".format(MAX_LEN))
+    print("Reducing corpus to sequences of min length {} max length: {}".format(MIN_LEN, MAX_LEN))
 
     filtered_src_lines, filtered_trg_lines = [], []
     for src_l, trg_l in zip(temp_src_toks, temp_trg_toks):
