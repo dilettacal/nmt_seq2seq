@@ -38,7 +38,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
     check_point_bleu = True
     CHECKPOINT = 20
-    saturate = False
+    TOLERANCE = 20
     no_train_improvements = 0
     print("Validation Beam: ", beam_size)
 
@@ -93,7 +93,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         metrics.update({"loss": train_losses, "ppl": train_ppls})
         bleus.update({'nltk': nltk_bleus})
 
-        if no_train_improvements == CHECKPOINT:
+        if no_train_improvements == TOLERANCE:
             print("No improvements. Left training.")
             break
 
