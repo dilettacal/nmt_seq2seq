@@ -151,7 +151,7 @@ def main():
 
     # Scheduler
     SCHEDULER_PATIENCE = 20
-    MIN_LR = 2e-07 # based on best learn rate
+    MIN_LR = 2e-07
     scheduler = CustomReduceLROnPlateau(optimizer, 'max', patience=SCHEDULER_PATIENCE, verbose=True, min_lr=MIN_LR, factor=0.1)
 
 
