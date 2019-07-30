@@ -95,7 +95,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         bleus.update({'nltk': nltk_bleus})
 
         if no_train_improvements == TOLERANCE:
-            print("No improvements. Left training.")
+            print("No improvements. Leaving training.")
             break
 
     return bleus, metrics
