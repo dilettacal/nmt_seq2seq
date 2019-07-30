@@ -11,7 +11,7 @@ from project.utils.experiment import Experiment
 from project.model.models import count_trainable_params, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.vocabulary import get_vocabularies_iterators, print_info
-from project.utils.training import train_model, beam_predict, check_translation
+from project.utils.training import train_model, beam_predict, check_translation, CustomReduceLROnPlateau
 from project.utils.utils import convert_time_unit, Logger, Metric, str2bool
 from settings import MODEL_STORE
 
@@ -150,7 +150,9 @@ def main():
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
 
     # Scheduler
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=20, verbose=True, min_lr=2e-7, factor=0.1)
+    SCHEDULER_PATIENCE = 20
+    MIN_LR = experiment.lr * 0.001
+    scheduler = CustomReduceLROnPlateau(optimizer, 'max', patience=SCHEDULER_PATIENCE, verbose=True, min_lr=MIN_LR, factor=0.1)
 
 
     logger.log('|src_vocab| = {}, |trg_vocab| = {}, Data Loading Time: {}.'.format(len(SRC.vocab), len(TRG.vocab),
