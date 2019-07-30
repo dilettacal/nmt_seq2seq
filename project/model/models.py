@@ -156,6 +156,7 @@ class Seq2Seq(nn.Module):
                     # Block predictions of tokens in remove_tokens
                     for t in remove_tokens: x[t] = -10e10
                     #### scores the words with log_softmax
+                    #lprobs = torch.log(x.exp() / x.exp().sum())
                     lprobs = F.log_softmax(x, dim=0)
                     # Add top k candidates to options list for next word
                     for index in torch.topk(lprobs, k)[1]:
