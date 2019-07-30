@@ -38,6 +38,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
     check_point_bleu = True
     CHECKPOINT = 20
+    saturate = False
+    no_train_improvements = 0
     print("Validation Beam: ", beam_size)
 
     for epoch in range(epochs):
@@ -62,10 +64,16 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         else:
             check_point_bleu = False
 
+        if avg_train_loss < checkpoint_loss:
+            no_train_improvements = 0
+        else:
+            no_train_improvements +=1
+
         if not check_point_bleu:
-            if epoch % CHECKPOINT == 0 and avg_train_loss <= checkpoint_loss:
-                logger.save_model(model.state_dict())
-                logger.log('Training Checkpoint - BLEU: {:.3f}'.format(bleu))
+            if epoch % CHECKPOINT == 0:
+                if avg_train_loss < checkpoint_loss:
+                    logger.save_model(model.state_dict())
+                    logger.log('Training Checkpoint - BLEU: {:.3f}'.format(bleu))
 
         checkpoint_loss = avg_train_loss #update checkpoint loss to last avg loss
 
@@ -84,6 +92,10 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
         metrics.update({"loss": train_losses, "ppl": train_ppls})
         bleus.update({'nltk': nltk_bleus})
+
+        if no_train_improvements == CHECKPOINT:
+            print("No improvements. Left training.")
+            break
 
     return bleus, metrics
 
