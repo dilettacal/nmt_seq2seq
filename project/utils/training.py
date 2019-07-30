@@ -38,7 +38,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
     check_point_bleu = True
     CHECKPOINT = 20
-    TOLERANCE = 30
+    TOLERANCE = 20
     no_train_improvements = 0
     print("Validation Beam: ", beam_size)
 
