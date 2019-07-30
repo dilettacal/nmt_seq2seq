@@ -85,10 +85,6 @@ def raw_preprocess(parser):
     src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", TOKENIZATION_MODE, prepro=PREPRO_PHASE), \
                                    get_custom_tokenizer(lang_code, TOKENIZATION_MODE, prepro=PREPRO_PHASE)
 
-    # Tokenisation is performed at word level, therefore only these Tokenizers are allowed
-    assert isinstance(src_tokenizer, SpacyTokenizer) or isinstance(src_tokenizer, FastTokenizer)
-    assert isinstance(trg_tokenizer, SpacyTokenizer) or isinstance(trg_tokenizer, FastTokenizer)
-
     # Creates logger to log tokenized objects
     src_logger = Logger(output_file_path, file_name="bitext.tok.en")
     trg_logger = Logger(output_file_path, file_name="bitext.tok.{}".format(lang_code))
