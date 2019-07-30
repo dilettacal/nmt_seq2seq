@@ -69,13 +69,14 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
                 if avg_train_loss < checkpoint_loss:
                     logger.save_model(model.state_dict())
                     logger.log('Training Checkpoint - BLEU: {:.3f}'.format(bleu))
+            checkpoint_loss = avg_train_loss  # update checkpoint loss to last avg loss
 
         if avg_train_loss < checkpoint_loss:
             no_train_improvements = 0
         else:
             no_train_improvements +=1
 
-        checkpoint_loss = avg_train_loss #update checkpoint loss to last avg loss
+
 
         if epoch % check_transl_every == 0:
             #### checking translations
