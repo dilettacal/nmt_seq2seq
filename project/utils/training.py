@@ -7,6 +7,7 @@ Code inspirations:
 """
 import os
 import time
+from typing import Any, Optional
 
 import torch
 import numpy as np
@@ -16,11 +17,52 @@ from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert_time_unit, AverageMeter
 from settings import DEFAULT_DEVICE, SEED
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import pandas as pd
 
 import random
 random.seed(SEED)
+
+
+class CustomReduceLROnPlateau(ReduceLROnPlateau):
+
+    def __init__(self, optimizer, mode='min', factor=0.1, patience=10,
+                 verbose=False, threshold=1e-4, threshold_mode='rel',
+                 cooldown=0, min_lr=0, eps=1e-8):
+        super().__init__(optimizer=optimizer,mode=mode,factor=factor,
+                                                      patience=patience,verbose=verbose,threshold=threshold,
+                                                      threshold_mode=threshold_mode, cooldown=cooldown,min_lr=min_lr, eps=eps)
+
+        self.TOTAL_LR_DECAYS = 0
+
+    def step(self, metrics, epoch=None):
+        #Source: https://pytorch.org/docs/stable/_modules/torch/optim/lr_scheduler.html#ReduceLROnPlateau
+        current = float(metrics)
+        if epoch is None:
+            epoch = self.last_epoch = self.last_epoch + 1
+        self.last_epoch = epoch
+
+        if self.is_better(current, self.best):
+            self.best = current
+            self.num_bad_epochs = 0
+        else:
+            self.num_bad_epochs += 1
+
+        if self.in_cooldown:
+            self.cooldown_counter -= 1
+            self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
+
+        if self.num_bad_epochs > self.patience:
+            self._reduce_lr(epoch)
+            ### keep track of decays ####
+            self.TOTAL_LR_DECAYS +=1
+            ##########################
+            self.cooldown_counter = self.cooldown
+            self.num_bad_epochs = 0
+
+    def get_total_decays(self):
+        return self.TOTAL_LR_DECAYS
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
@@ -36,8 +78,9 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     check_transl_every = check_translations_every if epochs <= 80 else check_translations_every*2
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
     CHECKPOINT = 20
-    TOLERANCE = 20
-    no_train_improvements = 0
+    TOLERANCE = 30
+    TOLERATE_DECAYS = 3
+    no_metric_improvements = 0
     print("Validation Beam: ", beam_size)
 
     for epoch in range(epochs):
@@ -53,20 +96,18 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         bleu = avg_bleu_val
         ### scheduler monitors val loss value
         scheduler.step(bleu)  # input bleu score
-
         if bleu > best_bleu_score:
             best_bleu_score = bleu
             logger.save_model(model.state_dict())
             logger.log('New best BLEU: {:.3f}'.format(best_bleu_score))
-            no_train_improvements = 0
+            no_metric_improvements = 0
         else:
+            if scheduler.get_total_decays() >= TOLERATE_DECAYS:
+                no_metric_improvements +=1
             if avg_train_loss < last_avg_loss:
                 if epoch % CHECKPOINT == 0:
                     logger.save_model(model.state_dict())
                     logger.log('Training Checkpoint - BLEU: {:.3f}'.format(bleu))
-                no_train_improvements = 0
-            else:
-                no_train_improvements += 1
 
         last_avg_loss = avg_train_loss #update checkpoint loss to last avg loss
 
@@ -87,7 +128,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         metrics.update({"loss": train_losses, "ppl": train_ppls})
         bleus.update({'nltk': nltk_bleus})
 
-        if no_train_improvements == TOLERANCE:
+        if no_metric_improvements >= TOLERANCE:
             logger.log("No training improvements in the last {} epochs. Training stopped.".format(TOLERANCE))
             break
 
