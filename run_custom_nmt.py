@@ -169,7 +169,7 @@ def main():
 
     # Train the model
 
-    log_every=5
+    log_every = 5
     bleu, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
                                  optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
                                  logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
@@ -224,11 +224,11 @@ def main():
     bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
     logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
-    logger.log('Finished in {}'.format(convert_time_unit(time.time() - start_time)))
-
     # Translate some sentences
     final_translation = Logger(file_name="final_translations.log", path=experiment_path)
     check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter, persist=True, char_level=experiment.char_level)
+
+    logger.log('Finished in {}'.format(convert_time_unit(time.time() - start_time)))
 
     return
 
