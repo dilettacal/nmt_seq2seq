@@ -22,25 +22,29 @@ from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 
 
 def data_prepro_parser():
-    parser = argparse.ArgumentParser(description='Preprocess Europarl Dataset for NMT. This script allows you to preprocess and tokenize the Europarl Dataset')
+    parser = argparse.ArgumentParser(description='Preprocess Europarl Dataset for NMT. \nThis script allows you to preprocess and tokenize the Europarl Dataset.')
     parser.add_argument("--lang_code", default="de", type=str, help="First language is English. Specifiy with 'lang_code' the second language as language code (e.g. 'de').")
     return parser
 
 
 def raw_preprocess(parser):
+    # configurations
+    corpus_name = "europarl"
+    lang_code = parser.lang_code.lower()
+    if lang_code == "en":
+        print("English is default language. Please provide the second language, e.g. 'de'.")
+        return
     # Download the raw tmx file
     try:
         print("Trying to download the file ...")
-        maybe_download_and_extract_europarl(language_code=parser.lang_code, tmx=True)
+        maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
     except Exception as e:
         print("An error has occurred:", e)
         print("Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
               "\nby selecting the data from the upper-right triangle (e.g. en > de])")
         return
 
-    # configurations
-    corpus_name = "europarl"
-    lang_code = parser.lang_code
+
     path_to_raw_file = os.path.join(DATA_DIR_RAW, corpus_name, lang_code)
     MAX_LEN, MIN_LEN = 30, 2 # min_len is by defaul 2 tokens
 
