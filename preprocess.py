@@ -24,7 +24,6 @@ from settings import DATA_DIR_PREPRO, DATA_DIR_RAW
 def data_prepro_parser():
     parser = argparse.ArgumentParser(description='Preprocess Europarl Dataset for NMT')
     parser.add_argument("--lang_code", default="de", type=str, help="First language is English. Specifiy with 'lang_code' the second language as language code (e.g. 'de').")
-    parser.add_argument("--max_len", default=30, type=int, help="Filter sequences with a length <= max_len. Provide 0 if sentences do not have to be filtered.")
     return parser
 
 
@@ -43,12 +42,12 @@ def raw_preprocess(parser):
     corpus_name = "europarl"
     lang_code = parser.lang_code
     path_to_raw_file = os.path.join(DATA_DIR_RAW, corpus_name, lang_code)
-    max_len, min_len = parser.max_len, 2 # min_len is by defaul 2 tokens
+    MAX_LEN, MIN_LEN = 30, 2 # min_len is by defaul 2 tokens
 
     file_name = lang_code+"-"+"en"+".tmx"
     COMPLETE_PATH = os.path.join(path_to_raw_file, file_name)
 
-    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), corpus_name, lang_code, "splits", str(max_len))
+    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), corpus_name, lang_code, "splits", str(MAX_LEN))
     os.makedirs(STORE_PATH, exist_ok=True)
 
     start = time.time()
@@ -125,7 +124,7 @@ def raw_preprocess(parser):
             src_logger.log(tok_sent, stdout=True if i % 100000 == 0 else False)
 
     # Reduce lines by max_len
-    if max_len > 0:
+    if MAX_LEN > 0:
         files = ['.'.join(file.split(".")[:2]) for file in os.listdir(STORE_PATH) if
                  file.endswith("tok.en") or file.endswith("tok." + lang_code)]
         filtered_src_lines, filtered_trg_lines = [], []
@@ -138,8 +137,8 @@ def raw_preprocess(parser):
             trg_l_s = re.sub(' +', ' ', trg_l)
             if src_l_s != "" and trg_l_s != "":
                 src_l_spl, trg_l_spl = src_l_s.split(" "), trg_l_s.split(" ")
-                if len(src_l_spl) <= max_len and len(trg_l_spl) <= max_len:
-                    if len(src_l_spl) >= min_len and len(trg_l_spl) >= min_len:
+                if len(src_l_spl) <= MAX_LEN and len(trg_l_spl) <= MAX_LEN:
+                    if len(src_l_spl) >= MIN_LEN and len(trg_l_spl) >= MIN_LEN:
                         filtered_src_lines.append(' '.join(src_l_spl))
                         filtered_trg_lines.append(' '.join(trg_l_spl))
 

@@ -36,12 +36,12 @@ def experiment_parser():
     parser.add_argument('-b', default=64, type=int, metavar='N', help='Batch size, default: 64')
     parser.add_argument('--epochs', default=80, type=int, metavar='N', help='number of epochs, default: 80')
     parser.add_argument('--model', metavar='DIR', default=None, help='path to model, default: None')
-    parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Sequence max length. Use the same max_len as in the preprocess step. Use 0 if sentences have not been filtered by length.")
+    parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Truncate the sequences to the given max_len parameter.")
     parser.add_argument('--corpus', default="europarl", metavar='STR',
                         help="The corpus, where training should be performed. Possible values: \'europarl\' and \'simple'\ - the iwslt dataset from torchtext")
     parser.add_argument('--attn', default="none", type=str, help="Attention type: dot, additive, none")
     parser.add_argument('-c', metavar='STR', default=False, help="Training at char level")
-    parser.add_argument('-lang_code', metavar='STR', default="de",
+    parser.add_argument('--lang_code', metavar='STR', default="de",
                         help="Provide language code, e.g. 'de'. This is the source or target language.")
     parser.add_argument('--reverse', type=str2bool, default=False,
                         help="Reverse language combination. Standard: en > de, if reverse, then de > en")

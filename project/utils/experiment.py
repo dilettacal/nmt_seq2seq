@@ -5,6 +5,7 @@ class Experiment(object):
     """
     The Experiment class defines the configuration for a training experiment.
     """
+    SEQ_MAX_LEN = 30
     def __init__(self, parser):
         self.model_type = 'none' # setup in the run_custom_nmt script
         if isinstance(parser, Namespace):
@@ -28,7 +29,8 @@ class Experiment(object):
         self.bi = self.args.bi
         self.reverse_input = self.args.reverse_input
         self.reverse_input = True if not self.bi else False
-
+        if self.args.max_len > Experiment.SEQ_MAX_LEN:
+            self.args.max_len = Experiment.SEQ_MAX_LEN
         self.truncate = self.args.max_len
         self.data_dir = self.args.data_dir
 
