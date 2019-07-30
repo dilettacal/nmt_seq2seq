@@ -12,7 +12,6 @@ import torch
 import numpy as np
 import math
 
-from project.utils.external.bleu import get_moses_multi_bleu
 from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
 from project.utils.utils import convert_time_unit, AverageMeter
 from settings import DEFAULT_DEVICE, SEED
