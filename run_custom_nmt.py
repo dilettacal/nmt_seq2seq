@@ -6,6 +6,7 @@ import os, datetime, time, sys
 
 import torch
 import torch.nn as nn
+import numpy as np
 
 from project.utils.experiment import Experiment
 from project.model.models import count_trainable_params, get_nmt_model
@@ -151,7 +152,9 @@ def main():
 
     # Scheduler
     SCHEDULER_PATIENCE = 20
-    MIN_LR = 2e-07
+   # MIN_LR = 2e-07
+    MIN_LR = np.float16(experiment.lr*0.001)
+    logger.log("Scheduler tolerance: {} epochs. Minimal learing rate: {}".format(SCHEDULER_PATIENCE, MIN_LR))
     scheduler = CustomReduceLROnPlateau(optimizer, 'max', patience=SCHEDULER_PATIENCE, verbose=True, min_lr=MIN_LR, factor=0.1)
 
 

@@ -27,9 +27,9 @@ random.seed(SEED)
 
 class CustomReduceLROnPlateau(ReduceLROnPlateau):
 
-    def __init__(self, optimizer, mode='min', factor=0.1, patience=10,
+    def __init__(self, optimizer, mode='max', factor=0.1, patience=20,
                  verbose=False, threshold=1e-4, threshold_mode='rel',
-                 cooldown=0, min_lr=0, eps=1e-8):
+                 cooldown=0, min_lr=2e-07, eps=1e-8):
         super().__init__(optimizer=optimizer,mode=mode,factor=factor,
                                                       patience=patience,verbose=verbose,threshold=threshold,
                                                       threshold_mode=threshold_mode, cooldown=cooldown,min_lr=min_lr, eps=eps)
@@ -79,7 +79,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
     CHECKPOINT = 20
     TOLERANCE = 30
-    TOLERATE_DECAYS = 3
+    TOLERATE_DECAYS = 2
     no_metric_improvements = 0
     print("Validation Beam: ", beam_size)
 
