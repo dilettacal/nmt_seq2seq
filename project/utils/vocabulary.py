@@ -110,7 +110,6 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     voc_limit = experiment.voc_limit
     min_freq = experiment.min_freq
 
-    char_level = experiment.char_level
     corpus = experiment.corpus
     language_code = experiment.lang_code
     reduce = experiment.reduce
@@ -125,11 +124,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     src_vec, trg_vec = None, None
 
     PREPRO = False if corpus == "europarl" else True
-    MODE = "c" if char_level else "w"
-
-    if MODE == "c" and corpus != "europarl":
-        ### char based training on datasets loaded at runtime from TorchText are not pretokenized at word level!
-        PREPRO = False
+    MODE = "w"
 
     src_tokenizer, trg_tokenizer = get_custom_tokenizer("en", mode=MODE, prepro=PREPRO), get_custom_tokenizer(language_code, mode=MODE, prepro=PREPRO)
 

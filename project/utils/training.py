@@ -115,7 +115,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
             #### checking translations
             if samples_iter:
                 tr_logger.log("Translation check. Epoch {}".format(epoch + 1))
-                check_translation(mini_samples, model, SRC, TRG, tr_logger, char_level=char_level)
+                check_translation(mini_samples, model, SRC, TRG, tr_logger)
 
 
         end_epoch_time = time.time()
@@ -187,7 +187,7 @@ def validate(val_iter, model, device, TRG, beam_size=5):
             src = batch.src.to(device)
             trg = batch.trg.to(device)
             # Get model prediction (from beam search)
-            out = model.predict(src, max_len=trg.size(0), beam_size=beam_size)  ### the beam value is the best value from the baseline study
+            out = model.predict(src, beam_size=beam_size)  ### the beam value is the best value from the baseline study
             # print(out.size())
             ref = list(trg.data.squeeze())
             # Prepare sentence for bleu script
@@ -241,7 +241,7 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30, char_leve
     # print("BLEU", batch_bleu)
     return nlkt_bleu
 
-def check_translation(samples, model, SRC, TRG, logger,persist=False, char_level=False):
+def check_translation(samples, model, SRC, TRG, logger, persist=False):
     """
     Readapted from Luke Melas Machine-Translation project:
     https://github.com/lukemelas/Machine-Translation/blob/master/training/train.py#L50
@@ -269,27 +269,19 @@ def check_translation(samples, model, SRC, TRG, logger,persist=False, char_level
             src_bs1 = src.select(1, k).unsqueeze(1)
             trg_bs1 = trg.select(1, k).unsqueeze(1)
             model.eval()  # predict mode
-            predictions = model.predict(src_bs1, beam_size=1, max_len=trg_bs1.size(0))
-            predictions_beam = model.predict(src_bs1, beam_size=2, max_len=trg_bs1.size(0))
-            predictions_beam5 = model.predict(src_bs1, beam_size=5,max_len=trg_bs1.size(0))
-            predictions_beam10 = model.predict(src_bs1, beam_size=10,max_len=trg_bs1.size(0))
+            predictions = model.predict(src_bs1, beam_size=1)
+            predictions_beam = model.predict(src_bs1, beam_size=2)
+            predictions_beam5 = model.predict(src_bs1, beam_size=5)
+            predictions_beam10 = model.predict(src_bs1, beam_size=10)
 
             #model.train()  # test mode
             #probs, maxwords = torch.max(scores.data.select(1, k), dim=1)  # training mode
-            if not char_level:
-                src_sent = ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
-                trg_sent = ' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)
-                beam1 = ' '.join(TRG.vocab.itos[x] for x in predictions)
-                beam2 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam)
-                beam5 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam5)
-                beam10 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam10)
-            else:
-                src_sent = ''.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
-                trg_sent = ''.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)
-                beam1 = ''.join(TRG.vocab.itos[x] for x in predictions)
-                beam2 = ''.join(TRG.vocab.itos[x] for x in predictions_beam)
-                beam5 = ''.join(TRG.vocab.itos[x] for x in predictions_beam5)
-                beam10 = ''.join(TRG.vocab.itos[x] for x in predictions_beam10)
+            src_sent = ' '.join(SRC.vocab.itos[x] for x in src_bs1.squeeze().data)
+            trg_sent = ' '.join(TRG.vocab.itos[x] for x in trg_bs1.squeeze().data)
+            beam1 = ' '.join(TRG.vocab.itos[x] for x in predictions)
+            beam2 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam)
+            beam5 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam5)
+            beam10 = ' '.join(TRG.vocab.itos[x] for x in predictions_beam10)
 
             logger.log('Source: {}'.format(src_sent), stdout=False)
             logger.log('Target: {}'.format(trg_sent), stdout=False)

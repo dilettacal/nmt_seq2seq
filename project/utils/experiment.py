@@ -40,7 +40,7 @@ class Experiment(object):
         self.cuda = self.args.cuda
         self.lr = self.args.lr
 
-        self.char_level = self.args.c
+        self.char_level = False
 
         self.src_vocab_size = None
         self.trg_vocab_size = None

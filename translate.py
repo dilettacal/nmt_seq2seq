@@ -40,21 +40,11 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     SRC_vocab = torch.load(os.path.join(path_to_exp, "src.pkl"))
     TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
 
-    char_level = experiment.char_level
-    tok_level = "c" if char_level else "w"
+    tok_level = "w"
 
-    src_word_pre_tokenizer, trg_word_pre_tokenizer = \
-        get_custom_tokenizer(experiment.get_src_lang(), "w", prepro=True), \
-        get_custom_tokenizer(experiment.get_trg_lang(), "w", prepro=True)
-
-    if tok_level == "c":
-        src_tokenizer, trg_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), "c", prepro=False), get_custom_tokenizer(
-            experiment.get_trg_lang(), "c", prepro=False)
-        MAX_LEN = FIXED_CHAR_LEVEL_LEN
-    else:
-        src_tokenizer = src_word_pre_tokenizer
-        trg_tokenizer = trg_word_pre_tokenizer
-        MAX_LEN = FIXED_WORD_LEVEL_LEN
+    src_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), "w", prepro=True)
+    trg_tokenizer = get_custom_tokenizer(experiment.get_trg_lang(), "w", prepro=True)
+    MAX_LEN = FIXED_WORD_LEVEL_LEN
 
     SRC_vocab.tokenize = src_tokenizer.tokenize
     TRG_vocab.tokenize = trg_tokenizer.tokenize
@@ -76,9 +66,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
         path_to_file = os.path.join(root, predict_from_file)
         samples = open(path_to_file, encoding="utf-8", mode="r").readlines()
         for sample in samples:
-            tok_sample = src_word_pre_tokenizer.tokenize(sample)
-            if tok_level == "c":
-                tok_sample = src_tokenizer.tokenize(' '.join(tok_sample))
+            tok_sample = src_tokenizer.tokenize(sample)
             _ = predict_from_input(input_sentence=tok_sample, SRC=SRC_vocab, TRG=TRG_vocab, model=model,
                                device=experiment.get_device(),
                                logger=logger, stdout=True, beam_size=beam_size, max_len=MAX_LEN)
@@ -89,9 +77,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
                 input_sequence = input("Source > ")
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
-                input_sequence = src_word_pre_tokenizer.tokenize(input_sequence.lower())
-                if tok_level == "c":
-                    input_sequence = src_tokenizer.tokenize(' '.join(input_sequence))
+                input_sequence = src_tokenizer.tokenize(input_sequence.lower())
                 out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu",
                                          beam_size=beam_size, max_len=MAX_LEN)
                 if out:

@@ -41,7 +41,6 @@ def experiment_parser():
     parser.add_argument('--corpus', default="europarl", metavar='STR',
                         help="The corpus, where training should be performed. Possible values: \'europarl\' and \'simple'\ - the iwslt dataset from torchtext")
     parser.add_argument('--attn', default="none", type=str, help="Attention type: dot, additive, none")
-    parser.add_argument('-c', metavar='STR', default=False, help="Training at char level")
     parser.add_argument('--lang_code', metavar='STR', default="de",
                         help="Provide language code, e.g. 'de'. This is the source or target language.")
     parser.add_argument('--reverse', type=str2bool, default=False,
@@ -228,7 +227,7 @@ def main():
 
     # Translate some sentences
     final_translation = Logger(file_name="final_translations.log", path=experiment_path)
-    check_translation(model=model, SRC=SRC, TRG=TRG, logger=final_translation, samples=samples_iter, persist=True, char_level=experiment.char_level)
+    check_translation(samples=samples_iter, model=model, SRC=SRC, TRG=TRG, logger=final_translation, persist=True)
 
     logger.log('Finished in {}'.format(convert_time_unit(time.time() - start_time)))
 
