@@ -153,7 +153,7 @@ def main():
     # Scheduler
     SCHEDULER_PATIENCE = 20
    # MIN_LR = 2e-07
-    MIN_LR = np.float16(experiment.lr*0.001)
+    MIN_LR = float(np.float(experiment.lr).__mul__(np.float(0.001)))
     logger.log("Scheduler tolerance: {} epochs. Minimal learing rate: {}".format(SCHEDULER_PATIENCE, MIN_LR))
     scheduler = CustomReduceLROnPlateau(optimizer, 'max', patience=SCHEDULER_PATIENCE, verbose=True, min_lr=MIN_LR, factor=0.1)
 
