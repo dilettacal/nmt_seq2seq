@@ -32,7 +32,6 @@ class Seq2SeqDataset(Dataset):
     def __init__(self, path, exts, fields, truncate=0, reduce=0):
 
         if not isinstance(fields[0], (tuple, list)):
-           # print(fields)
             fields = [('src', fields[0]), ('trg', fields[1])]
 
         src_path, trg_path = tuple(os.path.expanduser(path + x) for x in exts)
