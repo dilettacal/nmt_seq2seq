@@ -6,9 +6,6 @@ from torchtext.data import Field, Iterator
 from project.utils.utils import Logger, AverageMeter
 from project.utils.vocabulary import Seq2SeqDataset
 
-from io import StringIO
-import sys
-
 data_dir = os.path.join(".", "test_data")
 
 class TestIOUtils(unittest.TestCase):
