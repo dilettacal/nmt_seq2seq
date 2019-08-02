@@ -211,19 +211,33 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
 
     if voc_limit > 0:
         if experiment.pretrained:
-            src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit, vectors=src_vec)
-            trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit, vectors=trg_vec)
+            src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
+            src_stoi_cache = src_vocab.vocab.stoi.copy()
+            src_vocab.vocab.load_vectors(vectors=src_vec)
+            print("For SRC {} pretrained embeddings have been loaded".format(len(count_load_embeddings(src_stoi_cache, src_vec))))
+            trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
+            trg_stoi_cache = trg_vocab.vocab.stoi.copy()
+            trg_vocab.vocab.load_vectors(vectors=trg_vec)
+            print("For TRG {} pretrained embeddings have been loaded".format(len(count_load_embeddings(trg_stoi_cache, trg_vec))))
         else:
             src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
             trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
         print("Vocabularies created!")
     else:
         if experiment.pretrained:
-            src_vocab.build_vocab(train, min_freq=min_freq, vectors=src_vec)
-            trg_vocab.build_vocab(train, min_freq=min_freq, vectors=trg_vec)
-        else:
             src_vocab.build_vocab(train, min_freq=min_freq)
+            src_stoi_cache = src_vocab.vocab.stoi.copy()
+            src_vocab.vocab.load_vectors(vectors=src_vec)
+            print("For SRC {} pretrained embeddings have been loaded".format(
+                len(count_load_embeddings(src_stoi_cache, src_vec))))
             trg_vocab.build_vocab(train, min_freq=min_freq)
+            trg_stoi_cache = trg_vocab.vocab.stoi.copy()
+            trg_vocab.vocab.load_vectors(vectors=trg_vec)
+            print("For TRG {} pretrained embeddings have been loaded".format(
+                len(count_load_embeddings(trg_stoi_cache, trg_vec))))
+        else:
+                src_vocab.build_vocab(train, min_freq=min_freq)
+                trg_vocab.build_vocab(train, min_freq=min_freq)
         print("Vocabularies created!")
 
     #### Iterators #####
@@ -238,6 +252,9 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
 
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test, samples, samples_iter
 
+def count_load_embeddings(voc_stoi_before, vectors):
+    common_items = list(set(list(voc_stoi_before.keys())).intersection(list(vectors.stoi.keys())))
+    return common_items
 
 def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, experiment):
     """ This prints some useful stuff about our data sets. """
