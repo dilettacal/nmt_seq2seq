@@ -143,11 +143,12 @@ class Seq2Seq(nn.Module):
                     last_word_input = torch.LongTensor([last_word]).view(1, 1).to(self.device)
                     outputs_d, new_state = self.decoder(last_word_input, current_state)
                     # Attend
-                    ### Attention is computed globally on all the encoder hidden states and on the current hidden state of the decder
-                    context = self.attention(outputs_e, outputs_d)
                     if self.att_type == "none":
                         out_cat = outputs_d
-                    else: out_cat = torch.cat((outputs_d, context), dim=2)
+                    else:
+                        # Attend
+                        context = self.attention(outputs_e, outputs_d)
+                        out_cat = torch.cat((outputs_d, context), dim=2)
                     x = self.preoutput(out_cat)
                     ###########################################
                     x = self.dropout(self.tanh(x))
