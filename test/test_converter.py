@@ -30,5 +30,6 @@ class TestTMX2Corpus(unittest.TestCase):
         set1 = set(en_line.split(' '))
         set2 = set(EN.split(' '))
         self.assertEqual(set1, set2)
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
