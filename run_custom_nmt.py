@@ -26,15 +26,15 @@ def experiment_parser():
     parser.add_argument('--lr', default=2e-4, type=float, metavar='N', help='learning rate, default: 0.0002')
     parser.add_argument('--hs', default=300, type=int, metavar='N', help='size of hidden state, default: 300')
     parser.add_argument('--emb', default=300, type=int, metavar='N', help='embedding size, default: 300')
-    parser.add_argument('--nlayers', default=4, type=int, metavar='N', help='number of layers in rnn, default: 4')
+    parser.add_argument('--num_layers', default=4, type=int, metavar='N', help='number of layers in rnn, default: 4')
     parser.add_argument('--dp', default=0.25, type=float, metavar='N', help='dropout probability, default: 0.25')
     parser.add_argument('--bi', type=str2bool, default=False,
                         help='use bidrectional encoder, default: false')
     parser.add_argument('--reverse_input', type=str2bool, default=False,
                         help='reverse input to encoder, default: False')
-    parser.add_argument('-v', default=30000, type=int, metavar='N',
+    parser.add_argument('--v', default=30000, type=int, metavar='N',
                         help='Vocabulary size. Use 0 for max size. Default: 30000')
-    parser.add_argument('-b', default=64, type=int, metavar='N', help='Batch size, default: 64')
+    parser.add_argument('--b', default=64, type=int, metavar='N', help='Batch size, default: 64')
     parser.add_argument('--epochs', default=80, type=int, metavar='N', help='number of epochs, default: 80')
     parser.add_argument('--model', metavar='DIR', default=None, help='path to model, default: None')
     parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Truncate the sequences to the given max_len parameter.")

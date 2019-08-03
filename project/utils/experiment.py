@@ -50,7 +50,7 @@ class Experiment(object):
         self.hid_dim = self.args.hs
         self.emb_size = self.args.emb
         self.rnn_type = self.args.rnn
-        self.nlayers = self.args.nlayers
+        self.nlayers = self.args.num_layers
         self.dp = self.args.dp
         self.tok = self.args.tok
         self.val_beam_size = self.args.beam

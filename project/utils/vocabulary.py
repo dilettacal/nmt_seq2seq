@@ -120,8 +120,6 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     print("Required samples:")
     print(experiment.train_samples, experiment.val_samples, experiment.test_samples)
 
-    src_vec, trg_vec = None, None
-
     PREPRO = False if corpus == "europarl" else True
     MODE = "w"
 
@@ -136,7 +134,6 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     if corpus == "europarl":
 
         root = os.path.expanduser(DATA_DIR_PREPRO)
-        #print("Root:", root)
         if not data_dir:
             data_dir = os.path.join(root, corpus, language_code, "splits", str(max_len)) # local directory
 
