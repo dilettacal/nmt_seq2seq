@@ -16,6 +16,7 @@ class Attention(nn.Module):
         self.bidirectional = bidirectional
         self.attn_type = attn_type
         self.h_dim = h_dim
+        self.softmax = nn.Softmax(dim=1)
 
     def attention(self, encoder_outputs, decoder_outputs):
         '''Produces context and attention distribution'''
@@ -33,10 +34,8 @@ class Attention(nn.Module):
 
         # DOT ATTENTION
         attn = encoder_outputs.bmm(decoder_outputs.transpose(1, 2))
-
         # Compute scores
-        attn = attn.exp() / attn.exp().sum(dim=1, keepdim=True)
-        attn = attn.transpose(1,2)
+        attn = self.softmax(attn).transpose(1,2)
 
         # Compute the context
         context = attn.bmm(encoder_outputs)
