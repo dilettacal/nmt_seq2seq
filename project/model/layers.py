@@ -13,8 +13,8 @@ import torch
 class Attention(nn.Module):
     def __init__(self, bidirectional=False, attn_type='dot', h_dim=300):
         super(Attention, self).__init__()
-        if attn_type not in ['dot', 'additive', 'none']:
-            raise Exception('Incorrect attention type')
+        if attn_type not in ['dot', 'none']:
+            raise Exception("Incorrect attention type. Please provide none or dot")
         self.bidirectional = bidirectional
         self.attn_type = attn_type
         self.h_dim = h_dim
@@ -35,7 +35,6 @@ class Attention(nn.Module):
 
         # Dot attention
         attn = encoder_outputs.bmm(decoder_outputs.transpose(1, 2))
-
         # Compute scores
         attn = attn.exp() / attn.exp().sum(dim=1, keepdim=True)
         attn = attn.transpose(1,2)
