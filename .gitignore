@@ -157,3 +157,5 @@ scripts/floyd
 finaltraslations
 *.pt
 *.vec
+
+!test/test_data/samples*
