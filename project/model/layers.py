@@ -7,6 +7,7 @@ under the courtesy of the author
 """
 
 import torch.nn as nn
+import torch.nn.functional as F
 
 class Attention(nn.Module):
     def __init__(self, bidirectional=False, attn_type='dot', h_dim=300):
@@ -16,7 +17,6 @@ class Attention(nn.Module):
         self.bidirectional = bidirectional
         self.attn_type = attn_type
         self.h_dim = h_dim
-        self.softmax = nn.Softmax(dim=1)
 
     def attention(self, encoder_outputs, decoder_outputs):
         '''Produces context and attention distribution'''
@@ -35,7 +35,7 @@ class Attention(nn.Module):
         # DOT ATTENTION
         attn = encoder_outputs.bmm(decoder_outputs.transpose(1, 2))
         # Compute scores
-        attn = self.softmax(attn).transpose(1,2)
+        attn = F.softmax(attn, dim=1).transpose(1,2)
 
         # Compute the context
         context = attn.bmm(encoder_outputs)
