@@ -17,17 +17,16 @@ from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
 from project.utils.training import predict_from_input
 from project.utils.utils import Logger, str2bool
-from settings import RESULTS_DIR,BEST_MODEL_PATH
 
 
 def translate(path="", predict_from_file="", beam_size=5):
     use_cuda = True if torch.cuda.is_available() else False
     device = "cuda" if use_cuda else "cpu"
     FIXED_WORD_LEVEL_LEN = 30
-    FIXED_CHAR_LEVEL_LEN = 250
 
     if not path:
-        path = BEST_MODEL_PATH
+        print("Please provide path to model!")
+        return
 
     path_to_exp = os.path.expanduser(path)
     print("Using experiment from: ", path_to_exp)
@@ -92,7 +91,7 @@ def translate(path="", predict_from_file="", beam_size=5):
 def translation_parser():
     parser = argparse.ArgumentParser(description='NMT - Neural Machine Translator')
 
-    parser.add_argument('--path', type=str, default="de_en/s/2/uni/2019-07-15-14-03-09/",
+    parser.add_argument('--path', type=str, default="",
                         help='experiment path')
     parser.add_argument('--file', type=str, default="",
                         help="Translate from keyboard (False) or from samples file (True)")
