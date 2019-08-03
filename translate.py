@@ -20,7 +20,7 @@ from project.utils.utils import Logger, str2bool
 from settings import RESULTS_DIR,BEST_MODEL_PATH
 
 
-def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
+def translate(path="", predict_from_file="", beam_size=5):
     use_cuda = True if torch.cuda.is_available() else False
     device = "cuda" if use_cuda else "cpu"
     FIXED_WORD_LEVEL_LEN = 30
@@ -29,7 +29,7 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
     if not path:
         path = BEST_MODEL_PATH
 
-    path_to_exp = os.path.join(root, path)
+    path_to_exp = os.path.expanduser(path)
     print("Using experiment from: ", path_to_exp)
     path_to_model = os.path.join(path_to_exp, "model.pkl")
 
@@ -63,8 +63,9 @@ def translate(root=RESULTS_DIR, path="", predict_from_file="", beam_size=5):
 
     if predict_from_file:
 
-        path_to_file = os.path.join(root, predict_from_file)
+        path_to_file = os.path.expanduser(predict_from_file)
         samples = open(path_to_file, encoding="utf-8", mode="r").readlines()
+        logger.log("Predictions from file: {}".format(path_to_file))
         for sample in samples:
             tok_sample = src_tokenizer.tokenize(sample)
             _ = predict_from_input(input_sentence=tok_sample, SRC=SRC_vocab, TRG=TRG_vocab, model=model,
@@ -93,7 +94,7 @@ def translation_parser():
 
     parser.add_argument('--path', type=str, default="de_en/s/2/uni/2019-07-15-14-03-09/",
                         help='experiment path')
-    parser.add_argument('--file', type=str2bool, default="False",
+    parser.add_argument('--file', type=str, default="",
                         help="Translate from keyboard (False) or from samples file (True)")
     parser.add_argument('--beam', type=int, default=5, help="beam size")
     return parser
@@ -105,4 +106,4 @@ BEST_BASELINE_TIED = "best_baseline_tied/de_en/s/2/uni/2019-07-15-14-03-30"
 if __name__ == '__main__':
     parser = translation_parser().parse_args()
     #parser.path = BEST_BASELINE_TIED
-    translate(os.path.expanduser(os.path.join(RESULTS_DIR)), path=parser.path, predict_from_file=parser.file, beam_size = parser.beam)
+    translate(path=parser.path, predict_from_file=parser.file, beam_size = parser.beam)
