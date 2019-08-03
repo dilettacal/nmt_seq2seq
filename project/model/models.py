@@ -33,32 +33,27 @@ class Seq2Seq(nn.Module):
         self.num_layers = experiment_config.nlayers
         self.bos_token = tokens_bos_eos_pad_unk[0]
         self.eos_token = tokens_bos_eos_pad_unk[1]
-        self.pad_token = tokens_bos_eos_pad_unk[2]
-        self.unk_token = tokens_bos_eos_pad_unk[3]
         self.device = experiment_config.get_device()
         self.reverse_input = experiment_config.reverse_input
         self.weight_tied = experiment_config.tied
-        rnn_type = experiment_config.rnn_type
-        self.cell = rnn_type
+        self.cell =  experiment_config.rnn_type
 
         self.att_type = experiment_config.attn
 
-        assert rnn_type.lower() in VALID_CELLS, "Provided cell type is not supported!"
+        assert self.cell.lower() in VALID_CELLS, "Provided cell type is not supported!"
 
         self.encoder = Encoder(self.src_vocab_size, self.emb_size, self.hid_dim, self.num_layers,
-                               dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=rnn_type, device=self.device)
+                               dropout_p=self.dp, bidirectional=self.enc_bi, rnn_cell=self.cell, device=self.device)
 
         self.decoder = Decoder(self.trg_vocab_size, self.emb_size, self.hid_dim,
-                                   self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=rnn_type,
+                                   self.num_layers * 2 if self.enc_bi else self.num_layers, rnn_cell=self.cell,
                                    dropout_p=self.dp)
 
         self.attention = Attention(bidirectional=self.enc_bi, attn_type=self.att_type, h_dim=self.hid_dim)
 
         if self.att_type == "none":
-            self.context_model = False
             self.preoutput = nn.Linear(self.hid_dim, self.emb_size)
         else:
-            self.context_model = True
             self.preoutput = nn.Linear(2 * self.hid_dim, self.emb_size)
         self.tanh = nn.Tanh()
         self.dropout = nn.Dropout(experiment_config.dp)
@@ -67,18 +62,6 @@ class Seq2Seq(nn.Module):
         if self.weight_tied and self.decoder.embedding.weight.size() == self.output.weight.size():
             print('Weight tying!')
             self.output.weight = self.decoder.embedding.weight
-
-
-    def load_pretrained_embeddings(self, pretrained_src, pretraiend_trg):
-        assert self.encoder.embedding.weight.size() == pretrained_src.size()
-        assert self.decoder.embedding.weight.size() == pretraiend_trg.size()
-        enc_w = self.encoder.embedding.weight.clone()
-        dec_w = self.decoder.embedding.weight.clone()
-        self.encoder.embedding.weight.data.copy_(pretrained_src)
-        self.decoder.embedding.weight.data.copy_(pretraiend_trg)
-        assert not torch.all(torch.eq(enc_w, self.encoder.embedding.weight))
-        assert not torch.all(torch.eq(dec_w, self.decoder.embedding.weight))
-        print("Embeddings weights have been loaded in the model!")
 
     def forward(self, enc_input, dec_input):
         """

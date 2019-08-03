@@ -119,14 +119,6 @@ def main():
     # special tokens
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
 
-    # Load pretrained vectors if experiment is done with pretrained embeddings
-    if experiment.pretrained:
-        pretraiend_src = train_data.fields['src'].vocab.vectors
-        pretrained_trg = train_data.fields['trg'].vocab.vectors
-        logger.log("Running experiment with pretrained embeddings!")
-    else:
-        pretraiend_src, pretrained_trg = None, None
-
     model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
     print(model)
     model = model.to(experiment.get_device())
@@ -165,10 +157,10 @@ def main():
 
     log_every = 5
     bleu, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
-                                 optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
-                                 logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
-                                 samples_iter=samples_iter, check_translations_every=log_every,
-                                 beam_size=experiment.val_beam_size, char_level=experiment.char_level)
+                                optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
+                                logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
+                                samples_iter=samples_iter, check_translations_every=log_every,
+                                beam_size=experiment.val_beam_size)
 
     # persist metrics
     nltk_bleu_metric = Metric("nltk_bleu", list(bleu.values())[0])
@@ -187,9 +179,8 @@ def main():
     logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="loss_bleu")
 
     FIXED_WORD_LEVEL_LEN = 30
-    FIXED_CHAR_LEVEL_LEN = 1500
 
-    max_len = FIXED_WORD_LEVEL_LEN if experiment.char_level == False else FIXED_CHAR_LEVEL_LEN
+    max_len = FIXED_WORD_LEVEL_LEN
 
     # Test the model on the test dataset
 
@@ -197,25 +188,25 @@ def main():
     logger.log("Validation of test set")
     beam_size = 1
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len, char_level=experiment.char_level)
+    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Beam 2
     beam_size = 2
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
+    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Beam 5
     beam_size = 5
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
+    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Beam 10
     beam_size = 10
     logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len,  char_level=experiment.char_level)
+    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
     logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Translate some sentences

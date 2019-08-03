@@ -66,8 +66,7 @@ class CustomReduceLROnPlateau(ReduceLROnPlateau):
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5,
-                char_level=False):
+                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5):
     best_bleu_score = 0
     metrics = dict()
     train_losses = []
@@ -207,7 +206,7 @@ def validate(val_iter, model, device, TRG, beam_size=5):
 
     return bleu.val
 
-def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30, char_level=False):
+def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
     model.eval()
     sent_candidates = []
     sent_references = []
@@ -225,12 +224,8 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30, char_leve
             remove_tokens = [TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]
             out = [w for w in out if w not in remove_tokens]
             ref = [w for w in ref if w not in remove_tokens]
-            if not char_level:
-                sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
-                sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
-            else:
-                sent_out = ''.join(TRG.vocab.itos[j] for j in out)
-                sent_ref = ''.join(TRG.vocab.itos[j] for j in ref)
+            sent_out = ' '.join(TRG.vocab.itos[j] for j in out)
+            sent_ref = ' '.join(TRG.vocab.itos[j] for j in ref)
             sent_candidates.append(sent_out)
             sent_references.append(sent_ref)
 

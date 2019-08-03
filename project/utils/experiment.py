@@ -55,10 +55,6 @@ class Experiment(object):
         self.tok = self.args.tok
         self.val_beam_size = self.args.beam
 
-        ## Further developments
-        self.pretrained = False  # pretrained embeddings disabled
-        self.char_level = False  # training at char level disable
-
     def get_args(self):
         return self.args
 
