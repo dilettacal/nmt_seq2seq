@@ -186,58 +186,14 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         print("Duration: {}".format(convert_time_unit(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
 
-    if experiment.pretrained:
-        ### retrieve word vectors
-        embedding_dir = os.path.join(DATA_DIR_PREPRO, "embeddings")
-        os.makedirs(embedding_dir, exist_ok=True)
-
-        try:
-            maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_LANG_CODE.format(language_code),
-                                       raw_file='cc.{}.300.vec'.format(language_code))
-            maybe_download_and_extract(download_dir=embedding_dir, url=PRETRAINED_URL_EN,
-                                       raw_file='cc.en.300.vec')
-        except Exception as e:
-            print(
-                "An error has occurred while downloading pretrained embeddings. Please download the files for 'en' and <lang_code> manually from: \n"
-                "https://fasttext.cc/docs/en/pretrained-vectors.html")
-        init_unk = torch.Tensor.normal_
-        if experiment.get_src_lang() == "en":
-            src_vec = vocab.Vectors(name='cc.en.300.vec', cache=embedding_dir, unk_init=init_unk)
-            trg_vec = vocab.Vectors(name='cc.{}.300.vec'.format(language_code), cache=embedding_dir, unk_init=init_unk)
-
-        else:
-            src_vec = vocab.Vectors('cc.{}.300.vec'.format(language_code), embedding_dir, unk_init=init_unk)
-            trg_vec = vocab.Vectors('cc.en.300.vec', embedding_dir, unk_init=init_unk)
 
     if voc_limit > 0:
-        if experiment.pretrained:
-            src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
-            src_stoi_cache = src_vocab.vocab.stoi.copy()
-            src_vocab.vocab.load_vectors(vectors=src_vec)
-            print("For SRC {} pretrained embeddings have been loaded".format(len(count_load_embeddings(src_stoi_cache, src_vec))))
-            trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
-            trg_stoi_cache = trg_vocab.vocab.stoi.copy()
-            trg_vocab.vocab.load_vectors(vectors=trg_vec)
-            print("For TRG {} pretrained embeddings have been loaded".format(len(count_load_embeddings(trg_stoi_cache, trg_vec))))
-        else:
-            src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
-            trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
+        src_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
+        trg_vocab.build_vocab(train, min_freq=min_freq, max_size=voc_limit)
         print("Vocabularies created!")
     else:
-        if experiment.pretrained:
-            src_vocab.build_vocab(train, min_freq=min_freq)
-            src_stoi_cache = src_vocab.vocab.stoi.copy()
-            src_vocab.vocab.load_vectors(vectors=src_vec)
-            print("For SRC {} pretrained embeddings have been loaded".format(
-                len(count_load_embeddings(src_stoi_cache, src_vec))))
-            trg_vocab.build_vocab(train, min_freq=min_freq)
-            trg_stoi_cache = trg_vocab.vocab.stoi.copy()
-            trg_vocab.vocab.load_vectors(vectors=trg_vec)
-            print("For TRG {} pretrained embeddings have been loaded".format(
-                len(count_load_embeddings(trg_stoi_cache, trg_vec))))
-        else:
-                src_vocab.build_vocab(train, min_freq=min_freq)
-                trg_vocab.build_vocab(train, min_freq=min_freq)
+        src_vocab.build_vocab(train, min_freq=min_freq)
+        trg_vocab.build_vocab(train, min_freq=min_freq)
         print("Vocabularies created!")
 
     #### Iterators #####
