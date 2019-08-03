@@ -87,6 +87,7 @@ def translate(path="", predict_from_file="", beam_size=5):
             except KeyError:
                 print("Error: Encountered unknown word.")
 
+    return True
 
 def translation_parser():
     parser = argparse.ArgumentParser(description='NMT - Neural Machine Translator')
