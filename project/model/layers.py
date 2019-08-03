@@ -19,17 +19,11 @@ class Attention(nn.Module):
         self.attn_type = attn_type
         self.h_dim = h_dim
 
-        # Create parameters for additive attention
-        if self.attn_type == 'additive':
-            self.linear = nn.Linear(2 * self.h_dim, self.h_dim)
-            self.tanh = nn.Tanh()
-            self.vector = nn.Parameter(torch.zeros(self.h_dim))
-
     def attention(self, encoder_outputs, decoder_outputs):
         '''Produces context and attention distribution'''
         # If no attention, return context of zeros
         if self.attn_type == 'none':
-            return decoder_outputs.clone() * 0, decoder_outputs.clone() * 0
+            return None
 
         # Deal with bidirectional encoder, move batches first
         if self.bidirectional:
@@ -39,19 +33,8 @@ class Attention(nn.Module):
         encoder_outputs = encoder_outputs.transpose(0, 1)
         decoder_outputs = decoder_outputs.transpose(0, 1)
 
-        # Different types of attention
-        if self.attn_type == 'dot':
-            attn = encoder_outputs.bmm(decoder_outputs.transpose(1, 2))
-        elif self.attn_type == 'additive':
-            batch_size_src_len_trg_len_hid_dim = \
-                (encoder_outputs.size(0), encoder_outputs.size(1),
-                 decoder_outputs.size(1), encoder_outputs.size(2))
-            out_e_resized = encoder_outputs.unsqueeze(2).\
-                expand(batch_size_src_len_trg_len_hid_dim)
-            out_d_resized = decoder_outputs.unsqueeze(1).\
-                expand(batch_size_src_len_trg_len_hid_dim)
-            attn = self.linear(torch.cat((out_e_resized, out_d_resized), dim=3))
-            attn = self.tanh(attn) @ self.vector
+        # Dot attention
+        attn = encoder_outputs.bmm(decoder_outputs.transpose(1, 2))
 
         # Compute scores
         attn = attn.exp() / attn.exp().sum(dim=1, keepdim=True)
