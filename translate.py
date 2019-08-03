@@ -100,9 +100,6 @@ def translation_parser():
     return parser
 
 
-BEST_BASELINE = "best_baseline/de_en/s/2/uni/2019-07-15-14-03-09/"
-BEST_BASELINE_TIED = "best_baseline_tied/de_en/s/2/uni/2019-07-15-14-03-30"
-
 if __name__ == '__main__':
     parser = translation_parser().parse_args()
     #parser.path = BEST_BASELINE_TIED
