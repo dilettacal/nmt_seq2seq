@@ -19,13 +19,9 @@ class Experiment(object):
         self.reverse_lang_comb = self.args.reverse
         self.min_freq = self.args.min if self.args.min >= 0 else 5
         self.tied = self.args.tied
-        self.pretrained = self.args.pretrained
 
-        assert self.args.attn in ["none", "additive", "dot"]
+        assert self.args.attn in ["none", "dot"]
         self.attn = self.args.attn
-
-        ### setup either bidirectional or reverse_input
-        ### this step is also refined in run_custom_nmt.py
         self.bi = self.args.bi
         self.reverse_input = self.args.reverse_input
         self.reverse_input = True if not self.bi else False
@@ -39,8 +35,6 @@ class Experiment(object):
 
         self.cuda = self.args.cuda
         self.lr = self.args.lr
-
-        self.char_level = False
 
         self.src_vocab_size = None
         self.trg_vocab_size = None
@@ -58,10 +52,12 @@ class Experiment(object):
         self.rnn_type = self.args.rnn
         self.nlayers = self.args.nlayers
         self.dp = self.args.dp
-
         self.tok = self.args.tok
-
         self.val_beam_size = self.args.beam
+
+        ## Further developments
+        self.pretrained = False  # pretrained embeddings disabled
+        self.char_level = False  # training at char level disable
 
     def get_args(self):
         return self.args

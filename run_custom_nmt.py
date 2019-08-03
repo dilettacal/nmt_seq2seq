@@ -56,8 +56,6 @@ def experiment_parser():
                         help="Minimal word frequency. If min_freq <= 0, then min_freq is set to default value")
     parser.add_argument('--tied', default="False", type=str2bool,
                         help="Tie weights between input and output in decoder.")
-    parser.add_argument('--pretrained', default="False", type=str2bool,
-                        help="Initialize embeddings weights with pre-trained embeddings")
     parser.add_argument('--beam', type=int, default=5, help="Beam size used during the model validation.")
     return parser
 
@@ -66,7 +64,7 @@ def main():
     print("Running experiment on:", experiment.get_device())
 
     # Model configuration
-    if experiment.pretrained or experiment.attn != "none":
+    if experiment.attn != "none":
         experiment.model_type = "custom"
         experiment.reverse_input = False
         experiment.bi = True
