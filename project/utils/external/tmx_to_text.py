@@ -103,6 +103,7 @@ class Converter(object):
         logging.debug('Output %d pairs', self.output_lines)
         if self.suppress_count:
             logging.debug('Suppressed %d pairs', self.suppress_count)
+        return True
 
     def __output(self, bitext):
 
