@@ -26,7 +26,7 @@ def translate(path="", predict_from_file="", beam_size=5):
 
     if not path:
         print("Please provide path to model!")
-        return
+        return False
 
     path_to_exp = os.path.expanduser(path)
     print("Using experiment from: ", path_to_exp)
