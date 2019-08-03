@@ -139,13 +139,13 @@ def main():
     model = model.to(experiment.get_device())
 
     # Criterion
-    # Loss mask for padding token
+    # Masking loss: https://discuss.pytorch.org/t/how-can-i-compute-seq2seq-loss-using-mask/861/21
     weight = torch.ones(len(TRG.vocab))
     weight[TRG.vocab.stoi[PAD_TOKEN]] = 0
     weight = weight.to(experiment.get_device())
 
     # Create loss function and optimizer
-    criterion = nn.CrossEntropyLoss(weight=weight)
+    criterion = nn.CrossEntropyLoss(weight=weight) # or ignore_index = TRG.vocab.stoi[PAD_TOKEN]
     # Optimizer
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
 
