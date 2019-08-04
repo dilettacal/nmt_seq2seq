@@ -25,7 +25,50 @@ from project.utils.utils import Logger
 UTF8Reader = codecs.getreader('utf8')
 sys.stdin = UTF8Reader(sys.stdin)
 
+class Translator(object):
+    def __init__(self, model, SRC, TRG, logger, src_tokenizer, trg_tokenizer, device="cuda", beam_size=5, max_len=30):
+        self.model = model
+        self.src_vocab = SRC
+        self.trg_vocab = TRG
+        self.logger = logger
+        self.device = device
+        self.beam_size = beam_size
+        self.max_len = max_len
+        self.src_tokenizer = src_tokenizer
+        self.trg_tokenizer = trg_tokenizer
 
+
+    def predict_sentence(self, sentence, stdout=False):
+
+        sentence = self.src_tokenizer.tokenize(sentence.lower())
+        #### Changed from original ###
+        sent_indices = [self.src_vocab.vocab.stoi[word] if word in self.src_vocab.vocab.stoi
+                        else self.src_vocab.vocab.stoi[UNK_TOKEN] for word in
+                        sentence]
+        sent = torch.LongTensor([sent_indices])
+        sent = sent.to(self.device)
+        sent = sent.view(-1, 1)  # reshape to sl x bs
+        self.logger.log('SRC  >>> ' + ' '.join([self.src_vocab.vocab.itos[index] for index in sent_indices]),
+                        stdout=stdout)
+        ### predict sentences with beam search 5
+        pred = self.model.predict(sent, beam_size=self.beam_size, max_len=self.max_len)
+        pred = [index for index in pred if index not in [self.trg_vocab.vocab.stoi[SOS_TOKEN],
+                                                         self.trg_vocab.vocab.stoi[EOS_TOKEN]]]
+        out = ' '.join(self.trg_vocab.vocab.itos[idx] for idx in pred)
+        self.logger.log('PRED >>> ' + out, stdout=True)
+        return out
+
+    def predict_from_text(self, path_to_file):
+        path_to_file = os.path.expanduser(path_to_file)
+        self.logger.log("Predictions from file: {}".format(path_to_file))
+        self.logger.log("-" * 100, stdout=True)
+        # read file
+        with open(path_to_file, encoding="utf-8", mode="r") as f:
+            samples = f.readlines()
+        samples = [x.strip().lower() for x in samples if x]
+        for sample in samples:
+            out = self.predict_sentence(sample)
+            self.logger.log("-" * 100, stdout=True)
 
 def translate(path="", predict_from_file="", beam_size=5):
     use_cuda = True if torch.cuda.is_available() else False
@@ -69,45 +112,31 @@ def translate(path="", predict_from_file="", beam_size=5):
     logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)
     logger.log("Beam width: {}".format(beam_size))
 
-    if predict_from_file:
+    translator = Translator(model, SRC_vocab, TRG_vocab, logger, src_tokenizer, trg_tokenizer, device, beam_size, max_len=MAX_LEN)
 
-        path_to_file = os.path.expanduser(predict_from_file)
-        logger.log("Predictions from file: {}".format(path_to_file))
-        logger.log("-" * 100, stdout=True)
-        # read file
-        with open(path_to_file, encoding="utf-8", mode="r") as f:
-            samples = f.readlines()
-        samples = [x.strip().lower() for x in samples if x]
-        for sample in samples:
-            tok_sample = SRC_vocab.tokenize(sample)
-            _ = predict_from_input(input_sentence=tok_sample, SRC=SRC_vocab, TRG=TRG_vocab, model=model,
-                               device=experiment.get_device(),
-                               logger=logger, stdout=True, beam_size=beam_size, max_len=MAX_LEN)
-            logger.log("-" * 100, stdout=True)
+    if predict_from_file:
+        translator.predict_from_text(predict_from_file)
     else:
         input_sequence = ""
         while (1):
             try:
                 try:
-                    input_sequence = input("SRC > ")
+                    input_sequence = input("SRC  >>> ")
                     if input_sequence.lower().startswith("#"):
                         bs = input_sequence.split("#")[1]
                         try:
                             beam_size = int(bs)
                             logger.log("New Beam width: {}".format(beam_size))
-                            input_sequence = input("SRC > ")
+                            input_sequence = input("SRC  >>> ")
                         except ValueError:
-                            input_sequence = input("SRC > ")
+                            input_sequence = input("SRC  >>> ")
                 except ValueError as e:
                     print("An error has occurred: {}. Please restart program!".format(e))
                     return False
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
-                input_sequence = SRC_vocab.tokenize(input_sequence.lower())
-                out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu",
-                                         beam_size=beam_size, max_len=MAX_LEN)
+                out = translator.predict_sentence(input_sequence)
                 if out:
-                    print("TRG > ", out)
                     logger.log("-"*35, stdout=True)
                 else: print("Error while translating!")
 

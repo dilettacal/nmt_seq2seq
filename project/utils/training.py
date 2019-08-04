@@ -300,7 +300,10 @@ def check_translation(samples, model, SRC, TRG, logger, persist=False):
 
 
 
-def predict_from_input(model, input_sentence, SRC, TRG, logger, device="cuda", stdout=False, beam_size = 5, max_len=30):
+def predict_from_input(model, input_sentence,
+                       SRC, TRG, logger,
+                       device="cuda", stdout=False,
+                       beam_size = 5, max_len=30):
 
     #### Changed from original ###
     sent_indices = [SRC.vocab.stoi[word] if word in SRC.vocab.stoi else SRC.vocab.stoi[UNK_TOKEN] for word in input_sentence]

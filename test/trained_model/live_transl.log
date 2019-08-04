@@ -12,3 +12,411 @@ Live translation: 2019-08-04-16-33-18
 Beam width: 5
 Live translation: 2019-08-04-18-19-00
 Beam width: 5
+Live translation: 2019-08-04-20-34-48
+Beam width: 5
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+Live translation: 2019-08-04-20-36-36
+Beam width: 1
+Live translation: 2019-08-04-20-40-13
+Beam width: 1
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . <unk> <unk> . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> the <unk> , <unk> <unk> <unk> <unk> <unk> of of <unk> of <unk> . . . <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> , <unk> <unk> of of <unk> <unk> <unk> . . <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> of <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> of of <unk> <unk> <unk> <unk> of <unk> . <unk> . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> to <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> , , <unk> <unk> to <unk> <unk> <unk> <unk> . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> , of <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the of <unk> <unk> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the , <unk> <unk> , <unk> <unk> <unk> <unk> <unk> the <unk> <unk> of of <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> . <unk> . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , <unk> , <unk> of <unk> <unk> <unk> <unk> <unk> <unk> . <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> is to <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> , <unk> <unk> the <unk> , , <unk> <unk> <unk> the <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> of . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> the , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> , , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> of <unk> <unk> <unk> <unk> <unk> <unk> . <unk> <unk> . <unk> . .
+-----------------------------------
+SRC  >>> .
+PRED >>> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> , <unk> <unk> <unk> . .
+-----------------------------------
+Live translation: 2019-08-04-20-40-32
+Beam width: 1
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . <unk> <unk> . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> the <unk> , <unk> <unk> <unk> <unk> <unk> of of <unk> of <unk> . . . <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> , <unk> <unk> of of <unk> <unk> <unk> . . <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> of <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> of of <unk> <unk> <unk> <unk> of <unk> . <unk> . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> to <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> , , <unk> <unk> to <unk> <unk> <unk> <unk> . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> , of <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the of <unk> <unk> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the , <unk> <unk> , <unk> <unk> <unk> <unk> <unk> the <unk> <unk> of of <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> . <unk> . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , <unk> , <unk> of <unk> <unk> <unk> <unk> <unk> <unk> . <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> is to <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . . . <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> , <unk> <unk> the <unk> , , <unk> <unk> <unk> the <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> of . . . . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> the , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> , , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> of <unk> <unk> <unk> <unk> <unk> <unk> . <unk> <unk> . <unk> . .
+-----------------------------------
+SRC  >>> .
+PRED >>> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> , <unk> <unk> <unk> . .
+-----------------------------------
+Live translation: 2019-08-04-20-41-04
+Beam width: 5
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> be <unk> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> <unk> <unk> of <unk> <unk> . <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> of <unk> <unk> the <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the , <unk> <unk> <unk> of <unk> <unk> <unk> <unk> to <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> to <unk> <unk> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> the <unk> <unk> <unk> , <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> to <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> , <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the the <unk> <unk> <unk> <unk> <unk> <unk> <unk> , <unk> of <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> of of , <unk> to <unk> <unk> the <unk> <unk> the <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , the <unk> <unk> <unk> <unk> <unk> <unk> to <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> to <unk> <unk> to <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> to <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> of <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> .
+PRED >>> of <unk> <unk> <unk> <unk> <unk> , of <unk> <unk> <unk> <unk> . .
+-----------------------------------
+Live translation: 2019-08-04-20-41-17
+Beam width: 5
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> be <unk> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> <unk> <unk> of <unk> <unk> . <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> of <unk> <unk> the <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the , <unk> <unk> <unk> of <unk> <unk> <unk> <unk> to <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> to <unk> <unk> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> the <unk> <unk> <unk> , <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> to <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> , <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the the <unk> <unk> <unk> <unk> <unk> <unk> <unk> , <unk> of <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> of of , <unk> to <unk> <unk> the <unk> <unk> the <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , the <unk> <unk> <unk> <unk> <unk> <unk> to <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> to <unk> <unk> to <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> to <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> of <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> .
+PRED >>> of <unk> <unk> <unk> <unk> <unk> , of <unk> <unk> <unk> <unk> . .
+-----------------------------------
+Live translation: 2019-08-04-20-50-13
+Beam width: 5
+Live translation: 2019-08-04-20-57-02
+Beam width: 5
+SRC  >>> <unk> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+Live translation: 2019-08-04-20-57-38
+Beam width: 10
+SRC  >>> europa
+PRED >>> <unk> <unk> <unk> of <unk> to to <unk> to to
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> , <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk> <unk> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
