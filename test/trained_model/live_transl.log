@@ -557,3 +557,106 @@ SRC  >>> die europäische union ist <unk> .
 PRED >>> the the european european union european union european the european european the union the of european european european european union european european union union union union european european union .
 Live translation: 2019-08-04-21-18-38
 Beam width: 5
+Live translation: 2019-08-04-21-55-15
+Beam width: 5
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+Live translation: 2019-08-04-21-55-48
+Beam width: 5
+Predictions from file: test/test_data/samples.de
+----------------------------------------------------------------------------------------------------
+SRC  >>> wir liegen hier also auf einer <unk> .
+PRED >>> we we we a a a we a a a a we a a of a <unk> <unk> of of <unk> of a . a
+----------------------------------------------------------------------------------------------------
+SRC  >>> ich denke , daß wir die <unk> europas gegenüber unseren bürgern und auch gegenüber uns selbst manchmal unter wert <unk> .
+PRED >>> i am that that we we <unk> we , and and <unk> we and we <unk> with <unk> <unk> and <unk> <unk> <unk> .
+----------------------------------------------------------------------------------------------------
+SRC  >>> es ist <unk> , daß wir hier in der europäischen union nichts dagegen unternehmen .
+PRED >>> it is is it that that that european that european that it <unk> european to it european the that <unk> european european european european union .
+----------------------------------------------------------------------------------------------------
+SRC  >>> wie kann man sich angesichts dieser <unk> eine entwicklung in diesem punkt vorstellen ?
+PRED >>> this <unk> this <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> a this <unk> <unk> <unk> this this
+----------------------------------------------------------------------------------------------------
+SRC  >>> zu meinem <unk> gehören alle entscheidungen , die einstellungen betreffen .
+PRED >>> the of the <unk> of <unk> the the <unk> <unk> to to <unk> <unk> <unk> <unk> to the to to <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> genau um diesen <unk> <unk> es sowohl beim <unk> wie auch beim allgemeinen teil des haushalts .
+PRED >>> as <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> the <unk> <unk> <unk> <unk> <unk> the <unk> <unk> of <unk> <unk> <unk> . <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> auf die <unk> dieser aufgabe vertrauen die bürgerinnen und bürger europas .
+PRED >>> the <unk> the <unk> to <unk> <unk> <unk> and to <unk> of to the the <unk> <unk> <unk> . the
+----------------------------------------------------------------------------------------------------
+SRC  >>> vor allen dingen gibt es - das ist für uns ein sehr <unk> punkt - keine wesentliche ausweitung der <unk> des europäischen parlaments mit dem <unk> .
+PRED >>> in is is , it the the the is <unk> is of is <unk> the <unk> the of <unk> the the the european the the the the the european of
+----------------------------------------------------------------------------------------------------
+SRC  >>> ich hoffe , ich werde in das parlament <unk> .
+PRED >>> i i i i to parliament i parliament parliament in parliament i parliament parliament i parliament parliament parliament parliament this this this parliament . parliament
+----------------------------------------------------------------------------------------------------
+SRC  >>> frau <unk> <unk> weiß genau , daß dies ein thema ist , <unk> mich beschäftigt und von dem ich hoffe , daß eine <unk> lösung gefunden werden kann .
+PRED >>> in <unk> , that , that that <unk> is that is <unk> <unk> <unk> , that that that that <unk> that <unk> that that <unk> <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> wir <unk> die erweiterung vor , wir haben gemeinsame außen- und sicherheitspolitik und zusammenarbeit im <unk> <unk> .
+PRED >>> we we we we <unk> we and we we we and and and and <unk> and and and and and and and . and
+----------------------------------------------------------------------------------------------------
+SRC  >>> können sie sich vorstellen , dass <unk> <unk> in <unk> <unk> eine <unk> <unk> ?
+PRED >>> in , that , , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> die rolle der türkei ist die des <unk> und des <unk> , und nichts anderes ist auch der <unk> <unk> von herrn <unk> .
+PRED >>> the <unk> the of <unk> <unk> <unk> of <unk> <unk> of of <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> of <unk> <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> wenn ich trotzdem nicht dafür stimmen konnte , dann weil sie nach der abstimmung im <unk> noch einige <unk> <unk> .
+PRED >>> i i not i to not <unk> in , , <unk> <unk> <unk> <unk> <unk> <unk> <unk> the the the <unk> the the <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> wir müssen auch sicherstellen , dass dies den <unk> der nachhaltigen arbeitsplätze zwischen <unk> und <unk> <unk> .
+PRED >>> we also also that the <unk> <unk> the the <unk> that <unk> <unk> <unk> <unk> <unk> <unk> <unk> and <unk> <unk> and
+----------------------------------------------------------------------------------------------------
+Live translation: 2019-08-04-21-56-31
+Beam width: 5
+Predictions from file: test/test_data/samples.de
+----------------------------------------------------------------------------------------------------
+SRC  >>> wir liegen hier also auf einer <unk> .
+PRED >>> we we we a a a we a a a a we a a of a <unk> <unk> of of <unk> of a . a
+----------------------------------------------------------------------------------------------------
+SRC  >>> ich denke , daß wir die <unk> europas gegenüber unseren bürgern und auch gegenüber uns selbst manchmal unter wert <unk> .
+PRED >>> i am that that we we <unk> we , and and <unk> we and we <unk> with <unk> <unk> and <unk> <unk> <unk> .
+----------------------------------------------------------------------------------------------------
+SRC  >>> es ist <unk> , daß wir hier in der europäischen union nichts dagegen unternehmen .
+PRED >>> it is is it that that that european that european that it <unk> european to it european the that <unk> european european european european union .
+----------------------------------------------------------------------------------------------------
+SRC  >>> wie kann man sich angesichts dieser <unk> eine entwicklung in diesem punkt vorstellen ?
+PRED >>> this <unk> this <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> a this <unk> <unk> <unk> this this
+----------------------------------------------------------------------------------------------------
+SRC  >>> zu meinem <unk> gehören alle entscheidungen , die einstellungen betreffen .
+PRED >>> the of the <unk> of <unk> the the <unk> <unk> to to <unk> <unk> <unk> <unk> to the to to <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> genau um diesen <unk> <unk> es sowohl beim <unk> wie auch beim allgemeinen teil des haushalts .
+PRED >>> as <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> the <unk> <unk> <unk> <unk> <unk> the <unk> <unk> of <unk> <unk> <unk> . <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> auf die <unk> dieser aufgabe vertrauen die bürgerinnen und bürger europas .
+PRED >>> the <unk> the <unk> to <unk> <unk> <unk> and to <unk> of to the the <unk> <unk> <unk> . the
+----------------------------------------------------------------------------------------------------
+SRC  >>> vor allen dingen gibt es - das ist für uns ein sehr <unk> punkt - keine wesentliche ausweitung der <unk> des europäischen parlaments mit dem <unk> .
+PRED >>> in is is , it the the the is <unk> is of is <unk> the <unk> the of <unk> the the the european the the the the the european of
+----------------------------------------------------------------------------------------------------
+SRC  >>> ich hoffe , ich werde in das parlament <unk> .
+PRED >>> i i i i to parliament i parliament parliament in parliament i parliament parliament i parliament parliament parliament parliament this this this parliament . parliament
+----------------------------------------------------------------------------------------------------
+SRC  >>> frau <unk> <unk> weiß genau , daß dies ein thema ist , <unk> mich beschäftigt und von dem ich hoffe , daß eine <unk> lösung gefunden werden kann .
+PRED >>> in <unk> , that , that that <unk> is that is <unk> <unk> <unk> , that that that that <unk> that <unk> that that <unk> <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> wir <unk> die erweiterung vor , wir haben gemeinsame außen- und sicherheitspolitik und zusammenarbeit im <unk> <unk> .
+PRED >>> we we we we <unk> we and we we we and and and and <unk> and and and and and and and . and
+----------------------------------------------------------------------------------------------------
+SRC  >>> können sie sich vorstellen , dass <unk> <unk> in <unk> <unk> eine <unk> <unk> ?
+PRED >>> in , that , , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> die rolle der türkei ist die des <unk> und des <unk> , und nichts anderes ist auch der <unk> <unk> von herrn <unk> .
+PRED >>> the <unk> the of <unk> <unk> <unk> of <unk> <unk> of of <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> of <unk> <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> wenn ich trotzdem nicht dafür stimmen konnte , dann weil sie nach der abstimmung im <unk> noch einige <unk> <unk> .
+PRED >>> i i not i to not <unk> in , , <unk> <unk> <unk> <unk> <unk> <unk> <unk> the the the <unk> the the <unk> <unk>
+----------------------------------------------------------------------------------------------------
+SRC  >>> wir müssen auch sicherstellen , dass dies den <unk> der nachhaltigen arbeitsplätze zwischen <unk> und <unk> <unk> .
+PRED >>> we also also that the <unk> <unk> the the <unk> that <unk> <unk> <unk> <unk> <unk> <unk> <unk> and <unk> <unk> and
+----------------------------------------------------------------------------------------------------

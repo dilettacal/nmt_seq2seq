@@ -67,7 +67,7 @@ class Translator(object):
             samples = f.readlines()
         samples = [x.strip().lower() for x in samples if x]
         for sample in samples:
-            out = self.predict_sentence(sample)
+            out = self.predict_sentence(sample, stdout=True)
             self.logger.log("-" * 100, stdout=True)
 
     def set_beam_size(self, new_size):
@@ -96,8 +96,6 @@ def translate(path="", predict_from_file="", beam_size=5):
     except FileNotFoundError as e:
         print("Wrong path. File not found: ", e)
         return
-
-
 
     SRC_vocab = torch.load(os.path.join(path_to_exp, "src.pkl"))
     TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
