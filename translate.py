@@ -19,7 +19,7 @@ from project.model.models import get_nmt_model
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
-from project.utils.training import predict_from_input
+from project.utils.training import predict_from_input, check_translation
 from project.utils.utils import Logger
 
 UTF8Reader = codecs.getreader('utf8')
@@ -72,11 +72,14 @@ def translate(path="", predict_from_file="", beam_size=5):
     if predict_from_file:
 
         path_to_file = os.path.expanduser(predict_from_file)
-        samples = open(path_to_file, encoding="utf-8", mode="r").readlines()
         logger.log("Predictions from file: {}".format(path_to_file))
         logger.log("-" * 100, stdout=True)
+        # read file
+        with open(path_to_file, encoding="utf-8", mode="r") as f:
+            samples = f.readlines()
+        samples = [x.strip().lower() for x in samples if x]
         for sample in samples:
-            tok_sample = src_tokenizer.tokenize(sample)
+            tok_sample = SRC_vocab.tokenize(sample)
             _ = predict_from_input(input_sentence=tok_sample, SRC=SRC_vocab, TRG=TRG_vocab, model=model,
                                device=experiment.get_device(),
                                logger=logger, stdout=True, beam_size=beam_size, max_len=MAX_LEN)
@@ -100,7 +103,7 @@ def translate(path="", predict_from_file="", beam_size=5):
                     exit()
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
-                input_sequence = src_tokenizer.tokenize(input_sequence.lower())
+                input_sequence = SRC_vocab.tokenize(input_sequence.lower())
                 out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu",
                                          beam_size=beam_size, max_len=MAX_LEN)
                 if out:
