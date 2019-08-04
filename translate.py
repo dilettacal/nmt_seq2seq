@@ -6,17 +6,25 @@ Open the file and process each sentence with the method "predict_from_input".
 
 """
 import argparse
+import codecs
 import datetime
+import io
 import os
+import readline
+import sys
 
 import torch
 
 from project.model.models import get_nmt_model
-from project.utils.tokenizers import get_custom_tokenizer
+from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
 from project.utils.training import predict_from_input
-from project.utils.utils import Logger, str2bool
+from project.utils.utils import Logger
+
+UTF8Reader = codecs.getreader('utf8')
+sys.stdin = UTF8Reader(sys.stdin)
+
 
 
 def translate(path="", predict_from_file="", beam_size=5):
@@ -59,22 +67,29 @@ def translate(path="", predict_from_file="", beam_size=5):
 
     logger = Logger(path_to_exp, "live_transl.log")
     logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)
+    logger.log("Beam width: {}".format(beam_size))
 
     if predict_from_file:
 
         path_to_file = os.path.expanduser(predict_from_file)
         samples = open(path_to_file, encoding="utf-8", mode="r").readlines()
         logger.log("Predictions from file: {}".format(path_to_file))
+        logger.log("-" * 100, stdout=True)
         for sample in samples:
             tok_sample = src_tokenizer.tokenize(sample)
             _ = predict_from_input(input_sentence=tok_sample, SRC=SRC_vocab, TRG=TRG_vocab, model=model,
                                device=experiment.get_device(),
                                logger=logger, stdout=True, beam_size=beam_size, max_len=MAX_LEN)
+            logger.log("-" * 100, stdout=True)
     else:
         input_sequence = ""
         while (1):
             try:
-                input_sequence = input("Source > ")
+                try:
+                    input_sequence = input("Source > ")
+                except ValueError:
+                    print("An error has occurred. Please restart program!")
+                    exit()
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
                 input_sequence = src_tokenizer.tokenize(input_sequence.lower())
@@ -82,6 +97,7 @@ def translate(path="", predict_from_file="", beam_size=5):
                                          beam_size=beam_size, max_len=MAX_LEN)
                 if out:
                     print("Translation > ", out)
+                    logger.log("-"*35, stdout=True)
                 else: print("Error while translating!")
 
             except KeyError:
