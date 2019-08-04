@@ -86,9 +86,17 @@ def translate(path="", predict_from_file="", beam_size=5):
         while (1):
             try:
                 try:
-                    input_sequence = input("Source > ")
-                except ValueError:
-                    print("An error has occurred. Please restart program!")
+                    input_sequence = input("SRC > ")
+                    if input_sequence.lower().startswith("#"):
+                        bs = input_sequence.split("#")[1]
+                        try:
+                            beam_size = int(bs)
+                            logger.log("New Beam width: {}".format(beam_size))
+                            input_sequence = input("SRC > ")
+                        except ValueError:
+                            input_sequence = input("SRC > ")
+                except ValueError as e:
+                    print("An error has occurred: {}. Please restart program!".format(e))
                     exit()
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
@@ -96,7 +104,7 @@ def translate(path="", predict_from_file="", beam_size=5):
                 out = predict_from_input(model, input_sequence, SRC_vocab, TRG_vocab, logger=logger, device="cuda" if use_cuda else "cpu",
                                          beam_size=beam_size, max_len=MAX_LEN)
                 if out:
-                    print("Translation > ", out)
+                    print("TRG > ", out)
                     logger.log("-"*35, stdout=True)
                 else: print("Error while translating!")
 
