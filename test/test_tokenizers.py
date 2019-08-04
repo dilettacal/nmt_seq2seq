@@ -77,7 +77,3 @@ class TestEnvironmentTokenizers(unittest.TestCase):
         test_string = "das ist ein Satz"
         self.assertIsInstance(tokenizer.tokenize(test_string), list)
         self.assertAlmostEqual(len(tokenizer.tokenize(test_string)), 4)
-
-
-if __name__ == '__main__':
-    unittest.main()

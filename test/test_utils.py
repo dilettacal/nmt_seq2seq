@@ -41,7 +41,6 @@ class TestIOUtils(unittest.TestCase):
             content = f.read().strip().split("\n")
         self.assertEqual(content[0], "test_logging")
         self.assertEqual(content[1], "test_second_logging")
-        os.remove("./test_data/log.log")
 
     def test_save_model(self):
         if os.path.exists("./test_data/log.log"):
@@ -53,7 +52,6 @@ class TestIOUtils(unittest.TestCase):
         files = os.listdir("./test_data")
         self.assertIn("model.pkl", files)
         os.remove("./test_data/model.pkl")
-        os.remove("./test_data/log.log")
 
 
     def test_plot_metrics(self):
@@ -66,7 +64,6 @@ class TestIOUtils(unittest.TestCase):
         files = os.listdir("./test_data")
         self.assertIn("metric.png", files)
         os.remove("./test_data/metric.png")
-        os.remove("./test_data/log.log")
 
     def test_metric(self):
         metric = AverageMeter()
@@ -81,6 +78,3 @@ class TestIOUtils(unittest.TestCase):
         self.assertEqual(metric.val,  0)
         self.assertEqual(metric.avg,  0)
         self.assertEqual(metric.sum, 0)
-
-if __name__ == '__main__':
-    unittest.main()
