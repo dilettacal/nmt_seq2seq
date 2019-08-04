@@ -1,7 +1,6 @@
 import datetime
 import os
 import unittest
-import mock
 import torch
 
 from project.model.models import get_nmt_model, Seq2Seq

@@ -533,3 +533,27 @@ Live translation: 2019-08-04-21-09-43
 Beam width: 5
 Live translation: 2019-08-04-21-10-41
 Beam width: 5
+Live translation: 2019-08-04-21-16-14
+Beam width: 10
+SRC  >>> europa ist <unk>
+PRED >>> the the is is <unk> <unk> is <unk> to to to <unk> <unk>
+-----------------------------------
+New Beam width: 3
+SRC  >>> europa ist <unk> <unk>
+PRED >>> it is is is <unk> is <unk> <unk> <unk> <unk> <unk> is is <unk> <unk> <unk> <unk> . <unk>
+-----------------------------------
+SRC  >>> europa muss uns helfen
+PRED >>> in is must to to to to to to to to in <unk> to to to a to a to to of
+-----------------------------------
+New Beam width: 20
+SRC  >>> europa muss uns helfen
+PRED >>> should must , to to to to to be to to to <unk> to to to
+-----------------------------------
+Live translation: 2019-08-04-21-18-37
+Beam width: 5
+Live translation: 2019-08-04-21-18-37
+Beam width: 5
+SRC  >>> die europäische union ist <unk> .
+PRED >>> the the european european union european union european the european european the union the of european european european european union european european union union union union european european union .
+Live translation: 2019-08-04-21-18-38
+Beam width: 5
