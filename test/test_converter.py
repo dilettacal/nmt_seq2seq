@@ -6,7 +6,7 @@ data_dir = os.path.join(".", "test_data")
 DE = "Hallo, Welt!"
 EN = "Hello, world!"
 
-class TestTMX2Corpus(unittest.TestCase):
+class TestTmxToTxt(unittest.TestCase):
 
     def test_tmx_extraction(self):
 
