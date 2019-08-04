@@ -70,6 +70,12 @@ class Translator(object):
             out = self.predict_sentence(sample)
             self.logger.log("-" * 100, stdout=True)
 
+    def set_beam_size(self, new_size):
+        self.beam_size = new_size
+
+    def get_beam_size(self):
+        return self.beam_size
+
 def translate(path="", predict_from_file="", beam_size=5):
     use_cuda = True if torch.cuda.is_available() else False
     device = "cuda" if use_cuda else "cpu"
@@ -83,9 +89,15 @@ def translate(path="", predict_from_file="", beam_size=5):
     print("Using experiment from: ", path_to_exp)
     path_to_model = os.path.join(path_to_exp, "model.pkl")
 
-    experiment = torch.load(os.path.join(path_to_exp, "experiment.pkl"))
-    experiment = Experiment(experiment["args"])
-    experiment.cuda = use_cuda
+    try:
+        experiment = torch.load(os.path.join(path_to_exp, "experiment.pkl"))
+        experiment = Experiment(experiment["args"])
+        experiment.cuda = use_cuda
+    except FileNotFoundError as e:
+        print("Wrong path. File not found: ", e)
+        return
+
+
 
     SRC_vocab = torch.load(os.path.join(path_to_exp, "src.pkl"))
     TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
@@ -105,7 +117,11 @@ def translate(path="", predict_from_file="", beam_size=5):
     experiment.src_vocab_size = len(SRC_vocab.vocab)
     experiment.trg_vocab_size = len(TRG_vocab.vocab)
     model = get_nmt_model(experiment, tokens_bos_eos_pad_unk)
-    model.load_state_dict(torch.load(path_to_model))
+    try:
+        model.load_state_dict(torch.load(path_to_model))
+    except FileNotFoundError as e:
+        print("Wrong path. File not found: ", e)
+        return
     model = model.to(device)
 
     logger = Logger(path_to_exp, "live_transl.log")
@@ -135,6 +151,7 @@ def translate(path="", predict_from_file="", beam_size=5):
                     return False
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
+                translator.set_beam_size(beam_size)
                 out = translator.predict_sentence(input_sequence)
                 if out:
                     logger.log("-"*35, stdout=True)

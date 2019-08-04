@@ -420,3 +420,116 @@ PRED >>> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
 SRC  >>> <unk> <unk> <unk>
 PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
 -----------------------------------
+Live translation: 2019-08-04-20-58-29
+Beam width: 5
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> be <unk> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> <unk> <unk> <unk> of <unk> <unk> . <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> of <unk> <unk> the <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the , <unk> <unk> <unk> of <unk> <unk> <unk> <unk> to <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> to <unk> <unk> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> the <unk> <unk> <unk> , <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> to <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> , <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the the <unk> <unk> <unk> <unk> <unk> <unk> <unk> , <unk> of <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> of of , <unk> to <unk> <unk> the <unk> <unk> the <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> , the <unk> <unk> <unk> <unk> <unk> <unk> to <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> , <unk> <unk> to <unk> <unk> to <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> <unk> <unk> <unk> of <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> <unk> , <unk> <unk> <unk> <unk> <unk> <unk> . .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the <unk> <unk> <unk> <unk> <unk> <unk> <unk> to <unk>
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> <unk> <unk> of <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> .
+-----------------------------------
+SRC  >>> <unk>
+PRED >>> the , <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>
+-----------------------------------
+SRC  >>> <unk>
+Live translation: 2019-08-04-21-02-34
+Beam width: 5
+Live translation: 2019-08-04-21-02-56
+Beam width: 5
+Live translation: 2019-08-04-21-02-56
+Beam width: 5
+SRC  >>> die europäische union ist <unk> .
+PRED >>> the the union european european union european european european union european european european european european european union union european union union . european european
+Live translation: 2019-08-04-21-02-57
+Beam width: 5
+Live translation: 2019-08-04-21-05-12
+Beam width: 5
+SRC  >>> die europäische union ist <unk> .
+PRED >>> the european union the is union european union european is union european european <unk> union european union european union european european union union european
+Live translation: 2019-08-04-21-05-13
+Beam width: 5
+Live translation: 2019-08-04-21-06-42
+Beam width: 5
+SRC  >>> die europäische union ist <unk> .
+PRED >>> the european union the is union european union european is union european european <unk> union european union european union european european union union european
+Live translation: 2019-08-04-21-06-42
+Beam width: 5
+Live translation: 2019-08-04-21-07-49
+Beam width: 5
+Live translation: 2019-08-04-21-09-42
+Beam width: 5
+SRC  >>> die europäische union ist <unk> .
+PRED >>> the european european european european european union union union european european the union european european european union union european the union european union european union union european . . .
+Live translation: 2019-08-04-21-09-43
+Beam width: 5
+Live translation: 2019-08-04-21-10-41
+Beam width: 5
