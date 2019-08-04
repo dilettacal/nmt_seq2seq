@@ -19,10 +19,9 @@ from settings import DATA_DIR_PREPRO
 import os
 
 ########################################################################
-from project import get_full_path
 from settings import DATA_DIR_RAW
 
-DATA_DIR = get_full_path(DATA_DIR_RAW, "europarl")
+DATA_DIR = os.path.expanduser(os.path.join(DATA_DIR_RAW, "europarl"))
 
 # Base-URL for the data-sets on the internet.
 # Modified for handling tmx files

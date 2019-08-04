@@ -1,16 +1,12 @@
 import os
-from project import get_full_path
 
 ###### Directory settings
 
-ROOT = get_full_path(os.path.join("."))
-DATA_DIR = get_full_path(os.path.join(ROOT, "data"))
-DATA_DIR_RAW = get_full_path(os.path.join(DATA_DIR, "raw"))
-DATA_DIR_PREPRO = get_full_path(os.path.join(DATA_DIR, "preprocessed"))
-
-MODEL_STORE = get_full_path(ROOT, "results")
-
-RESULTS_DIR = get_full_path(ROOT, "results")
+ROOT = os.path.expanduser(os.path.join("."))
+DATA_DIR = os.path.expanduser(os.path.join(ROOT,"data"))
+DATA_DIR_RAW = os.path.expanduser(os.path.join(DATA_DIR, "raw"))
+DATA_DIR_PREPRO = os.path.expanduser(os.path.join(DATA_DIR, "preprocessed"))
+MODEL_STORE = os.path.expanduser(os.path.join(ROOT,"results"))
 
 
 ##### Experiment settings

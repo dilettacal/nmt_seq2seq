@@ -3,8 +3,6 @@ import time
 
 from torchtext import datasets, data as data
 from torchtext.data import Field
-
-from project import get_full_path
 from project.utils.constants import PAD_TOKEN, UNK_TOKEN, SOS_TOKEN, EOS_TOKEN
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.utils import convert_time_unit
@@ -89,7 +87,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
         #### Training on IWSLT torchtext corpus #####
         print("Loading data...")
         start = time.time()
-        path = get_full_path(DATA_DIR_PREPRO, "iwslt")
+        path = os.path.expanduser(os.path.join(DATA_DIR_PREPRO, "iwslt"))
         os.makedirs(path, exist_ok=True)
         exts = (".en", ".de") if experiment.get_src_lang() == "en" else (".de", ".en")
         ## see: https://lukemelas.github.io/machine-translation.html
