@@ -100,7 +100,7 @@ def translate(path="", predict_from_file="", beam_size=5):
                             input_sequence = input("SRC > ")
                 except ValueError as e:
                     print("An error has occurred: {}. Please restart program!".format(e))
-                    exit()
+                    return False
                 # Check if it is quit case
                 if input_sequence == 'q' or input_sequence == 'quit': break
                 input_sequence = SRC_vocab.tokenize(input_sequence.lower())
@@ -114,7 +114,7 @@ def translate(path="", predict_from_file="", beam_size=5):
             except KeyError:
                 print("Error: Encountered unknown word.")
 
-    return True
+    return [experiment, model, SRC_vocab, TRG_vocab, src_tokenizer, trg_tokenizer, logger]
 
 def translation_parser():
     parser = argparse.ArgumentParser(description='NMT - Neural Machine Translator')
@@ -130,4 +130,4 @@ def translation_parser():
 if __name__ == '__main__':
     parser = translation_parser().parse_args()
     #parser.path = BEST_BASELINE_TIED
-    translate(path=parser.path, predict_from_file=parser.file, beam_size = parser.beam)
+    _ = translate(path=parser.path, predict_from_file=parser.file, beam_size = parser.beam)
