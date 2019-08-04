@@ -70,7 +70,6 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     best_bleu_score = 0
     metrics = dict()
     train_losses = []
-    train_ppls = []
     nltk_bleus =[]
     bleus = dict()
     last_avg_loss = 100
@@ -89,8 +88,6 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
 
         train_losses.append(avg_train_loss)
-        train_ppl = math.exp(avg_train_loss)
-        train_ppls.append(train_ppl)
         nltk_bleus.append(avg_bleu_val)
         bleu = avg_bleu_val
         ### scheduler monitors val loss value
@@ -122,9 +119,9 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         total_epoch = convert_time_unit(end_epoch_time - start_time)
 
         logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
-        logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Train PPL: {train_ppl:7.3f} | Val. BLEU: {bleu:.3f}')
+        logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Val. BLEU: {bleu:.3f}')
 
-        metrics.update({"loss": train_losses, "ppl": train_ppls})
+        metrics.update({"loss": train_losses})
         bleus.update({'nltk': nltk_bleus})
 
         if no_metric_improvements >= TOLERANCE:
