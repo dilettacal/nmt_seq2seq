@@ -3,7 +3,7 @@
 ### create environment
 python3 -m venv env
 echo "Activating environment"
-source "venv/bin/activate"
+source "env/bin/activate"
 
 ### Requirements for the project ####
 pip install torch torchtext
