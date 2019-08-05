@@ -165,7 +165,6 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
         norms.update(get_gradient_norm2(model))
         # Clip gradient norms and step optimizer
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-
         optimizer.step()
     return losses.avg, norms.avg
 
@@ -325,6 +324,10 @@ def predict_from_input(model, input_sentence,
 #################### gradient utility methods #################
 
 def get_gradient_norm2(m):
+    """
+    :param m: model
+    :return: the norm2 of the gradient
+    """
     total_norm = 0
     for p in m.parameters():
         param_norm = p.grad.data.norm(2)
