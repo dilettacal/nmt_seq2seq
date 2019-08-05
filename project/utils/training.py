@@ -83,7 +83,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
     for epoch in range(epochs):
         start_time = time.time()
-        avg_train_loss = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
+        avg_train_loss, avg_norms = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
                                device=device)
         avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
 
@@ -120,6 +120,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
         logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Val. BLEU: {bleu:.3f}')
+        logger.log('Average gradient norm: {}'.format(avg_norms))
 
         metrics.update({"loss": train_losses})
         bleus.update({'nltk': nltk_bleus})
@@ -136,6 +137,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
     model.train()
     losses = AverageMeter()
     train_iter.init_epoch()
+    norms = AverageMeter()
 
     for i, batch in enumerate(train_iter):
 
@@ -160,11 +162,12 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
         loss = criterion(scores, trg)
         loss.backward()
         losses.update(loss.item())
+        norms.update(get_gradient_norm2(model))
         # Clip gradient norms and step optimizer
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         optimizer.step()
-    return losses.avg
+    return losses.avg, norms.avg
 
 
 def validate(val_iter, model, device, TRG, beam_size=5):
@@ -321,7 +324,7 @@ def predict_from_input(model, input_sentence,
 
 #################### gradient utility methods #################
 
-def get_gradient_norm(m):
+def get_gradient_norm2(m):
     total_norm = 0
     for p in m.parameters():
         param_norm = p.grad.data.norm(2)
