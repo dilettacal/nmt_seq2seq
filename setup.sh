@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 
+### create environment
+python3 -m venv venv
+echo "Activating environment"
+source "venv/bin/activate"
+
 ### Requirements for the project ####
-pip install --user torch torchtext
-pip install --user -U spacy
-python -m spacy download en
-python -m spacy download de
+pip install torch torchtext
+pip install -U spacy
+python3 -m spacy download en
+python3 -m spacy download de
+python3 -m spacy download xx #multilanguage support
+pip install dill
 pip install nltk
 pip install numpy pandas matplotlib
-
-### Required to preprocess the tmx file ####
-pip install git+https://github.com/dltcls/tmx2corpus.git
+pip install mock
+pip install HTMLParser
