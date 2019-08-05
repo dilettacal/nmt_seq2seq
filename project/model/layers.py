@@ -1,11 +1,8 @@
 """
 This class defines the Attention Layer to use when training the model with the attention mechanism.
-
-Code integrated from this repository:
+Code readapted (under the courtesy of the author) from:
 https://github.com/lukemelas/Machine-Translation
-under the courtesy of the author
 """
-
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -32,13 +29,9 @@ class Attention(nn.Module):
         encoder_outputs = encoder_outputs.transpose(0, 1)
         decoder_outputs = decoder_outputs.transpose(0, 1)
 
-        # DOT ATTENTION
-        attn = encoder_outputs.bmm(decoder_outputs.transpose(1, 2))
-        # Compute scores
-        attn = F.softmax(attn, dim=1).transpose(1,2)
-
-        # Compute the context
-        context = attn.bmm(encoder_outputs)
+        attn = encoder_outputs.bmm(decoder_outputs.transpose(1, 2)) # attention weights
+        attn = F.softmax(attn, dim=1).transpose(1,2) # Attention scores
+        context = attn.bmm(encoder_outputs) # context c_t
         context = context.transpose(0,1)
 
         return context, attn

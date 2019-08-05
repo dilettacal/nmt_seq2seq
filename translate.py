@@ -19,14 +19,23 @@ from project.model.models import get_nmt_model
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
-from project.utils.training import predict_from_input, check_translation
 from project.utils.utils import Logger
 
 UTF8Reader = codecs.getreader('utf8')
 sys.stdin = UTF8Reader(sys.stdin)
 
 class Translator(object):
-    def __init__(self, model, SRC, TRG, logger, src_tokenizer, trg_tokenizer, device="cuda", beam_size=5, max_len=30):
+    def __init__(self, model, SRC, TRG, logger, src_tokenizer, device="cuda", beam_size=5, max_len=30):
+        """
+        :param model: the trained model
+        :param SRC: the src vocabulary
+        :param TRG: the target vocabulary
+        :param logger: the translation logger
+        :param src_tokenizer: the source tokenizer
+        :param device: the device
+        :param beam_size:
+        :param max_len: unroll steps during prediction
+        """
         self.model = model
         self.src_vocab = SRC
         self.trg_vocab = TRG
@@ -35,11 +44,9 @@ class Translator(object):
         self.beam_size = beam_size
         self.max_len = max_len
         self.src_tokenizer = src_tokenizer
-        self.trg_tokenizer = trg_tokenizer
 
 
     def predict_sentence(self, sentence, stdout=False):
-
         sentence = self.src_tokenizer.tokenize(sentence.lower())
         #### Changed from original ###
         sent_indices = [self.src_vocab.vocab.stoi[word] if word in self.src_vocab.vocab.stoi
@@ -47,10 +54,9 @@ class Translator(object):
                         sentence]
         sent = torch.LongTensor([sent_indices])
         sent = sent.to(self.device)
-        sent = sent.view(-1, 1)  # reshape to sl x bs
+        sent = sent.view(-1, 1)
         self.logger.log('SRC  >>> ' + ' '.join([self.src_vocab.vocab.itos[index] for index in sent_indices]),
                         stdout=stdout)
-        ### predict sentences with beam search 5
         pred = self.model.predict(sent, beam_size=self.beam_size, max_len=self.max_len)
         pred = [index for index in pred if index not in [self.trg_vocab.vocab.stoi[SOS_TOKEN],
                                                          self.trg_vocab.vocab.stoi[EOS_TOKEN]]]
@@ -126,7 +132,7 @@ def translate(path="", predict_from_file="", beam_size=5):
     logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)
     logger.log("Beam width: {}".format(beam_size))
 
-    translator = Translator(model, SRC_vocab, TRG_vocab, logger, src_tokenizer, trg_tokenizer, device, beam_size, max_len=MAX_LEN)
+    translator = Translator(model, SRC_vocab, TRG_vocab, logger, src_tokenizer, device, beam_size, max_len=MAX_LEN)
 
     if predict_from_file:
         translator.predict_from_text(predict_from_file)

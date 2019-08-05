@@ -49,9 +49,8 @@ class TestTranslation(unittest.TestCase):
         logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)
         logger.log("Beam width: {}".format(5))
 
-        self.translator = Translator(model, SRC_vocab, TRG_vocab, logger,
-                                     src_tokenizer, trg_tokenizer, device, beam_size=1,
-                                max_len=MAX_LEN)
+        self.translator = Translator(model, SRC_vocab, TRG_vocab, logger, src_tokenizer, device, beam_size=1,
+                                     max_len=MAX_LEN)
 
 
     def test_load_data_for_translation(self):
@@ -64,11 +63,6 @@ class TestTranslation(unittest.TestCase):
             self.assertIsInstance(self.translator.src_tokenizer, FastTokenizer)
         except AssertionError:
             self.assertIsInstance(self.translator.src_tokenizer, SpacyTokenizer)
-
-        try:
-            self.assertIsInstance(self.translator.trg_tokenizer, FastTokenizer)
-        except AssertionError:
-            self.assertIsInstance(self.translator.trg_tokenizer, SpacyTokenizer)
 
         self.assertIsInstance(self.translator.model, Seq2Seq)
         self.assertEqual(self.translator.device, "cpu")
