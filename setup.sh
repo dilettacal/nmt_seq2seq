@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ### create environment
-python3 -m venv venv
+python3 -m venv env
 echo "Activating environment"
 source "venv/bin/activate"
 
