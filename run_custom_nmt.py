@@ -187,10 +187,10 @@ def main():
     logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Beam 2
-    beam_size = 2
-    logger.log("Prediction of test set - Beam size: {}".format(beam_size))
-    bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
-    logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
+   # beam_size = 2
+  #  logger.log("Prediction of test set - Beam size: {}".format(beam_size))
+   # bleu = beam_predict(model, val_iter, experiment.get_device(), beam_size, TRG, max_len=max_len)
+  #  logger.log(f'\t Test. (nltk) BLEU: {bleu:.3f}')
 
     # Beam 5
     beam_size = 5
