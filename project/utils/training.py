@@ -120,7 +120,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
         logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Val. BLEU: {bleu:.3f}')
-        logger.log('First norm value (before clip): {} | Average dataset gradient norms (before clip): {}'.format(firs_norm, avg_norms))
+        logger.log('First norm value (before clip): {} | Average dataset gradient norms: {}'.format(firs_norm, avg_norms))
 
         metrics.update({"loss": train_losses})
         bleus.update({'nltk': nltk_bleus})
@@ -167,7 +167,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
         norms.update(grad_norm)
         if i == 0:
             first_norm_value = grad_norm
-        # Clip gradient norms and step optimizer
+        # Clip gradient norms and step optimizer, by default: norm type = 2
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
     return losses.avg, norms.avg, first_norm_value
