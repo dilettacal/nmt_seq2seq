@@ -164,7 +164,7 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
         loss.backward()
         losses.update(loss.item())
         grad_norm = get_gradient_norm2(model)
-        norms.update(get_gradient_norm2(grad_norm))
+        norms.update(grad_norm)
         if i == 0:
             first_norm_value = grad_norm
         # Clip gradient norms and step optimizer
