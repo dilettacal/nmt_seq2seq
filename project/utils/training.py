@@ -1,19 +1,11 @@
 """
-This script contains methods to train the model and to modify gradients.
-
-Code inspirations:
-- Ben Trevett 2018: https://github.com/bentrevett/pytorch-seq2seq/
-
+This script contains methods to train the model.
 """
 import os
 import time
-from typing import Any, Optional
-
 import torch
-import numpy as np
-import math
-
-from project.utils.constants import UNK_TOKEN, EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
+from project.utils.constants import EOS_TOKEN, SOS_TOKEN, PAD_TOKEN
+from project.utils.gradients import get_gradient_norm2
 from project.utils.utils import convert_time_unit, AverageMeter
 from settings import DEFAULT_DEVICE, SEED
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
@@ -28,16 +20,30 @@ random.seed(SEED)
 class CustomReduceLROnPlateau(ReduceLROnPlateau):
 
     def __init__(self, optimizer, mode='max', factor=0.1, patience=20,
-                 verbose=False, threshold=1e-4, threshold_mode='rel',
-                 cooldown=0, min_lr=2e-07, eps=1e-8):
+                 verbose=False, cooldown=0, min_lr=2e-07):
+        """
+        A customized version of ReduceLROnPlateau from PyTorch
+        source: https://pytorch.org/docs/stable/_modules/torch/optim/lr_scheduler.html#ReduceLROnPlateau
+        :param optimizer: training optimizer
+        :param mode: how to keep track of the metric, default 'max' for BLEU
+        :param factor: the factor by which the learn rate should be adapted
+        :param patience: epochs to wait
+        :param verbose: log change
+        :param cooldown: further epochs to wait before change
+        :param min_lr: minimum possibile learn rate
+        """
         super().__init__(optimizer=optimizer,mode=mode,factor=factor,
-                                                      patience=patience,verbose=verbose,threshold=threshold,
-                                                      threshold_mode=threshold_mode, cooldown=cooldown,min_lr=min_lr, eps=eps)
+                        patience=patience,verbose=verbose,
+                         cooldown=cooldown,min_lr=min_lr)
 
         self.TOTAL_LR_DECAYS = 0
 
     def step(self, metrics, epoch=None):
-        #Source: https://pytorch.org/docs/stable/_modules/torch/optim/lr_scheduler.html#ReduceLROnPlateau
+        """
+        Defines a scheduler step keeping track of the number of changes performed
+        :param metrics: takes the metric
+        :param epoch: the epoch
+        """
         current = float(metrics)
         if epoch is None:
             epoch = self.last_epoch = self.last_epoch + 1
@@ -67,6 +73,25 @@ class CustomReduceLROnPlateau(ReduceLROnPlateau):
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
                 device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5):
+    """
+    The main function to train the model
+    :param train_iter: training iterator
+    :param val_iter: validation iterator
+    :param model: the model
+    :param criterion: the loss criterion
+    :param optimizer: the optimizer
+    :param scheduler: the scheduler
+    :param epochs: number of epochs
+    :param SRC: the source vocabulary
+    :param TRG: the target vocabulary
+    :param logger: a logger utility
+    :param device: the training devise
+    :param tr_logger: the translation logger
+    :param samples_iter: the sample translation iterator
+    :param check_translations_every: when to check translation
+    :param beam_size: beam size for validation
+    :return: bleu and loss scores
+    """
     best_bleu_score = 0
     metrics = dict()
     train_losses = []
@@ -133,6 +158,15 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
 
 def train(train_iter, model, criterion, optimizer, device="cuda"):
+    """
+    Train epoch step
+    :param train_iter: the training iterator
+    :param model: the model
+    :param criterion: the loss criterion
+    :param optimizer: the optimizer
+    :param device: the devise
+    :return: the loss and gradient statistics
+    """
 
     model.train()
     losses = AverageMeter()
@@ -174,6 +208,15 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
 
 
 def validate(val_iter, model, device, TRG, beam_size=5):
+    """
+    Validation epoch step
+    :param val_iter: the validation iterator
+    :param model: the model
+    :param device: the device
+    :param TRG: the target vocabulary
+    :param beam_size: beam size
+    :return: average BLEu score for the validation dataset
+    """
     model.eval()
     val_iter.init_epoch()
 
@@ -210,6 +253,16 @@ def validate(val_iter, model, device, TRG, beam_size=5):
     return bleu.val
 
 def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
+    """
+    Tests the model after training
+    :param model: trained model
+    :param data_iter: test iterator
+    :param device: device
+    :param beam_size: beam size
+    :param TRG: target vocabulary
+    :param max_len: max len to unroll the decoder during the prediction
+    :return: the average bleu score
+    """
     model.eval()
     sent_candidates = []
     sent_references = []
@@ -241,15 +294,13 @@ def beam_predict(model, data_iter, device, beam_size, TRG, max_len=30):
 
 def check_translation(samples, model, SRC, TRG, logger, persist=False):
     """
-    Readapted from Luke Melas Machine-Translation project:
-    https://github.com/lukemelas/Machine-Translation/blob/master/training/train.py#L50
-    :param src:
-    :param trg:
-    :param model:
-    :param SRC:
-    :param TRG:
-    :param logger:
-    :return:
+    Check transaltions from a samples dataset
+    :param samples: the samples dataset
+    :param model: model
+    :param SRC: source vocabulary
+    :param TRG: target vocabulary
+    :param logger: logger utility
+    :param persist: persists translations to a csv file
     """
     if not samples:
         return
@@ -305,68 +356,15 @@ def check_translation(samples, model, SRC, TRG, logger, persist=False):
         df.to_csv(filename, sep=",", columns=final_translations.keys(), encoding="utf-8")
 
 
-
-def predict_from_input(model, input_sentence,
-                       SRC, TRG, logger,
-                       device="cuda", stdout=False,
-                       beam_size = 5, max_len=30):
-
-    #### Changed from original ###
-    sent_indices = [SRC.vocab.stoi[word] if word in SRC.vocab.stoi else SRC.vocab.stoi[UNK_TOKEN] for word in input_sentence]
-    sent = torch.LongTensor([sent_indices])
-    sent = sent.to(device)
-    sent = sent.view(-1,1) # reshape to sl x bs
-    logger.log('SRC  >>> ' + ' '.join([SRC.vocab.itos[index] for index in sent_indices]), stdout=stdout)
-    ### predict sentences with beam search 5
-    pred = model.predict(sent, beam_size=beam_size, max_len=max_len)
-    pred = [index for index in pred if index not in [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN]]]
-    out = ' '.join(TRG.vocab.itos[idx] for idx in pred)
-    logger.log('PRED >>> ' + out, stdout=stdout)
-    return out
-
-
-#################### gradient utility methods #################
-
-def get_gradient_norm2(m):
-    """
-    :param m: model
-    :return: the norm2 of the gradient
-    """
-    total_norm = 0
-    for p in m.parameters():
-        param_norm = p.grad.data.norm(2)
-        total_norm += param_norm.item() ** 2
-    total_norm = total_norm ** (1. / 2)
-    return total_norm
-
-def customized_clip_value(parameters, norm_value):
-    if isinstance(parameters, torch.Tensor):
-        parameters = [parameters]
-    for p in filter(lambda p: p.grad is not None, parameters):
-        p.grad = (5*p.grad)/norm_value
-
-
-def get_gradient_statistics(model):
-    parameters = list(filter(lambda p: p.grad is not None, model.parameters()))
-    min_stats = min(p.grad.data.min() for p in parameters)
-    max_stats = max(p.grad.data.max() for p in parameters)
-    mean_stats = np.mean([p.grad.mean().cpu().numpy() for p in parameters])
-
-    return {"min": min_stats, "max": max_stats, "mean": mean_stats}
-
-
-###### other functions #######
-
-### validate with teacher forcing (not used in any experiment)
 def validate_scores_tf(val_iter, model, criterion, logger):
-    '''
-    Computes standard teacher forcing on the validation set
-    :param val_iter:
-    :param model:
-    :param criterion:
-    :param logger:
-    :return:
-    '''
+    """
+    Validates the validation dataset using teacher forcing (DEPRECATED)
+    :param val_iter: validatio dataset
+    :param model: the model
+    :param criterion: loss criterion
+    :param logger: logger utilities
+    :return: validation loss average as cross entropy loss
+    """
     model.eval()
     losses = AverageMeter()
     for i, batch in enumerate(val_iter):

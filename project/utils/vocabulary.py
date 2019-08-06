@@ -1,13 +1,9 @@
 import os
 from torchtext import data as data
 from torchtext.data import Dataset
-
 import random
-
 from settings import SEED
 random.seed(SEED)
-
-
 
 class Seq2SeqDataset(Dataset):
     """
