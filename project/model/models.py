@@ -60,7 +60,6 @@ class Seq2Seq(nn.Module):
 
         self.output = nn.Linear(self.emb_size, self.trg_vocab_size)
         if self.weight_tied and self.decoder.embedding.weight.size() == self.output.weight.size():
-            print('Weight tying!')
             self.output.weight = self.decoder.embedding.weight
 
     def forward(self, enc_input, dec_input):

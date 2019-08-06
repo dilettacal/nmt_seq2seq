@@ -17,7 +17,6 @@ class Attention(nn.Module):
 
     def attention(self, encoder_outputs, decoder_outputs):
         '''Produces context and attention distribution'''
-        # If no attention, return context of zeros
         if self.attn_type == 'none':
             return None
 
