@@ -81,14 +81,14 @@ class Seq2Seq(nn.Module):
         decoder_outputs, final_states_dec = self.decoder(dec_input, final_states_enc) # Decode
         if self.att_type == "none":
             # no attention
-            out_cat = decoder_outputs
+            scores = decoder_outputs
         else:
             # Attend
             context = self.attention(encoder_outputs, decoder_outputs)
-            out_cat = torch.cat((decoder_outputs, context), dim=2)
+            scores = torch.cat((decoder_outputs, context), dim=2)
 
         # Predict
-        output = self.preoutput(out_cat)
+        output = self.preoutput(scores)
         output = self.dropout(self.tanh(output))
         output = self.output(output)
         return output

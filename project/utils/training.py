@@ -99,7 +99,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     bleus = dict()
     last_avg_loss = 100
     check_transl_every = check_translations_every if epochs <= 80 else check_translations_every*2
-    mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
+    if samples_iter: mini_samples = [batch for i, batch in enumerate(samples_iter) if i < 3]
     CHECKPOINT = 40
     TOLERANCE = 25
     TOLERATE_DECAYS = 2
