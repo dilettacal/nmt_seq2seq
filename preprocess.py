@@ -51,6 +51,7 @@ def raw_preprocess(parser):
 
     file_name = lang_code + "-" + "en" + ".tmx"
     COMPLETE_PATH = os.path.join(path_to_raw_file, file_name)
+    print(COMPLETE_PATH)
 
     STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), CORPUS_NAME, lang_code, "splits", str(MAX_LEN))
     os.makedirs(STORE_PATH, exist_ok=True)
@@ -62,6 +63,7 @@ def raw_preprocess(parser):
     converter = Converter(output=FileOutput(output_file_path))
     converter.convert([COMPLETE_PATH])
     print("Converted lines:", converter.output_lines)
+    print("Extraction took {} minutes to complete.".format(convert_time_unit(time.time()-start)))
 
     target_file = "bitext.{}".format(lang_code)
     src_lines, trg_lines = [], []
