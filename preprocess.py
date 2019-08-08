@@ -11,7 +11,9 @@ import argparse
 import os
 import re
 import time
-from project.utils.tokenizers import SpacyTokenizer, FastTokenizer
+import urllib
+
+from project.utils.tokenizers import SpacyTokenizer
 from project.utils.external.europarl import maybe_download_and_extract_europarl
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.data import split_data, persist_txt
@@ -33,18 +35,17 @@ def raw_preprocess(parser):
     CORPUS_NAME = "europarl"
     lang_code = parser.lang_code.lower()
     if lang_code == "en":
-        print("English is default language. Please provide the second language, e.g. 'de'.")
-        return
+        raise SystemExit("English is the default language. Please provide second language!")
+    if not lang_code:
+        raise SystemExit("Empty language not allowed!")
     # Download the raw tmx file
     try:
         print("Trying to download the file ...")
         maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
-    except Exception as e:
-        print("An error has occurred:", e)
-        print(
-            "Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
+    except urllib.error.HTTPError as e:
+        print(e)
+        raise SystemExit("Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
             "\nby selecting the data from the upper-right triangle (e.g. en > de])")
-        return
 
     path_to_raw_file = os.path.join(DATA_DIR_RAW, CORPUS_NAME, lang_code)
     MAX_LEN, MIN_LEN = 30, 2  # min_len is by defaul 2 tokens
