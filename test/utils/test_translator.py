@@ -16,13 +16,15 @@ user_input = "Die europäische Union ist groß."
 class TestTranslation(unittest.TestCase):
 
     def setUp(self) -> None:
-        path_to_model = os.path.expanduser("trained_model")
+
+        path_to_model = os.path.expanduser(os.path.join(".", "trained_model"))
+        print(path_to_model)
         use_cuda = False
         device = "cuda" if use_cuda else "cpu"
         MAX_LEN = 30
-        path_to_exp = os.path.expanduser(path_to_model)
+        path_to_exp = os.path.join(path_to_model)
         path_to_model = os.path.join(path_to_exp, "model.pkl")
-
+        print(os.path.join(path_to_exp, "experiment.pkl"))
         experiment = torch.load(os.path.join(path_to_exp, "experiment.pkl"))
         experiment = Experiment(experiment["args"])
         experiment.cuda = use_cuda

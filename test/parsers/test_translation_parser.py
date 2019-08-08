@@ -15,7 +15,3 @@ class TranslateParserTest(unittest.TestCase):
 
     def empty_path(self):
         self.assertFalse(translate(""))
-
-
-if __name__ == '__main__':
-    unittest.main()

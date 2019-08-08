@@ -45,7 +45,7 @@ with subclasses of the Tokenizer or Filter objects.
 import os
 import codecs
 import logging
-logging.basicConfig(filename='converter.log',level=logging.DEBUG)
+#logging.basicConfig(filename='converter.log',level=logging.DEBUG)
 from xml.etree import ElementTree
 
 try:

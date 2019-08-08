@@ -4,7 +4,7 @@ testmodules = [
     'utils.test_converter',
     'utils.test_tokenizers',
     'utils.test_utils',
-    'test_translation',
+    'utils.test_translator',
     'parsers.test_translation_parser',
     'parsers.test_preprocessing_parser',
     'parsers.test_training_parser'
