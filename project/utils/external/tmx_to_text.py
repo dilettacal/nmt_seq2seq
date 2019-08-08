@@ -1,8 +1,8 @@
 '''
-This file contains classes and functions from:
+This file contains classes and functions readapted from:
 https://github.com/amake/tmx2corpus
 
-######################################################################################################
+The following is the License Text from that repository:
 
 The MIT License (MIT)
 
@@ -25,7 +25,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-######################################################################################################
+
+##############################################################################
 Script description:
 
 A script to convert TMXs into parallel corpuses for machine
@@ -38,7 +39,7 @@ To perform tokenization or to filter the output, use the convert() method
 with subclasses of the Tokenizer or Filter objects.
 @author: aaron.madlon-kay
 
-######################################################################################################
+###############################################################################
 '''
 
 import os
