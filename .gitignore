@@ -158,6 +158,6 @@ finaltraslations
 *.pt
 *.vec
 
-!test/test_data/samples*
-!test/test_data/test.tmx
-!test/trained_model/*
+!test/utils/test_data/samples*
+!test/utils/test_data/test.tmx
+!test/utils/trained_model/*
