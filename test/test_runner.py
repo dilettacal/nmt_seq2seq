@@ -4,7 +4,10 @@ testmodules = [
     'test_converter',
     'test_tokenizers',
     'test_utils',
-    'test_translation'
+    'test_translation',
+    'parsers.test_translation_parser',
+    'parsers.test_preprocessing_parser',
+    'parsers.test_training_parser'
     ]
 
 suite = unittest.TestSuite()
