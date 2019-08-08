@@ -101,7 +101,7 @@ def translate(path="", predict_from_file="", beam_size=5):
         experiment.cuda = use_cuda
     except FileNotFoundError as e:
         print("Wrong path. File not found: ", e)
-        return
+        return False
 
     SRC_vocab = torch.load(os.path.join(path_to_exp, "src.pkl"))
     TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
