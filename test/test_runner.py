@@ -6,8 +6,8 @@ testmodules = [
     'test_utils',
     'test_translator',
     'parsers.test_translation_parser',
-    'parsers.test_preprocessing_parser',
-    'parsers.test_training_parser'
+    'parsers.test_training_parser',
+    'parsers.test_preprocessing_parser'
     ]
 
 suite = unittest.TestSuite()
