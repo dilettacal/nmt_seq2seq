@@ -24,7 +24,12 @@ class Experiment(object):
         self.attn = self.args.attn
         self.bi = self.args.bi
         self.reverse_input = self.args.reverse_input
-        self.reverse_input = True if not self.bi else False
+        if self.bi and self.reverse_input:
+            self.bi = True
+            self.reverse_input = False
+        elif self.reverse_input and not self.bi:
+            self.reverse_input = True
+       # self.reverse_input = True if not self.bi else False
         if self.args.max_len > Experiment.SEQ_MAX_LEN:
             self.args.max_len = Experiment.SEQ_MAX_LEN
         self.truncate = self.args.max_len

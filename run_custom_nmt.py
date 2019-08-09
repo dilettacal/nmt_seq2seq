@@ -65,12 +65,8 @@ def main():
     # Model configuration
     if experiment.attn != "none":
         experiment.model_type = "custom"
-        experiment.reverse_input = False
-        experiment.bi = True
     else:
         experiment.model_type = "s"
-        if experiment.bi and experiment.reverse_input:
-            experiment.reverse_input = False
 
     model_type = experiment.model_type
     print("Model Type", model_type)
