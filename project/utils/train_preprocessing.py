@@ -1,5 +1,6 @@
 import os
 import time
+from collections import Counter
 
 from torchtext import datasets, data as data
 from torchtext.data import Field
@@ -8,6 +9,7 @@ from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.utils import convert_time_unit
 from project.utils.vocabulary import Seq2SeqDataset
 from settings import DATA_DIR_PREPRO
+import numpy as np
 
 
 def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
@@ -135,6 +137,37 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log('train {}'.format(len(train_data)))
     logger.log('valid {}'.format(len(valid_data)))
     logger.log('test {}'.format(len(test_data)))
+
+    ### train lengths ####
+
+    all_train_src = [elem for elem in train_data.__getattr__("src")]
+    all_train_trg = [elem for elem in train_data.__getattr__("trg")]
+
+    all_train_src_lens = list(map(lambda x: len(x), all_train_src))
+    all_train_trg_lens = list(map(lambda x: len(x), all_train_trg))
+
+    train_src_len_counter = Counter(all_train_src_lens)
+    train_trg_len_counter = Counter(all_train_trg_lens)
+
+    labels, values = zip(*sorted(train_src_len_counter.items()))
+    indexes = np.arange(len(labels))
+    width = 0.5
+    import matplotlib.pyplot as plt
+    plt.bar(indexes, values, width)
+    plt.xticks(indexes+width*0.9, labels)
+    plt.tick_params(axis='x', which='major', labelsize=10)
+    #plt.tight_layout()
+    plt.title("Length distribution in train set")
+    path = logger.path + "train_len.png"
+    plt.savefig(path, format="png")
+
+
+    ### validation lengths ####
+
+
+    ### test lengths ####
+
+    exit()
 
     logger.log("First training example:")
     logger.log("src: {}".format(" ".join(vars(train_data[0])['src'])))
