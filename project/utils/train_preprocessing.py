@@ -137,25 +137,7 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log('train {}'.format(len(train_data)))
     logger.log('valid {}'.format(len(valid_data)))
     logger.log('test {}'.format(len(test_data)))
-
-    ### train lengths ####
-
-    all_train_src = [elem for elem in train_data.__getattr__("src")]
-    all_train_trg = [elem for elem in train_data.__getattr__("trg")]
-
-    all_train_src_lens = list(map(lambda x: len(x), all_train_src))
-    all_train_trg_lens = list(map(lambda x: len(x), all_train_trg))
-
-    train_src_len_counter = Counter(all_train_src_lens)
-    train_trg_len_counter = Counter(all_train_trg_lens)
-
-
-    ### validation lengths ####
-
-
-    ### test lengths ####
-
-    exit()
+    #length_checker(train_data, valid_data, test_data)
 
     logger.log("First training example:")
     logger.log("src: {}".format(" ".join(vars(train_data[0])['src'])))
@@ -183,3 +165,56 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log("Total TRG words in the training dataset: {}".format(sum(trg_field.vocab.freqs.values())))
 
     logger.log("Minimal word frequency (src/trg): {}".format(experiment.min_freq))
+
+
+def length_checker(train_data, valid_data, test_data):
+    from pprint import pprint
+    ### train lengths ####
+
+    all_train_src = [elem for elem in train_data.__getattr__("src")]
+    all_train_trg = [elem for elem in train_data.__getattr__("trg")]
+
+    all_train_src_lens = list(map(lambda x: len(x), all_train_src))
+    all_train_trg_lens = list(map(lambda x: len(x), all_train_trg))
+
+    train_src_len_counter = Counter(all_train_src_lens)
+    train_trg_len_counter = Counter(all_train_trg_lens)
+
+    print("Training data lengths:")
+    print("German:")
+    pprint(train_src_len_counter.most_common(10))
+    print("English")
+    pprint(train_trg_len_counter.most_common(10))
+
+    ### validation lengths ####
+    all_val_src = [elem for elem in valid_data.__getattr__("src")]
+    all_val_trg = [elem for elem in valid_data.__getattr__("trg")]
+
+    all_val_src_lens = list(map(lambda x: len(x), all_val_src))
+    all_val_trg_lens = list(map(lambda x: len(x), all_val_trg))
+
+    val_src_len_counter = Counter(all_val_src_lens)
+    val_trg_len_counter = Counter(all_val_trg_lens)
+
+    print("Validation data lenghts")
+    print("German")
+    pprint(val_src_len_counter.most_common(10))
+    print("English")
+    pprint(val_trg_len_counter.most_common(10))
+
+    ### test lengths ####
+    all_test_src = [elem for elem in test_data.__getattr__("src")]
+    all_test_trg = [elem for elem in test_data.__getattr__("trg")]
+
+    all_test_src_lens = list(map(lambda x: len(x), all_test_src))
+    all_test_trg_lens = list(map(lambda x: len(x), all_test_trg))
+
+    test_src_len_counter = Counter(all_test_src_lens)
+    test_trg_len_counter = Counter(all_test_trg_lens)
+
+    print("Test data lengths")
+    print("German:")
+    pprint(test_src_len_counter.most_common(10))
+    print("English:")
+    pprint(test_trg_len_counter.most_common(10))
+
