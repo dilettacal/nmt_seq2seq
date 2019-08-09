@@ -149,18 +149,6 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     train_src_len_counter = Counter(all_train_src_lens)
     train_trg_len_counter = Counter(all_train_trg_lens)
 
-    labels, values = zip(*sorted(train_src_len_counter.items()))
-    indexes = np.arange(len(labels))
-    width = 0.5
-    import matplotlib.pyplot as plt
-    plt.bar(indexes, values, width)
-    plt.xticks(indexes+width*0.9, labels)
-    plt.tick_params(axis='x', which='major', labelsize=10)
-    #plt.tight_layout()
-    plt.title("Length distribution in train set")
-    path = logger.path + "train_len.png"
-    plt.savefig(path, format="png")
-
 
     ### validation lengths ####
 
