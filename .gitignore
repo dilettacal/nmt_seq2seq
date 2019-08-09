@@ -124,10 +124,6 @@ iwslt
 Europarl.*
 bpe.*
 *.bpe.*
-# exclusions
-!*-dataset.log
-!*_content_words.csv
-!*_functional_words.csv
 
 *.tmx
 *.png
