@@ -2,7 +2,8 @@ import os
 import unittest
 from project.utils.external.tmx_to_text import FileOutput, Converter
 
-data_dir = os.path.join(".", "test_data")
+data_dir = os.path.expanduser(os.path.join(".", "test_data"))
+print(data_dir)
 DE = "Hallo, Welt!"
 EN = "Hello, world!"
 

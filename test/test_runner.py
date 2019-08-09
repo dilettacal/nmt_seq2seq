@@ -1,10 +1,10 @@
 import unittest
 
 testmodules = [
-    'utils.test_converter',
-    'utils.test_tokenizers',
-    'utils.test_utils',
-    'utils.test_translator',
+    'test_converter',
+    'test_tokenizers',
+    'test_utils',
+    'test_translator',
     'parsers.test_translation_parser',
     'parsers.test_preprocessing_parser',
     'parsers.test_training_parser'
