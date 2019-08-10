@@ -19,6 +19,7 @@ from project.model.models import get_nmt_model
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
+from project.utils.train_preprocessing import get_vocabularies_iterators
 from project.utils.utils import Logger
 
 UTF8Reader = codecs.getreader('utf8')
@@ -103,8 +104,18 @@ def translate(path="", predict_from_file="", beam_size=5):
         print("Wrong path. File not found: ", e)
         return False
 
-    SRC_vocab = torch.load(os.path.join(path_to_exp, "src.pkl"))
-    TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
+    logger_file_name = experiment.rnn_type+"_live_translations.log"
+    logger = Logger(path_to_exp,file_name=logger_file_name)
+
+    try:
+        SRC_vocab = torch.load(os.path.join(path_to_exp, "src.pkl"))
+        TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
+    except ModuleNotFoundError as e:
+        print("Error while loading vocabularies: {}\nLoading vocabularies based on experiment configuration...".format(e))
+        train_prepos = get_vocabularies_iterators(experiment)
+        SRC_vocab, TRG_vocab = train_prepos[0], train_prepos[1]
+        logger.pickle_obj(SRC_vocab, "src")
+        logger.pickle_obj(TRG_vocab, "trg")
 
     tok_level = "w"
 
@@ -128,7 +139,6 @@ def translate(path="", predict_from_file="", beam_size=5):
         return
     model = model.to(device)
 
-    logger = Logger(path_to_exp, "live_transl.log")
     logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)
     logger.log("Beam width: {}".format(beam_size))
 
