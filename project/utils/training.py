@@ -203,15 +203,14 @@ def train(train_iter, model, criterion, optimizer, device="cuda", clip_value=-1)
         loss = criterion(scores, trg)
         loss.backward()
         losses.update(loss.item())
-        if clip_value != -1:
+        if clip_value != -1.0:
             if clip_value >=1.0:
                 gradient_clip = clip_value
                 grad_norm = get_gradient_norm2(model)
                 norms.update(grad_norm)
                 if i == 0:
                     first_norm_value = grad_norm
-            else: gradient_clip = 1.0
-        print("Clip: ", gradient_clip)
+            else: gradient_clip = 1.0 # default value
         # Clip gradient norms and step optimizer, by default: norm type = 2
         torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip)
         optimizer.step()
