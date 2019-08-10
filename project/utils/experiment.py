@@ -84,5 +84,5 @@ class Experiment(object):
     def set_test(self, n):
         self.test_samples = n
 
-    def check_norm(self):
+    def get_clip_value(self):
         return self.args.norm
