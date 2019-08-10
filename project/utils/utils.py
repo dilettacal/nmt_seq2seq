@@ -61,7 +61,6 @@ class Logger():
         :param ylabel: the y label
         :param file: file name
         """
-        print("Pltting with new plotting style")
         try:
             import matplotlib.pyplot as plt
         except ImportError or ModuleNotFoundError:
