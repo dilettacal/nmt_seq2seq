@@ -149,6 +149,7 @@ scripts/floyd
 !de-en.log
 
 !data/preprocessed/europarl/de/splits/30/samples.*
+!data/preprocessed/europarl/de/splits/30/translation.*
 
 finaltraslations
 *.pt
