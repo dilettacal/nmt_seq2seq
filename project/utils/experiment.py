@@ -83,3 +83,6 @@ class Experiment(object):
 
     def set_test(self, n):
         self.test_samples = n
+
+    def check_norm(self):
+        return self.args.norm

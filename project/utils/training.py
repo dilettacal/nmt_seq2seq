@@ -72,7 +72,7 @@ class CustomReduceLROnPlateau(ReduceLROnPlateau):
 
 
 def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, epochs, SRC, TRG, logger=None,
-                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5):
+                device=DEFAULT_DEVICE, tr_logger=None, samples_iter=None, check_translations_every=5, beam_size=5, check_norm=False):
     """
     The main function to train the model
     :param train_iter: training iterator
@@ -112,7 +112,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     for epoch in range(epochs):
         start_time = time.time()
         avg_train_loss, avg_norms, first_norm = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
-                               device=device)
+                               device=device, check_norm=check_norm)
         avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
 
         train_losses.append(avg_train_loss)
@@ -161,7 +161,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     return bleus, metrics
 
 
-def train(train_iter, model, criterion, optimizer, device="cuda"):
+def train(train_iter, model, criterion, optimizer, device="cuda", check_norm=False):
     """
     Train epoch step
     :param train_iter: the training iterator
@@ -201,13 +201,11 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
         loss = criterion(scores, trg)
         loss.backward()
         losses.update(loss.item())
-        """
-        ## Remove this comment to log gradient norm values
-        grad_norm = get_gradient_norm2(model)
-        norms.update(grad_norm)
-        if i == 0:
-            first_norm_value = grad_norm
-        """
+        if check_norm:
+            grad_norm = get_gradient_norm2(model)
+            norms.update(grad_norm)
+            if i == 0:
+                first_norm_value = grad_norm
         # Clip gradient norms and step optimizer, by default: norm type = 2
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()

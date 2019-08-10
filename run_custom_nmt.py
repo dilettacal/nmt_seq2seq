@@ -56,12 +56,12 @@ def experiment_parser():
     parser.add_argument('--tied', default="False", type=str2bool,
                         help="Tie weights between input and output in decoder.")
     parser.add_argument('--beam', type=int, default=5, help="Beam size used during the model validation.")
+    parser.add_argument('--norm', type=str2bool, default=False, help="Check norm during training epochs. Default: False (no check).")
     return parser
 
 def main():
     experiment = Experiment(experiment_parser())
     print("Running experiment on:", experiment.get_device())
-
     # Model configuration
     if experiment.attn != "none":
         experiment.model_type = "custom"
@@ -156,7 +156,7 @@ def main():
                                 optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
                                 logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
                                 samples_iter=samples_iter, check_translations_every=log_every,
-                                beam_size=experiment.val_beam_size)
+                                beam_size=experiment.val_beam_size, check_norm=experiment.check_norm())
 
     # persist metrics
     nltk_bleu_metric = Metric("nltk_bleu", list(bleu.values())[0])
