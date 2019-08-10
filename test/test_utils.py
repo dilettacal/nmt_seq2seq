@@ -4,7 +4,7 @@ import unittest
 from torchtext.data import Field, Iterator
 
 from project.utils.utils import Logger, AverageMeter
-from project.utils.vocabulary import Seq2SeqDataset
+from project.utils.datasets import Seq2SeqDataset
 
 data_dir = os.path.join(".", "test_data")
 

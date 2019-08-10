@@ -111,7 +111,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
     for epoch in range(epochs):
         start_time = time.time()
-        avg_train_loss, avg_norms, firs_norm = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
+        avg_train_loss, avg_norms, first_norm = train(train_iter=train_iter, model=model, criterion=criterion, optimizer=optimizer,
                                device=device)
         avg_bleu_val = validate(val_iter=val_iter, model=model, device=device, TRG=TRG, beam_size=beam_size)
 
@@ -148,7 +148,8 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
 
         logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Val. BLEU: {bleu:.3f}')
-        logger.log('\tFirst norm value (before clip): {} | Average dataset gradient norms: {}'.format(firs_norm, avg_norms))
+        if first_norm > 0 and avg_norms > 0:
+            logger.log('\tFirst norm value (before clip): {} | Average dataset gradient norms: {}'.format(first_norm, avg_norms))
 
         metrics.update({"loss": train_losses})
         bleus.update({'nltk': nltk_bleus})
@@ -200,10 +201,13 @@ def train(train_iter, model, criterion, optimizer, device="cuda"):
         loss = criterion(scores, trg)
         loss.backward()
         losses.update(loss.item())
+        """
+        ## Remove this comment to log gradient norm values
         grad_norm = get_gradient_norm2(model)
         norms.update(grad_norm)
         if i == 0:
             first_norm_value = grad_norm
+        """
         # Clip gradient norms and step optimizer, by default: norm type = 2
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
