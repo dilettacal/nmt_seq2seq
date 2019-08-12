@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# TODO
 echo "Optional tests"
 
 echo "Best config + 340000 data"
