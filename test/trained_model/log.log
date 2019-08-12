@@ -1,0 +1,56 @@
+Language combination (de-en)
+Attention: dot
+SRC and TRG objects persisted in the experiment directory.
+Scheduler tolerance: 20 epochs. Minimal learing rate: 2.0000000000000002e-07
+|src_vocab| = 431, |trg_vocab| = 502, Data Loading Time: 00:00:01.
+>>>> Path to model: ./results/de_en/custom/lstm/2/bi/2019-08-12-09-20-48/model.pkl
+CLI-ARGS train_model.py --train 1000 --test 100 --val 100 --epochs 1 --attn dot
+Args: Namespace(attn='dot', b=64, beam=5, bi=True, corpus='europarl', cuda=True, data_dir=None, dp=0.25, emb=300, epochs=1, hs=300, lang_code='de', lr=0.0002, max_len=30, min=5, norm=-1.0, num_layers=2, reverse=True, reverse_input=False, rnn='lstm', test=100, tied=False, tok='tok', train=1000, v=30000, val=100)
+OPTIM: Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.0002
+    weight_decay: 0
+)
+LR: 0.0002
+SCHED: {'factor': 0.1, 'optimizer': Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.0002
+    weight_decay: 0
+), 'min_lrs': [2.0000000000000002e-07], 'patience': 20, 'verbose': True, 'cooldown': 0, 'cooldown_counter': 0, 'mode': 'max', 'threshold': 0.0001, 'threshold_mode': 'rel', 'best': -inf, 'num_bad_epochs': 0, 'mode_worse': -inf, 'is_better': functools.partial(<bound method ReduceLROnPlateau._cmp of <project.utils.training.CustomReduceLROnPlateau object at 0x7f79d6519940>>, 'max', 'rel', 0.0001), 'eps': 1e-08, 'last_epoch': -1, 'TOTAL_LR_DECAYS': 0}
+MODEL: Seq2Seq(
+  (encoder): Encoder(
+    (embedding): Embedding(431, 300)
+    (rnn): LSTM(300, 300, num_layers=2, dropout=0.25, bidirectional=True)
+    (dropout): Dropout(p=0.25, inplace=False)
+  )
+  (decoder): Decoder(
+    (embedding): Embedding(502, 300)
+    (rnn): LSTM(300, 300, num_layers=4, dropout=0.25)
+    (dropout): Dropout(p=0.25, inplace=False)
+  )
+  (attention): Attention()
+  (preoutput): Linear(in_features=600, out_features=300, bias=True)
+  (tanh): Tanh()
+  (dropout): Dropout(p=0.25, inplace=False)
+  (output): Linear(in_features=300, out_features=502, bias=True)
+)
+
+Trainable parameters: 7,110,502
+New best BLEU: 1.333
+Epoch: 1 | Time: 00:00:46
+	Train Loss: 5.685 | Val. BLEU: 1.333
+Plot saved: ./results/de_en/custom/lstm/2/bi/2019-08-12-09-20-48/loss_bleu.png
+Validation of test set
+Prediction of test set - Beam size: 1
+	 Test. (nltk) BLEU: 1.333
+Prediction of test set - Beam size: 5
+	 Test. (nltk) BLEU: 1.333
+Prediction of test set - Beam size: 10
+	 Test. (nltk) BLEU: 1.333
+Finished in 00:01:55

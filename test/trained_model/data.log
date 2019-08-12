@@ -1,53 +1,53 @@
 Dataset in use: EUROPARL
 Data set sizes (number of sentence pairs):
-train 5001
+train 1001
 valid 101
 test 101
 First training example:
 src: wir liegen hier also auf einer wellenlänge .
 trg: so we are on exactly the same wavelength here .
 Most common words (src):
-                   .       4816
-                   ,       4701
-                 die       3306
-                 der       2659
-                 und       1911
-                  in       1278
-                 wir       1075
-                 ist       1048
-                  zu        970
-                 das        970
-                 ich        935
-                 den        927
-                 für        779
-                 von        768
-                  es        760
-               nicht        658
-              werden        620
-                 auf        593
-                eine        581
-                dass        579
+                   .        967
+                   ,        942
+                 die        649
+                 der        520
+                 und        380
+                  in        258
+                 ist        218
+                 wir        216
+                 das        211
+                 den        195
+                  zu        179
+                 ich        171
+                  es        166
+                 für        160
+                 von        140
+               nicht        130
+                eine        124
+              werden        117
+                 des        116
+                 auf        113
 Most common words (trg):
-                 the       5913
-                   .       4761
-                   ,       3354
-                  to       2718
-                  of       2642
-                 and       1953
-                  in       1860
-                  is       1757
-                that       1457
-                   a       1406
-                  we       1190
-                this       1099
-                   i        991
-                  it        916
-                 for        895
-                  be        832
-                  on        750
-                 are        696
-                 not        672
-                have        605
+                 the       1181
+                   .        951
+                   ,        686
+                  to        552
+                  of        544
+                  in        383
+                 and        378
+                  is        356
+                   a        290
+                that        277
+                  we        243
+                this        218
+                   i        181
+                 for        170
+                  it        156
+                  be        147
+                 not        140
+                  on        134
+                 are        133
+                with        121
 Total UNKs in the source dataset: 0
 Total UNKs in the target dataset: 0
 First 10 words (src):
@@ -59,8 +59,8 @@ First 10 words (src):
 05 der
 06 und
 07 in
-08 wir
-09 ist
+08 ist
+09 wir
 First 10 words (trg):
 00 <unk>
 01 <pad>
@@ -71,9 +71,9 @@ First 10 words (trg):
 06 ,
 07 to
 08 of
-09 and
-Number of Vocabulary source words (types): 1848
-Number of Vocabulary target words (types): 1906
-Total SRC words in the training dataset: 87184
-Total TRG words in the training dataset: 91916
+09 in
+Number of Vocabulary source words (types): 431
+Number of Vocabulary target words (types): 502
+Total SRC words in the training dataset: 17406
+Total TRG words in the training dataset: 18446
 Minimal word frequency (src/trg): 5
