@@ -9,7 +9,8 @@ from project.utils.experiment import Experiment
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.tokenizers import SpacyTokenizer, FastTokenizer
 from project.utils.utils import Logger
-from translate import translate, Translator
+from translate import translate
+from project.utils.translators import Translator
 
 user_input = "Die europäische Union ist groß."
 
@@ -17,7 +18,7 @@ class TestTranslation(unittest.TestCase):
 
     def setUp(self) -> None:
 
-        path_to_model = os.path.expanduser(os.path.join(".", "trained_model"))
+        path_to_model = os.path.expanduser(os.path.join(".", "test", "trained_model"))
         print(path_to_model)
         use_cuda = False
         device = "cuda" if use_cuda else "cpu"

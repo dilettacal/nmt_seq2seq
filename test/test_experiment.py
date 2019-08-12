@@ -1,7 +1,7 @@
 import unittest
 
 from project.utils.experiment import Experiment
-from train_model import experiment_parser
+from project.utils.parsers.get_train_model_parser import experiment_parser
 
 
 class ExperimentTest(unittest.TestCase):

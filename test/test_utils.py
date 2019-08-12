@@ -6,7 +6,7 @@ from torchtext.data import Field, Iterator
 from project.utils.utils import Logger, AverageMeter
 from project.utils.datasets import Seq2SeqDataset
 
-data_dir = os.path.join(".", "test_data")
+data_dir = os.path.join(".", "test", "test_data")
 
 class TestIOUtils(unittest.TestCase):
 
@@ -31,39 +31,42 @@ class TestIOUtils(unittest.TestCase):
 
 
     def test_logger(self):
-        if os.path.exists("./test_data/log.log"):
-            os.remove("./test_data/log.log")
-        logger = Logger(path="./test_data")
+        path = os.path.join(data_dir, "log.log")
+        if os.path.exists(path):
+            os.remove(path)
+        logger = Logger(path=data_dir)
         self.assertIsNotNone(logger)
         logger.log("test_logging", stdout=False)
         logger.log("test_second_logging", stdout=False)
-        with open("./test_data/log.log", mode="r") as f:
+        with open(path, mode="r") as f:
             content = f.read().strip().split("\n")
         self.assertEqual(content[0], "test_logging")
         self.assertEqual(content[1], "test_second_logging")
 
     def test_save_model(self):
-        if os.path.exists("./test_data/log.log"):
-            os.remove("./test_data/log.log")
-        logger = Logger(path="./test_data")
+        path = os.path.join(data_dir, "log.log")
+        if os.path.exists(path):
+            os.remove(path)
+        logger = Logger(path=data_dir)
         self.assertIsNotNone(logger)
         model = dict({"model": [1,2,3,4,2]})
         logger.save_model(model)
-        files = os.listdir("./test_data")
+        files = os.listdir(data_dir)
         self.assertIn("model.pkl", files)
-        os.remove("./test_data/model.pkl")
+        os.remove(os.path.join(data_dir, "model.pkl"))
 
 
     def test_plot_metrics(self):
-        if os.path.exists("./test_data/log.log"):
-            os.remove("./test_data/log.log")
-        logger = Logger(path="./test_data")
+        path = os.path.join(data_dir, "log.log")
+        if os.path.exists(path):
+            os.remove(path)
+        logger = Logger(path=data_dir)
         self.assertIsNotNone(logger)
         metric = [1,2,5,1,6,1]
         logger.plot(metric, "", "", "metric")
-        files = os.listdir("./test_data")
+        files = os.listdir(data_dir)
         self.assertIn("metric.png", files)
-        os.remove("./test_data/metric.png")
+        os.remove(os.path.join(data_dir, "metric.png"))
 
     def test_metric(self):
         metric = AverageMeter()

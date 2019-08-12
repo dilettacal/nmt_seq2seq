@@ -3,8 +3,9 @@ import unittest
 
 import unittest
 
-from train_model import experiment_parser
-from translate import translation_parser, translate
+from project.utils.parsers.get_train_model_parser import experiment_parser
+from translate import translate
+from project.utils.parsers.get_translation_parser import translation_parser
 
 
 class TrainModelParserTest(unittest.TestCase):

@@ -1,5 +1,6 @@
 import unittest
-from preprocess import data_prepro_parser, raw_preprocess
+from project.utils.preprocess import raw_preprocess
+from project.utils.parsers.get_preprocess_parser import data_prepro_parser
 
 
 class PreprocessParserTest(unittest.TestCase):

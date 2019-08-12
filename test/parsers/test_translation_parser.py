@@ -1,6 +1,7 @@
 import unittest
 
-from translate import translation_parser, translate
+from translate import translate
+from project.utils.parsers.get_translation_parser import translation_parser
 
 
 class TranslateParserTest(unittest.TestCase):
