@@ -120,12 +120,9 @@ def main():
     nltk_bleu_metric = Metric("nltk_bleu", list(bleu.values())[0])
     train_loss = Metric("train_loss", list(metrics.values())[0])
 
-    logger.pickle_obj(nltk_bleu_metric.get_dict(), "nltk_bleus")
-    logger.pickle_obj(train_loss.get_dict(), "train_losses")
-
-    # plot metrics
-    train_bleus = dict({"train": train_loss.values, "bleu": nltk_bleu_metric.values})
-    logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="loss_bleu")
+    # plot metrics - uncomment to plot metrics
+    #train_bleus = dict({"train": train_loss.values, "bleu": nltk_bleu_metric.values})
+    #logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="loss_bleu")
 
     FIXED_WORD_LEVEL_LEN = 30
 
