@@ -28,7 +28,7 @@ BEST_MODEL_PATH = ""
 ### SPACY PART ###
 ### New languages should be written here
 #### Update supported languages #####
-SUPPORTED_LANGS = dict({"en":"en_core_web_sm", "de":"de_core_news_sm", "it": "it_core_news_sm"})
+SUPPORTED_LANGS = dict({"en":"en_core_web_sm", "de":"de_core_news_sm", "xx":"xx_ent_wiki_sm"})
 
 #### Links to pretrained embeddings, see: https://fasttext.cc/docs/en/pretrained-vectors.html
 PRETRAINED_URL_EN = "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.vec.gz"

@@ -22,10 +22,11 @@ class TestEnvironmentTokenizers(unittest.TestCase):
 
     def test_factory_spacy_xx(self):
         tokenizer = get_custom_tokenizer("xx", prepro=True, mode="w")
-        self.assertIsInstance(tokenizer, SpacyTokenizer)
         self.assertEqual(tokenizer.lang, "xx")
-        self.assertIsInstance(tokenizer.nlp, spacy.lang.xx.MultiLanguage)
         self.assertIs(tokenizer.only_tokenize, True)
+        self.assertIsInstance(tokenizer, SpacyTokenizer)
+        self.assertIsInstance(tokenizer.nlp, spacy.lang.xx.MultiLanguage)
+
 
     def test_factory_split_lang(self):
         tokenizer = get_custom_tokenizer("de", prepro=False, mode="w")
