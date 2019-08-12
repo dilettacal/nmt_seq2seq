@@ -109,18 +109,15 @@ def main():
     # Train the model
 
     log_every = 5
-#    CLIP = 1 if experiment.train_samples <= 170000 else 5
     bleu, metrics = train_model(train_iter=train_iter, val_iter=val_iter, model=model, criterion=criterion,
                                 optimizer=optimizer, scheduler=scheduler, epochs=experiment.epochs, SRC=SRC, TRG=TRG,
                                 logger=logger, device=experiment.get_device(), tr_logger=translation_logger,
                                 samples_iter=samples_iter, check_translations_every=log_every,
                                 beam_size=experiment.val_beam_size, clip_value=experiment.get_clip_value())
 
-    # persist metrics
-    nltk_bleu_metric = Metric("nltk_bleu", list(bleu.values())[0])
-    train_loss = Metric("train_loss", list(metrics.values())[0])
-
-    # plot metrics - uncomment to plot metrics
+    # Uncomment following lines if you want to pickle metric results and/or plot bleus and losses
+    #nltk_bleu_metric = Metric("nltk_bleu", list(bleu.values())[0])
+    #train_loss = Metric("train_loss", list(metrics.values())[0])
     #train_bleus = dict({"train": train_loss.values, "bleu": nltk_bleu_metric.values})
     #logger.plot(train_bleus, title="Train Loss vs. Val BLEU", ylabel="Loss/BLEU", file="loss_bleu")
 
