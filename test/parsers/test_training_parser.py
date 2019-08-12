@@ -3,7 +3,7 @@ import unittest
 
 import unittest
 
-from run_custom_nmt import experiment_parser
+from train_model import experiment_parser
 from translate import translation_parser, translate
 
 

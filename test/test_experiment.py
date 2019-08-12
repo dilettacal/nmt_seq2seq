@@ -1,7 +1,7 @@
 import unittest
 
 from project.utils.experiment import Experiment
-from run_custom_nmt import experiment_parser
+from train_model import experiment_parser
 
 
 class ExperimentTest(unittest.TestCase):
