@@ -100,7 +100,6 @@ def select_word_based_tokenizer(lang):
     :return: a Spacy-Based Tokenizer or a FastTokenizer
     """
     if lang in SUPPORTED_LANGS.keys():
-        print("Language {} is supported!".format(lang))
         try:
             import spacy
             nlp = spacy.load(SUPPORTED_LANGS[lang],

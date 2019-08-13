@@ -28,9 +28,16 @@ class Seq2SeqDataset(Dataset):
 
     def _generate_examples(self, src_path, trg_path, fields, truncate, reduce):
         examples = []
+
+        src_exist = os.path.isfile(os.path.join(src_path))
+        trg_exist = os.path.isfile(os.path.join(trg_path))
+        if not src_exist or not trg_exist:
+            return None
+
+        print("Preprocessing files: {}, {}".format(src_path, trg_path))
         src_lines = [line.strip("\n") for line in
-                     open(os.path.join(src_path), mode="r",
-                          encoding="utf-8").readlines() if line]
+                         open(os.path.join(src_path), mode="r",
+                              encoding="utf-8").readlines() if line]
         trg_lines = [line.strip("\n") for line in
                      open(os.path.join(trg_path), mode="r",
                           encoding="utf-8").readlines() if line]

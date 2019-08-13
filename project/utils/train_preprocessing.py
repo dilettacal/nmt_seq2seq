@@ -80,7 +80,6 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
                                         train="samples."+file_type,
                                         validation="", test="",
                                         path=data_dir)
-
         end = time.time()
         print("Duration: {}".format(convert_time_unit(end - start)))
         print("Total number of sentences: {}".format((len(train) + len(val) + len(test))))
@@ -118,7 +117,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     val_iter = data.BucketIterator(val, 1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=True)
     test_iter = data.Iterator(test, batch_size=1, device=device, repeat=False, sort_key=lambda x: (len(x.src)), shuffle=False)
 
-    if samples:
+    if samples[0].examples:
         samples_iter = data.Iterator(samples[0], batch_size=1, device=device, repeat=False, shuffle=False, sort_key=lambda x: (len(x.src)))
     else: samples_iter = None
 
