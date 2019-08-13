@@ -147,9 +147,7 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log("Most common words (trg):")
     logger.log("\n".join(["%20s %10d" % x for x in trg_field.vocab.freqs.most_common(20)]))
 
-    logger.log("Total UNKs in the source dataset: {}".format(src_field.vocab.freqs[UNK_TOKEN]))
-    logger.log("Total UNKs in the target dataset: {}".format(trg_field.vocab.freqs[UNK_TOKEN]))
-
+    print("Freq:", src_field.vocab.freqs["die"])
     logger.log("First 10 words (src):")
     logger.log("\n".join(
         '%02d %s' % (i, t) for i, t in enumerate(src_field.vocab.itos[:10])))
