@@ -158,6 +158,12 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log("Number of Vocabulary source words (types): {}".format(len(src_field.vocab)))
     logger.log("Number of Vocabulary target words (types): {}".format(len(trg_field.vocab)))
 
+    total_src_unk = {k: v for k, v in src_field.vocab.freqs.items() if v < experiment.min_freq}
+    total_trg_unk = {k: v for k, v in trg_field.vocab.freqs.items() if v < experiment.min_freq}
+
+    logger.log("Total UNKs in source vocabulary: {}".format(len(total_src_unk.keys())))
+    logger.log("Total UNKs in target vocabulary: {}".format(len(total_trg_unk.keys())))
+
     logger.log("Total SRC words in the training dataset: {}".format(sum(src_field.vocab.freqs.values())))
     logger.log("Total TRG words in the training dataset: {}".format(sum(trg_field.vocab.freqs.values())))
 
