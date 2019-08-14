@@ -152,7 +152,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         logger.log('Epoch: {} | Time: {}'.format(epoch + 1, total_epoch))
         logger.log(f'\tTrain Loss: {avg_train_loss:.3f} | Val. BLEU: {bleu:.3f}')
         if first_norm > 0 and avg_norms > 0:
-            logger.log('\tFirst norm value (before clip): {} | Average dataset gradient norms: {}'.format(first_norm, avg_norms))
+            logger.log('\tFirst batch norm value (before clip): {} | Average dataset gradient norms: {}'.format(first_norm, avg_norms))
 
         metrics.update({"loss": train_losses})
         bleus.update({'nltk': nltk_bleus})
