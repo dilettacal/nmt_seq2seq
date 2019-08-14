@@ -11,13 +11,14 @@ from project.utils.experiment import Experiment
 from project.model.models import count_trainable_params, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.parsers.get_train_model_parser import experiment_parser
-from project.utils.train_preprocessing import get_vocabularies_iterators, print_info
+from project.utils.train_preprocessing import get_vocabularies_iterators, print_info, count_unks
 from project.utils.training import train_model, beam_predict, check_translation, CustomReduceLROnPlateau
 from project.utils.utils import convert_time_unit, Logger, Metric
 from settings import MODEL_STORE
 
 
 def main():
+    TRAIN_SUB_SAMPLE = 170000
     experiment = Experiment(experiment_parser())
     print("Running experiment on:", experiment.get_device())
     # Model configuration
@@ -66,7 +67,9 @@ def main():
     data_logger = Logger(path=experiment_path, file_name="data.log")
     translation_logger = Logger(path=experiment_path, file_name="train_translations.log")
 
-    print_info(data_logger, train_data, val_data, test_data, SRC, TRG, experiment) # print some infos
+    if experiment.train_samples != 0 and experiment.train_samples != TRAIN_SUB_SAMPLE:
+        ### creates a data.log only if training is not performed on the whole dataset or on the subsample of 170000 sentences
+        print_info(data_logger, train_data, val_data, test_data, val_iter, test_iter, SRC, TRG, experiment)
 
     # Create model
     # special tokens

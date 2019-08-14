@@ -124,7 +124,7 @@ def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
     return src_vocab, trg_vocab, train_iter, val_iter, test_iter, train, val, test, samples, samples_iter
 
 
-def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, experiment):
+def print_info(logger, train_data, valid_data, test_data, val_iter, test_iter, src_field, trg_field, experiment):
     """ This prints some useful stuff about our data sets. """
     if experiment.corpus == "":
         corpus_name = "IWLST"
@@ -133,9 +133,9 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log("Dataset in use: {}".format(corpus_name.upper()))
 
     logger.log("Data set sizes (number of sentence pairs):")
-    logger.log('train {}'.format(len(train_data)))
-    logger.log('valid {}'.format(len(valid_data)))
-    logger.log('test {}'.format(len(test_data)))
+    logger.log('train {}'.format(len(train_data)-1))
+    logger.log('valid {}'.format(len(valid_data)-1))
+    logger.log('test {}'.format(len(test_data)-1))
     #length_checker(train_data, valid_data, test_data)
 
     logger.log("First training example:")
@@ -147,7 +147,6 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log("Most common words (trg):")
     logger.log("\n".join(["%20s %10d" % x for x in trg_field.vocab.freqs.most_common(20)]))
 
-    print("Freq:", src_field.vocab.freqs["die"])
     logger.log("First 10 words (src):")
     logger.log("\n".join(
         '%02d %s' % (i, t) for i, t in enumerate(src_field.vocab.itos[:10])))
@@ -155,9 +154,12 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log("\n".join(
         '%02d %s' % (i, t) for i, t in enumerate(trg_field.vocab.itos[:10])))
 
+    logger.log("Maximal vocabulary size: {}".format(experiment.voc_limit))
+    logger.log("Minimal word frequency (src/trg): {}".format(experiment.min_freq))
     logger.log("Number of Vocabulary source words (types): {}".format(len(src_field.vocab)))
     logger.log("Number of Vocabulary target words (types): {}".format(len(trg_field.vocab)))
-
+    logger.log("")
+    logger.log("###### Training dataset information #######")
     total_src_unk = {k: v for k, v in src_field.vocab.freqs.items() if v < experiment.min_freq}
     total_trg_unk = {k: v for k, v in trg_field.vocab.freqs.items() if v < experiment.min_freq}
 
@@ -167,7 +169,62 @@ def print_info(logger, train_data, valid_data, test_data, src_field, trg_field, 
     logger.log("Total SRC words in the training dataset: {}".format(sum(src_field.vocab.freqs.values())))
     logger.log("Total TRG words in the training dataset: {}".format(sum(trg_field.vocab.freqs.values())))
 
-    logger.log("Minimal word frequency (src/trg): {}".format(experiment.min_freq))
+    src_val_unks, trg_val_unks = count_unks(val_iter, src_field, trg_field)
+    src_valid_words, trg_valid_words = count_words(val_iter, src_field, trg_field)
+    src_test_unks, trg_test_unks = count_unks(test_iter, src_field, trg_field)
+    src_test_words, trg_test_words = count_words(test_iter, src_field, trg_field)
+
+    ### Validaiton Analysis ####
+    logger.log("")
+    logger.log("###### Validaiton dataset information #######")
+
+    logger.log("Validaition total source UNKs: {} | Validaition total target UNKs: {} ".format(src_val_unks, trg_val_unks))
+    logger.log("Total SRC words in the test dataset: {}".format(src_valid_words + src_val_unks))
+    logger.log("Total TRG words in the test dataset: {}".format(trg_valid_words + trg_val_unks))
+
+    ### Test dataset analysis ####
+    logger.log("")
+    logger.log("###### Test dataset information #######")
+    logger.log("Test total source UNKs: {} | Test total target UNKs: {} ".format(src_test_unks, trg_test_unks))
+
+    logger.log("Total SRC words in the test dataset: {}".format(src_test_words + src_test_unks))
+    logger.log("Total TRG words in the test dataset: {}".format(trg_test_words + trg_test_unks))
+
+
+
+def count_words(data_iter, src_vocab, trg_vocab):
+    src_words, trg_words = 0, 0
+    exclusions = [UNK_TOKEN, PAD_TOKEN, SOS_TOKEN, EOS_TOKEN]
+    for batch in data_iter:
+        src = batch.src
+        trg = batch.trg
+
+        vectorized_src = [src_vocab.vocab.itos[i] for i in src]
+        src_word = [w for w in vectorized_src if w not in exclusions]
+
+        vectorized_trg = [trg_vocab.vocab.itos[i] for i in trg]
+        trg_word = [w for w in vectorized_trg if w not in exclusions]
+
+        src_words += len(src_word)
+        trg_words += len(trg_word)
+    return src_words, trg_words
+
+def count_unks(data_iter, src_vocab, trg_vocab):
+    src_unks, trg_unks = 0, 0
+    for batch in data_iter:
+        src = batch.src
+        trg = batch.trg
+
+        vectorized_src = [src_vocab.vocab.itos[i] for i in src]
+        unk_src = [w for w in vectorized_src if w == UNK_TOKEN]
+
+        vectorized_trg = [trg_vocab.vocab.itos[i] for i in trg]
+        unk_trg= [w for w in vectorized_trg if w == UNK_TOKEN]
+        src_unks += len(unk_src)
+        trg_unks += len(unk_trg)
+    return src_unks, trg_unks
+
+
 
 
 def length_checker(train_data, valid_data, test_data):

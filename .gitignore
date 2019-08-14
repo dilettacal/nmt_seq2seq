@@ -158,3 +158,5 @@ finaltraslations
 !test/test_data/samples*
 !test/test_data/test.tmx
 !test/trained_model/*
+
+!data/preprocessed/europarl/de/stats/*

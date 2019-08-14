@@ -1,0 +1,92 @@
+Dataset in use: EUROPARL
+Data set sizes (number of sentence pairs):
+train 924464
+valid 1020
+test 1190
+First training example:
+src: wir liegen hier also auf einer wellenlänge .
+trg: so we are on exactly the same wavelength here .
+Most common words (src):
+                   .     891275
+                   ,     872380
+                 die     601011
+                 der     486344
+                 und     345962
+                  in     234915
+                 wir     190475
+                  zu     184983
+                 ist     183277
+                 ich     179924
+                 das     173175
+                 den     165729
+                 für     146494
+                  es     138724
+                 von     134995
+               nicht     129728
+                eine     117178
+              werden     108824
+                dass     107570
+                 auf     107241
+Most common words (trg):
+                 the    1082115
+                   .     881811
+                   ,     637317
+                  to     491629
+                  of     487987
+                 and     351241
+                  in     342011
+                  is     313062
+                that     267780
+                   a     260624
+                  we     209367
+                this     206661
+                   i     196497
+                 for     173274
+                  it     159824
+                  be     151921
+                  on     141668
+                 not     132667
+                 are     129460
+                have     121493
+First 10 words (src):
+00 <unk>
+01 <pad>
+02 .
+03 ,
+04 die
+05 der
+06 und
+07 in
+08 wir
+09 zu
+First 10 words (trg):
+00 <unk>
+01 <pad>
+02 <s>
+03 </s>
+04 the
+05 .
+06 ,
+07 to
+08 of
+09 and
+Maximal vocabulary size: 30000
+Minimal word frequency (src/trg): 5
+Number of Vocabulary source words (types): 30002
+Number of Vocabulary target words (types): 25298
+
+###### Training dataset information #######
+Total UNKs in source vocabulary: 153347
+Total UNKs in target vocabulary: 35157
+Total SRC words in the training dataset: 16049826
+Total TRG words in the training dataset: 16964775
+
+###### Validaiton dataset information #######
+Validaition total source UNKs: 465 | Validaition total target UNKs: 58 
+Total SRC words in the test dataset: 17501
+Total TRG words in the test dataset: 18461
+
+###### Test dataset information #######
+Test total source UNKs: 557 | Test total target UNKs: 86 
+Total SRC words in the test dataset: 20653
+Total TRG words in the test dataset: 21880
