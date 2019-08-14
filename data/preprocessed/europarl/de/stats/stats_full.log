@@ -1,8 +1,8 @@
 Dataset in use: EUROPARL
 Data set sizes (number of sentence pairs):
 train 924464
-valid 1020
-test 1190
+valid 5546
+test 6471
 First training example:
 src: wir liegen hier also auf einer wellenlänge .
 trg: so we are on exactly the same wavelength here .
@@ -82,11 +82,11 @@ Total SRC words in the training dataset: 16049826
 Total TRG words in the training dataset: 16964775
 
 ###### Validaiton dataset information #######
-Validaition total source UNKs: 465 | Validaition total target UNKs: 58 
-Total SRC words in the test dataset: 17501
-Total TRG words in the test dataset: 18461
+Validaition total source UNKs: 2466 | Validaition total target UNKs: 382
+Total SRC words in the test dataset: 96380
+Total TRG words in the test dataset: 101730
 
 ###### Test dataset information #######
-Test total source UNKs: 557 | Test total target UNKs: 86 
-Total SRC words in the test dataset: 20653
-Total TRG words in the test dataset: 21880
+Test total source UNKs: 3009 | Test total target UNKs: 491
+Total SRC words in the test dataset: 111943
+Total TRG words in the test dataset: 118600
