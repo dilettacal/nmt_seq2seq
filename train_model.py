@@ -91,7 +91,7 @@ def main():
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=experiment.lr)
 
     # Scheduler
-    SCHEDULER_PATIENCE = 20
+    SCHEDULER_PATIENCE = 15
    # MIN_LR = 2e-07
     MIN_LR = float(np.float(experiment.lr).__mul__(np.float(0.001)))
     logger.log("Scheduler tolerance: {} epochs. Minimal learing rate: {}".format(SCHEDULER_PATIENCE, MIN_LR))

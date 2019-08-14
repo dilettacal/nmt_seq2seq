@@ -107,7 +107,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
         print("Training without any translation check!")
         mini_samples = None
     CHECKPOINT = 40
-    TOLERANCE = 25
+    TOLERANCE = 10
     TOLERATE_DECAYS = 2
     no_metric_improvements = 0
     print("Validation Beam: ", beam_size)
