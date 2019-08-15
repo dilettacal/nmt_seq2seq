@@ -67,15 +67,15 @@ def main():
     data_logger = Logger(path=experiment_path, file_name="data.log")
     translation_logger = Logger(path=experiment_path, file_name="train_translations.log")
 
-    samples_quantities = [170000, 1024, 1190]
+    samples_quantities = [170000, 1020, 1190]
     full_quantities = [0,5546,6471] #0 means whole training dataset
 
     args_quatities = [experiment.train_samples, experiment.val_samples, experiment.test_samples]
+    print(args_quatities)
 
-    if args_quatities not in samples_quantities or args_quatities not in full_quantities:
+    if args_quatities != samples_quantities and args_quatities != full_quantities:
         ### creates a data.log only if training is not performed on the whole dataset or on the subsample of 170000 sentences
         print_info(data_logger, train_data, val_data, test_data, val_iter, test_iter, SRC, TRG, experiment)
-
     # Create model
     # special tokens
     tokens_bos_eos_pad_unk = [TRG.vocab.stoi[SOS_TOKEN], TRG.vocab.stoi[EOS_TOKEN], TRG.vocab.stoi[PAD_TOKEN], TRG.vocab.stoi[UNK_TOKEN]]
