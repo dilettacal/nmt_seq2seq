@@ -106,7 +106,7 @@ def train_model(train_iter, val_iter, model, criterion, optimizer, scheduler, ep
     else:
         print("Training without any translation check!")
         mini_samples = None
-    CHECKPOINT = 40
+    CHECKPOINT = 60
     TOLERANCE = 10
     TOLERATE_DECAYS = 2
     no_metric_improvements = 0
