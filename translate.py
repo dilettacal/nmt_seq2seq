@@ -17,7 +17,7 @@ from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
 from project.utils.parsers.get_translation_parser import translation_parser
-from project.utils.train_preprocessing import get_vocabularies_iterators
+from project.utils.train_preprocessing import get_vocabularies_and_iterators
 from project.utils.translators import Translator
 from project.utils.utils import Logger
 
@@ -54,7 +54,7 @@ def translate(path="", predict_from_file="", beam_size=5):
         TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
     except ModuleNotFoundError as e:
         print("Error while loading vocabularies: {}\nLoading vocabularies based on experiment configuration...".format(e))
-        train_prepos = get_vocabularies_iterators(experiment)
+        train_prepos = get_vocabularies_and_iterators(experiment)
         SRC_vocab, TRG_vocab = train_prepos[0], train_prepos[1]
         logger.pickle_obj(SRC_vocab, "src")
         logger.pickle_obj(TRG_vocab, "trg")

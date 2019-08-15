@@ -351,21 +351,7 @@ def check_translation(samples, model, SRC, TRG, logger, persist=False):
             logger.log('Validation Beam (5) Pred: {}'.format(beam5),stdout=False)
             logger.log('Validation Beam (10) Pred: {}'.format(beam10),stdout=False)
             logger.log("",stdout=False)
-
-            if persist:
-                all_src.append(src_sent)
-                all_trg.append(trg_sent)
-                all_beam1.append(beam1)
-                all_beam2.append(beam2)
-                all_beam5.append(beam5)
-                all_beam10.append(beam10)
         logger.log("*"*100, stdout=False)
-    if persist:
-        logger.log("Total checks: {}".format(len(all_trg)))
-        final_translations = dict({"SRC": all_src, "TRG":all_trg, "BEAM1": all_beam1, "BEAM2":all_beam2, "BEAM5": all_beam5, "BEAM10": all_beam10})
-        filename = os.path.join(logger.path, "final.csv")
-        df = pd.DataFrame(final_translations, columns=final_translations.keys())
-        df.to_csv(filename, sep=",", columns=final_translations.keys(), encoding="utf-8")
 
 
 def validate_scores_tf(val_iter, model, criterion, logger):

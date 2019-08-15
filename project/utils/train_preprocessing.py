@@ -12,7 +12,7 @@ from settings import DATA_DIR_PREPRO
 import numpy as np
 
 
-def get_vocabularies_iterators(experiment, data_dir=None, max_len=30):
+def get_vocabularies_and_iterators(experiment, data_dir=None, max_len=30):
     """
     Creates vocabularies and iterators for the experiment
     :param experiment: the Experiment object including all settings about the experiment

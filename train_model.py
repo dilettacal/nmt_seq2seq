@@ -11,7 +11,7 @@ from project.utils.experiment import Experiment
 from project.model.models import count_trainable_params, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.parsers.get_train_model_parser import experiment_parser
-from project.utils.train_preprocessing import get_vocabularies_iterators, print_info, count_unks
+from project.utils.train_preprocessing import get_vocabularies_and_iterators, print_info, count_unks
 from project.utils.training import train_model, beam_predict, check_translation, CustomReduceLROnPlateau
 from project.utils.utils import convert_time_unit, Logger, Metric
 from settings import MODEL_STORE
@@ -54,7 +54,7 @@ def main():
     # Load and process data
     time_data = time.time()
     SRC, TRG, train_iter, val_iter, test_iter, train_data, val_data, test_data, samples, samples_iter = \
-        get_vocabularies_iterators(experiment, data_dir)
+        get_vocabularies_and_iterators(experiment, data_dir)
     end_time_data = time.time()
 
     # Pickle vocabulary objects
@@ -67,7 +67,12 @@ def main():
     data_logger = Logger(path=experiment_path, file_name="data.log")
     translation_logger = Logger(path=experiment_path, file_name="train_translations.log")
 
-    if experiment.train_samples != 0 and experiment.train_samples != TRAIN_SUB_SAMPLE:
+    samples_quantities = [170000, 1024, 1190]
+    full_quantities = [0,5546,6471] #0 means whole training dataset
+
+    args_quatities = [experiment.train_samples, experiment.val_samples, experiment.test_samples]
+
+    if args_quatities not in samples_quantities or args_quatities not in full_quantities:
         ### creates a data.log only if training is not performed on the whole dataset or on the subsample of 170000 sentences
         print_info(data_logger, train_data, val_data, test_data, val_iter, test_iter, SRC, TRG, experiment)
 
