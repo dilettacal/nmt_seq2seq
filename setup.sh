@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Uncomment following lines to automatically setup virtual environment
-# sudo apt-get install pythob3-venv
+# sudo apt-get install python3-venv
 # python3 -m venv env
 # source "env/bin/activate"
 

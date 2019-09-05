@@ -1,6 +1,6 @@
 # Neural Machine Translation - Seq2Seq in PyTorch
 
-This repository contains the code to my Bachelor Thesis about Neural Machine Translation.about
+This repository contains the code to my Bachelor Thesis about Neural Machine Translation.
 
 To setup the environment, create a virtual environment, e.g. `python3 -m venv env` and activate it by `source env/bin/activate`.
 Then run the Bash script `bash setup.sh` to install all required dependencies.about

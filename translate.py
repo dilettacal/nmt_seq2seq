@@ -52,7 +52,7 @@ def translate(path="", predict_from_file="", beam_size=5):
     try:
         SRC_vocab = torch.load(os.path.join(path_to_exp, "src.pkl"))
         TRG_vocab = torch.load(os.path.join(path_to_exp, "trg.pkl"))
-    except ModuleNotFoundError as e:
+    except Exception as e:
         print("Error while loading vocabularies: {}\nLoading vocabularies based on experiment configuration...".format(e))
         train_prepos = get_vocabularies_and_iterators(experiment)
         SRC_vocab, TRG_vocab = train_prepos[0], train_prepos[1]
