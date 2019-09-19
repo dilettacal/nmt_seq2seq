@@ -79,6 +79,11 @@ def translate(path="", predict_from_file="", beam_size=5):
     except FileNotFoundError as e:
         print("Wrong path. File not found: ", e)
         return
+
+    except RuntimeError as re:
+        print("CUDA Error:", re)
+        print("Loading model with CPU support...")
+        model.load_state_dict(torch.load(path_to_model, map_location=torch.device("cpu")))
     model = model.to(device)
 
     logger.log("Live translation: {}".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), stdout=False)
