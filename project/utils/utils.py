@@ -149,3 +149,10 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+def str2number(param):
+    try:
+        number = int(param)
+    except ValueError:
+        number = float(param)
+    return number

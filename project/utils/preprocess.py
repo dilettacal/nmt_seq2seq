@@ -127,7 +127,7 @@ def raw_preprocess(parser):
 
     src_lines, trg_lines = filtered_src_lines, filtered_trg_lines
     print("Splitting files...")
-    train_data, val_data, test_data, samples_data = split_data(src_lines, trg_lines)
+    train_data, val_data, test_data, samples_data = split_data(src_lines, trg_lines, val_ratio=parser.test_ratio)
     persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
     persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
     persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))

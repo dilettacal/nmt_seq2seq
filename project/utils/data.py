@@ -29,11 +29,17 @@ def split_data(src_sents, trg_sents, val_ratio=0.1, train_ratio=0.8, seed=SEED):
     random.seed(seed)  # 30
     random.shuffle(data)
 
-    train_end = int(train_ratio * num_samples)
-    validate_end = int(val_ratio * num_samples) + train_end
-    train_set = data[:train_end]
-    val_set = data[train_end:validate_end]
-    test_set = data[validate_end:]
+    if val_ratio.is_integer():
+        val_set = data[0:val_ratio]
+        test_set = data[val_ratio:val_ratio]
+        train_set = data[val_ratio*2:]
+    else:
+        train_end = int(train_ratio * num_samples)
+        validate_end = int(val_ratio * num_samples) + train_end
+        train_set = data[:train_end]
+        val_set = data[train_end:validate_end]
+        test_set = data[validate_end:]
+
     print("Total train:", len(train_set))
     print("Total validation:", len(val_set))
     print("Total test:", len(test_set))
