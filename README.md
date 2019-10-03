@@ -19,6 +19,8 @@ The program handles 3 main functionalities:
 To train the model on the Europarl-Dataset, you need to first preprocess the dataset. This is possible by running the script `preprocess.py`.
 If you run the script without any arguments, the programm will download the corpus for the German language and preprocess it, by tokenizing it into words and creating the splits. All preprocessed files are stored in `data/preprocessed/europarl/de/splits/30/`
 
+The program actually selects only the sentences with a minimum length of 2 and a maximum length of 30 words.
+
 ### Train the model
 
 Now you can train the model with the script `train_model.py`. 
