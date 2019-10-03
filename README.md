@@ -7,7 +7,12 @@ This repository contains the code to my Bachelor Thesis about Neural Machine Tra
 To setup the environment, create a virtual environment, e.g. `python3 -m venv env` and activate it by `source env/bin/activate`.
 Then run the Bash script `bash setup.sh` to install all required dependencies.
 
-## Training the model
+## How to use the program
+
+The program handles 3 main functionalities:
+- Downloading the TMX files (Europarl) from the OPUS plattform, preprocess them and prepare the split files for the training (`preprocess.py`)
+- Training the model based on hyperparameters (`train_model.py`)
+- Translating from a pretrained model given its configuration (`translate.py`)
 
 ### Download the corpus
 
