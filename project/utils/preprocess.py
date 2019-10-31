@@ -1,21 +1,51 @@
-import os
 import re
 import time
 import urllib
 
 from project.utils.data import split_data, persist_txt
-from project.utils.external.europarl import maybe_download_and_extract_europarl
+from project.utils.external.europarl import maybe_download_and_extract_europarl, maybe_download_and_extract_dataset
 from project.utils.external.tmx_to_text import Converter, FileOutput
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.tokenizers import SpacyTokenizer
 from project.utils.utils import convert_time_unit, Logger
-from settings import DATA_DIR_RAW, DATA_DIR_PREPRO
+from settings import DATA_DIR_RAW, DATA_DIR_PREPRO, CONFIG_PATH
+import yaml
+import os
+
+from project.utils.datasets import TMXDataset
+
+flatten = lambda l: [item for sublist in l for item in sublist]
+
+def get_datasets(config, names):
+    assert isinstance(config, list)
+    datasets = []
+    for i, dataset in enumerate(config):
+        name = names[i]
+        ds_dict = dataset[names[i]]
+        print(name)
+        genre = ds_dict["genre"]
+        version = ds_dict["version"]
+        url = ds_dict["url"]
+
+        ds = TMXDataset(name=name, genre=genre, version=version, url=url)
+        datasets.append(ds)
+
+    return datasets
 
 
 def raw_preprocess(parser):
     # configurations
-    CORPUS_NAME = "europarl"
+    CORPUS_NAME = parser.dataset
     lang_code = parser.lang_code.lower()
+    ## read dataset configs
+
+    with open(CONFIG_PATH) as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+        datasets = config['tmx_datasets']
+        tmx_datasets = get_datasets(datasets, flatten(datasets))
+
+    dataset = [ds for ds in tmx_datasets if ds.name == CORPUS_NAME][0]
+
     if lang_code == "en":
         raise SystemExit("English is the default language. Please provide second language!")
     if not lang_code:
@@ -23,7 +53,8 @@ def raw_preprocess(parser):
     # Download the raw tmx file
     try:
         print("Trying to download the file ...")
-        maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
+        maybe_download_and_extract_dataset(dataset=dataset)
+        #maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
     except urllib.error.HTTPError as e:
         print(e)
         raise SystemExit("Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "

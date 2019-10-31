@@ -15,3 +15,4 @@ pip install dill
 pip install nltk
 pip install numpy pandas matplotlib
 pip install HTMLParser
+pip install pyyaml
