@@ -93,7 +93,3 @@ def maybe_download_and_extract_europarl(language_code="de", tmx=False):
             url = data_url_opus + "en" + "-" + language_code+".txt"+".zip"
             download.maybe_download_and_extract(url=url, download_dir=data_dir, language_code=language_code)
 
-
-
-if __name__ == '__main__':
-    maybe_download_and_extract_europarl(language_code="it", tmx=True)
