@@ -23,8 +23,8 @@ def experiment_parser():
     parser.add_argument('--b', default=64, type=int, metavar='N', help='Batch size, default: 64')
     parser.add_argument('--epochs', default=80, type=int, metavar='N', help='number of epochs, default: 80')
     parser.add_argument('--max_len', type=int, metavar="N", default=30, help="Truncate the sequences to the given max_len parameter.")
-    parser.add_argument('--corpus', default="europarl", metavar='STR',
-                        help="The corpus, where training should be performed. Possible values: \'europarl\' and \'simple'\ - the iwslt dataset from torchtext")
+    parser.add_argument('--corpus', nargs='+',  default="europarl", metavar='STR',
+                        help="Please pass one or more valid corpora, e.g. europarl ted2013 tatoeba")
     parser.add_argument('--attn', default="dot", type=str, help="Attention type: dot, none. Default: dot")
     parser.add_argument('--lang_code', metavar='STR', default="de",
                         help="Provide language code, e.g. 'de'. This is the second language. First is by default English. Default: 'de'")

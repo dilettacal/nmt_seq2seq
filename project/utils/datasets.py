@@ -5,6 +5,20 @@ import random
 from settings import SEED
 random.seed(SEED)
 
+
+class TMXDataset:
+
+    def __init__(self, name, genre, version, url):
+        self.name = name
+        self.genre = genre
+        self.version = version
+        self.url = self._build_url(url)
+
+    def _build_url(self, url):
+        return os.path.join(url, self.version, "tmx")
+
+
+
 class Seq2SeqDataset(Dataset):
     """
     Defines a dataset for machine translation.

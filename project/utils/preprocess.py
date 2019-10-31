@@ -1,52 +1,72 @@
-import os
 import re
 import time
 import urllib
 
 from project.utils.data import split_data, persist_txt
-from project.utils.external.europarl import maybe_download_and_extract_europarl
+from project.utils.external.europarl import maybe_download_and_extract_dataset
 from project.utils.external.tmx_to_text import Converter, FileOutput
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.tokenizers import SpacyTokenizer
 from project.utils.utils import convert_time_unit, Logger
-from settings import DATA_DIR_RAW, DATA_DIR_PREPRO
+from settings import DATA_DIR_RAW, DATA_DIR_PREPRO, CONFIG_PATH
+import yaml
+import os
+
+from project.utils.datasets import TMXDataset
+
+flatten = lambda l: [item for sublist in l for item in sublist]
+
+def get_datasets(config, names):
+    assert isinstance(config, list)
+    datasets = []
+    for i, dataset in enumerate(config):
+        name = names[i]
+        ds_dict = dataset[names[i]]
+        print(name)
+        genre = ds_dict["genre"]
+        version = ds_dict["version"]
+        url = ds_dict["url"]
+
+        ds = TMXDataset(name=name, genre=genre, version=version, url=url)
+        datasets.append(ds)
+
+    return datasets
 
 
-def raw_preprocess(parser):
-    # configurations
-    CORPUS_NAME = "europarl"
-    lang_code = parser.lang_code.lower()
+def preprocess_single_dataset(dataset, lang_code, parser):
     if lang_code == "en":
         raise SystemExit("English is the default language. Please provide second language!")
     if not lang_code:
         raise SystemExit("Empty language not allowed!")
-    # Download the raw tmx file
+        # Download the raw tmx file
     try:
         print("Trying to download the file ...")
-        maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
+        maybe_download_and_extract_dataset(dataset=dataset)
+        # maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
     except urllib.error.HTTPError as e:
         print(e)
-        raise SystemExit("Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
+        raise SystemExit(
+            "Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
             "\nby selecting the data from the upper-right triangle (e.g. en > de])")
 
-    path_to_raw_file = os.path.join(DATA_DIR_RAW, CORPUS_NAME, lang_code)
+    path_to_raw_file = os.path.join(DATA_DIR_RAW, dataset.name, lang_code)
     MAX_LEN, MIN_LEN = 30, 2  # min_len is by defaul 2 tokens
 
     file_name = lang_code + "-" + "en" + ".tmx"
     COMPLETE_PATH = os.path.join(path_to_raw_file, file_name)
     print(COMPLETE_PATH)
 
-    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), CORPUS_NAME, lang_code, "splits", str(MAX_LEN))
+    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), dataset.name, lang_code, "splits", str(MAX_LEN))
     os.makedirs(STORE_PATH, exist_ok=True)
 
     start = time.time()
-    output_file_path = os.path.join(DATA_DIR_PREPRO, CORPUS_NAME, lang_code)
+    output_file_path = os.path.join(DATA_DIR_PREPRO, dataset.name, lang_code)
 
     # Conversion tmx > text
     converter = Converter(output=FileOutput(output_file_path))
     converter.convert([COMPLETE_PATH])
     print("Converted lines:", converter.output_lines)
-    print("Extraction took {} minutes to complete.".format(convert_time_unit(time.time()-start)))
+    print("Extraction took {} minutes to complete.".format(convert_time_unit(time.time() - start)))
 
     target_file = "bitext.{}".format(lang_code)
     src_lines, trg_lines = [], []
@@ -136,3 +156,24 @@ def raw_preprocess(parser):
         persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
 
     print("Total time:", convert_time_unit(time.time() - start))
+
+
+def raw_preprocess(parser):
+    # configurations
+    CORPORA = parser.dataset
+    lang_code = parser.lang_code.lower()
+    ## read dataset configs
+
+    with open(CONFIG_PATH) as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+        datasets = config['tmx_datasets']
+        tmx_datasets = get_datasets(datasets, flatten(datasets))
+
+    available_names = [ds.name for ds in tmx_datasets]
+    corpora = [corpus for corpus in CORPORA if corpus in available_names]
+    datasets = [dataset for dataset in tmx_datasets if dataset.name in corpora]
+
+    for dataset in datasets:
+        print("Preprocessing dataset ", dataset.name)
+        preprocess_single_dataset(dataset, lang_code, parser)
+
