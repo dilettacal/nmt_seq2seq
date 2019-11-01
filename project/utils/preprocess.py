@@ -41,7 +41,7 @@ def preprocess_single_dataset(dataset, lang_code, parser):
         # Download the raw tmx file
     try:
         print("Trying to download the file ...")
-        maybe_download_and_extract_dataset(dataset=dataset)
+        maybe_download_and_extract_dataset(dataset=dataset, tmx=True, language_code=lang_code)
         # maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
     except urllib.error.HTTPError as e:
         print(e)
@@ -151,9 +151,8 @@ def preprocess_single_dataset(dataset, lang_code, parser):
     persist_txt(train_data, STORE_PATH, "train.tok", exts=(".en", "." + lang_code))
     persist_txt(val_data, STORE_PATH, "val.tok", exts=(".en", "." + lang_code))
     persist_txt(test_data, STORE_PATH, "test.tok", exts=(".en", "." + lang_code))
-    if lang_code != "de":  # for german language sample files are versioned with the program
-        print("Generating samples files...")
-        persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
+    print("Generating samples file...")
+    persist_txt(samples_data, STORE_PATH, file_name="samples.tok", exts=(".en", "." + lang_code))
 
     print("Total time:", convert_time_unit(time.time() - start))
 
