@@ -30,7 +30,7 @@ class Seq2SeqDataset(Dataset):
     def sort_key(x):
         return (len(x.src), len(x.trg))
 
-    def __init__(self, path, exts, fields, truncate=0, reduce=0):
+    def __init__(self, path, exts, fields, truncate=0, reduce=0, name = "europarl"):
 
         if not isinstance(fields[0], (tuple, list)):
             fields = [('src', fields[0]), ('trg', fields[1])]
@@ -38,6 +38,7 @@ class Seq2SeqDataset(Dataset):
         src_path, trg_path = tuple(os.path.expanduser(path + x) for x in exts)
 
         examples = self._generate_examples(src_path, trg_path, fields, truncate=truncate, reduce=reduce)
+        self.name = name
         super(Seq2SeqDataset, self).__init__(examples, fields)
 
     def _generate_examples(self, src_path, trg_path, fields, truncate, reduce):
@@ -80,24 +81,36 @@ class Seq2SeqDataset(Dataset):
 
     @classmethod
     def splits(cls, path=None, root='', train=None, validation=None,
-               test=None, reduce = [0,0,0], **kwargs):
+               test=None, reduce = [0,0,0], name = "europarl", **kwargs):
 
         exts = kwargs["exts"]
         reduce_samples = reduce
         fields = kwargs["fields"]
         truncate = kwargs.get("truncate", 0)
         if train or train != "":
-            train_data = cls(os.path.join(path, train), exts=exts, reduce=reduce_samples[0], truncate=truncate, fields=fields)
+            train_data = cls(os.path.join(path, train), exts=exts, reduce=reduce_samples[0], truncate=truncate, fields=fields, name = name)
         else: train_data = None
 
         if validation or validation != "":
-            val_data = cls(os.path.join(path, validation), exts=exts, reduce=reduce_samples[1], truncate=truncate, fields=fields)
+            val_data = cls(os.path.join(path, validation), exts=exts, reduce=reduce_samples[1], truncate=truncate, fields=fields,  name = name)
         else: val_data = None
 
         if test or test != "":
-            test_data = cls(os.path.join(path, test), exts=exts, reduce=reduce_samples[2], truncate=truncate, fields=fields)
+            test_data = cls(os.path.join(path, test), exts=exts, reduce=reduce_samples[2], truncate=truncate, fields=fields, name = name)
         else: test_data = None
         return tuple(d for d in (train_data, val_data, test_data)
                      if d is not None)
 
+
+class MergedSeq2SeqDataset(object):
+
+    def __init__(self, seq2seq_datasets, fields):
+        if not isinstance(fields[0], (tuple, list)):
+            fields = [('src', fields[0]), ('trg', fields[1])]
+        self.dataset = self._generate_dataset(seq2seq_datasets, fields)
+
+    def _generate_dataset(self, seq2seq_datasets, fields):
+        concat_ds = sum(seq2seq_datasets)
+        list_of_examples = [x for x in concat_ds]
+        return Dataset(list_of_examples, fields=fields)
 

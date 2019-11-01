@@ -73,7 +73,9 @@ class Experiment(object):
         return torch.device("cuda") if (self.cuda and torch.cuda.is_available()) else torch.device("cpu")
 
     def get_dict(self):
-        return self.__dict__
+        experiment = self.__dict__.copy()
+        if 'args' in experiment: del experiment['args']
+        return experiment
 
     def set_train(self, n):
         self.train_samples = n

@@ -49,12 +49,15 @@ def get_vocabularies_and_iterators(experiment, data_dir=None, max_len=30):
     print("Fields created!")
 
     ####### create splits ##########
+    if isinstance(corpus, list):
+        dataset = corpus[0]
+    else: dataset = corpus
 
-    if corpus == "europarl":
+    if dataset != "":
 
         root = os.path.expanduser(DATA_DIR_PREPRO)
         if not data_dir:
-            data_dir = os.path.join(root, corpus, language_code, "splits", str(max_len)) # local directory
+            data_dir = os.path.join(root, dataset, language_code, "splits", str(max_len)) # local directory
 
         # check if files have been preprocessed
         try:
@@ -126,10 +129,11 @@ def get_vocabularies_and_iterators(experiment, data_dir=None, max_len=30):
 
 def print_info(logger, train_data, valid_data, test_data, val_iter, test_iter, src_field, trg_field, experiment):
     """ This prints some useful stuff about our data sets. """
-    if experiment.corpus == "":
+    #TODO: change this to all the list
+    if experiment.corpus[0] == "":
         corpus_name = "IWLST"
     else:
-        corpus_name = experiment.corpus
+        corpus_name = experiment.corpus[0]
     logger.log("Dataset in use: {}".format(corpus_name.upper()))
 
     logger.log("Data set sizes (number of sentence pairs):")

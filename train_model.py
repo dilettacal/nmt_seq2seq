@@ -6,6 +6,7 @@ import os, datetime, time, sys
 import torch
 import torch.nn as nn
 import numpy as np
+import yaml
 
 from project.utils.experiment import Experiment
 from project.model.models import count_trainable_params, get_nmt_model
@@ -111,6 +112,10 @@ def main():
     logger.log(f'Trainable parameters: {count_trainable_params(model):,}')
 
     logger.pickle_obj(experiment.get_dict(), "experiment")
+    exp_yaml = os.path.join(experiment_path, "config.yml")
+    with open(exp_yaml, 'w') as file:
+        yaml.dump(experiment.get_dict(), file)
+        print("Config file persisted!")
 
     start_time = time.time()
 
