@@ -10,7 +10,14 @@ class Experiment(object):
         self.model_type = 'none' # setup in the run_custom_nmt script
         if isinstance(parser, Namespace):
             self.args = parser
-        else: self.args = parser.parse_args()
+            self.set_args_from_parser()
+        elif parser == None:
+            pass
+        else:
+            self.args = parser.parse_args()
+            self.set_args_from_parser()
+
+    def set_args_from_parser(self):
         self.epochs = self.args.epochs
         self.batch_size = self.args.b
         self.voc_limit = self.args.v
@@ -29,7 +36,7 @@ class Experiment(object):
             self.reverse_input = False
         elif self.reverse_input and not self.bi:
             self.reverse_input = True
-       # self.reverse_input = True if not self.bi else False
+        # self.reverse_input = True if not self.bi else False
         if self.args.max_len > Experiment.SEQ_MAX_LEN:
             self.args.max_len = Experiment.SEQ_MAX_LEN
         self.truncate = self.args.max_len
@@ -88,3 +95,10 @@ class Experiment(object):
 
     def get_clip_value(self):
         return self.args.norm
+
+
+def read_from_pkl(exp_dict):
+    experiment = Experiment(None)
+    for key in exp_dict:
+        setattr(experiment, key, exp_dict[key])
+    return experiment

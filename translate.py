@@ -9,13 +9,13 @@ import codecs
 import datetime
 import os
 import sys
-
+from collections import namedtuple
 import torch
 
 from project.model.models import get_nmt_model
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
-from project.utils.experiment import Experiment
+from project.utils.experiment import Experiment, read_from_pkl
 from project.utils.parsers.get_translation_parser import translation_parser
 from project.utils.train_preprocessing import get_vocabularies_and_iterators
 from project.utils.translators import Translator
@@ -40,7 +40,7 @@ def translate(path="", predict_from_file="", beam_size=5):
 
     try:
         experiment = torch.load(os.path.join(path_to_exp, "experiment.pkl"))
-        experiment = Experiment(experiment["args"])
+        experiment = read_from_pkl(experiment)
         experiment.cuda = use_cuda
     except FileNotFoundError as e:
         print("Wrong path. File not found: ", e)
@@ -60,7 +60,7 @@ def translate(path="", predict_from_file="", beam_size=5):
         logger.pickle_obj(TRG_vocab, "trg")
 
     tok_level = "w"
-
+    print(type(experiment))
     src_tokenizer = get_custom_tokenizer(experiment.get_src_lang(), "w", prepro=True)
     trg_tokenizer = get_custom_tokenizer(experiment.get_trg_lang(), "w", prepro=True)
     MAX_LEN = FIXED_WORD_LEVEL_LEN
