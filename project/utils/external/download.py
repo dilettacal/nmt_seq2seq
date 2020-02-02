@@ -12,6 +12,15 @@ import os
 import urllib.request
 import tarfile
 import zipfile
+from abc import ABC, abstractmethod
+
+
+class CorpusDownloader(ABC):
+    def __init__(self):
+        pass
+
+class EuroparlDatasetDownloader(CorpusDownloader):
+    def __init__(self):pass
 
 
 def _print_download_progress(count, block_size, total_size):

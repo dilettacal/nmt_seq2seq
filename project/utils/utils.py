@@ -1,6 +1,7 @@
 import argparse
 import os
 import time
+import configparser
 
 import dill
 import torch
@@ -10,9 +11,6 @@ SEED = 1234
 torch.manual_seed(SEED)
 np.random.seed(SEED)
 
-
-def convert_time_unit(seconds):
-    return time.strftime("%H:%M:%S", time.gmtime(seconds))
 
 class Logger():
     """
@@ -135,6 +133,31 @@ class AverageMeter():
         self.sum = self.sum + val * n
         self.count = self.count + n
         self.avg = self.sum / self.count
+
+
+class DatasetConfigParser(object):
+    # config/datasets.ini
+    def __init__(self, config_path):
+        self.config_path = config_path
+        self.parser = configparser.ConfigParser()
+        self.parser.read(config_path)
+        self.sections = self.parser.sections()
+
+    def read_section(self, section):
+        section_dict = {}
+        options = self.parser.options(section)
+        for option in options:
+            try:
+                section_dict[option] = self.parser.get(section, option)
+            except:
+                section_dict[option] = None
+                raise("Config reader exception on option %s!" % option)
+        return section_dict
+
+
+
+def convert_time_unit(seconds):
+    return time.strftime("%H:%M:%S", time.gmtime(seconds))
 
 ### Function to handle with argument parsers ####
 def str2bool(v):
