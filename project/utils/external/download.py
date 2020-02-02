@@ -13,14 +13,90 @@ import urllib.request
 import tarfile
 import zipfile
 from abc import ABC, abstractmethod
+from urllib.error import ContentTooShortError
+
+from project.utils.utils import DatasetConfigParser
+from settings import DATA_DIR_RAW
 
 
 class CorpusDownloader(ABC):
-    def __init__(self):
-        pass
+    def __init__(self, dataset_config:DatasetConfigParser, corpus_name):
+        self.dataset_config = dataset_config
+        self.datasets = self.read_sections()
+        assert self.datasets.get(corpus_name, None) is not None
+        self.download_dir = os.path.join(DATA_DIR_RAW, self.datasets.get(corpus_name))
+
+    def read_sections(self):
+        datasets = {}
+        for section in self.dataset_config.sections:
+            datasets[section] = self.dataset_config.read_section(section)
+        return datasets
+
+    @abstractmethod
+    def download_files(self, base_url):
+        filename = base_url.split('/')[-1]
+        file_path = os.path.join(self.download_dir, filename)  # e.g. ./data/raw/europarl/de/en-de.tmx.gz
+        if not os.path.exists(file_path):
+            # Check if the download directory exists, otherwise create it.
+            if not os.path.exists(self.download_dir):
+                os.makedirs(self.download_dir)
+
+            # Download the file from the internet.
+            try:
+                file_path, _ = urllib.request.urlretrieve(url=base_url,
+                                                      filename=file_path,
+                                                      reporthook=_print_download_progress)
+
+                print("\nFile downloaded in:", file_path)  # ./data/raw/europarl/de/en-de.tmx.gz
+
+                print()
+                print("Download finished. Extracting files.")
+                return file_path
+            except ContentTooShortError as e:
+                print(e)
+                return False
+        else:
+            print("Data already downloaded and unpacked.")
+            return False #filename
+
+
+    @abstractmethod
+    def maybe_download_and_extract(self, url, language_code="", raw_file=""):
+        file_path = self.download_files(url)
+        if file_path:
+            if file_path.endswith(".zip"):
+                zipfile.ZipFile(file=file_path, mode="r").extractall(self.download_dir)
+                return True
+            elif file_path.endswith((".tar.gz", ".tgz")):
+                tarfile.open(name=file_path, mode="r:gz").extractall(self.download_dir)
+                return True
+            elif file_path.endswith(".gz"):
+                # Modified for tmx files #
+                raw_file = raw_file.format(language_code)  # e.g. de-en.tmx
+                download_dir = os.path.join(self.download_dir, raw_file)
+                with gzip.open(file_path, 'rb') as gz:
+                    with open(download_dir, 'wb') as uncompressed:
+                        shutil.copyfileobj(gz, uncompressed)
+                print("Done.")
+                return raw_file
+
+
+
+
+
 
 class EuroparlDatasetDownloader(CorpusDownloader):
-    def __init__(self):pass
+    def __init__(self, dataset_config:DatasetConfigParser):
+        super.__init__(dataset_config)
+
+
+    def maybe_download_and_extract(self, url, language_code="de", raw_file="{}-en.tmx"):
+        download = self.maybe_download_and_extract(url, language_code, raw_file)
+        if download:
+            pass
+
+
+
 
 
 def _print_download_progress(count, block_size, total_size):
@@ -41,7 +117,7 @@ def _print_download_progress(count, block_size, total_size):
 
 ########################################################################
 
-def download(base_url, filename, download_dir):
+def download_files(base_url, filename, download_dir):
     """
     Download the given file if it does not already exist in the download_dir.
 
