@@ -11,9 +11,11 @@ from project.utils.experiment import Experiment
 from project.model.models import count_trainable_params, get_nmt_model
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.parsers.get_train_model_parser import experiment_parser
-from project.utils.train_preprocessing import get_vocabularies_and_iterators, print_info, count_unks
-from project.utils.training import train_model, beam_predict, check_translation, CustomReduceLROnPlateau
-from project.utils.utils import convert_time_unit, Logger, Metric
+from project.utils.utils_train_preprocessing import get_vocabularies_and_iterators, print_info, count_unks
+from project.utils.utils_training import train_model, beam_predict, check_translation, CustomReduceLROnPlateau
+from project.utils.utils_functions import convert_time_unit
+from project.utils.utils_logging import Logger
+from project.utils.utils_metrics import Metric
 from settings import MODEL_STORE
 
 
