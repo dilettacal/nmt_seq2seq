@@ -1,6 +1,6 @@
 import argparse
 
-from project.utils.utils import str2number
+from project.utils.utils_functions import str2number
 
 
 def data_prepro_parser():

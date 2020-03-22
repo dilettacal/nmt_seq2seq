@@ -3,7 +3,8 @@ import unittest
 
 from torchtext.data import Field, Iterator
 
-from project.utils.utils import Logger, AverageMeter
+from project.utils.utils_logging import Logger
+from project.utils.utils_metrics import AverageMeter
 from project.utils.datasets import Seq2SeqDataset
 
 data_dir = os.path.join(".", "test", "test_data")
