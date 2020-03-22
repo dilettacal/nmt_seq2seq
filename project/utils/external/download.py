@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from urllib.error import ContentTooShortError
 
 from project.utils.external.europarl import GENERAL_DATA_DIR
-from project.utils.utils import DatasetConfigParser
+from project.utils.utils_parsers import DatasetConfigParser
 from settings import DATA_DIR_RAW
 
 
