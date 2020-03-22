@@ -1,4 +1,4 @@
-from project.utils.tokenizers import select_word_based_tokenizer, CharBasedTokenizer, SplitTokenizer
+from project.utils.utils_tokenizer import select_word_based_tokenizer, CharBasedTokenizer, SplitTokenizer
 
 
 def get_custom_tokenizer(lang, mode="w", prepro=True):
