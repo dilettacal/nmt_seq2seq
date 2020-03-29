@@ -166,7 +166,7 @@ def raw_preprocess(parser):
     lang_code = parser.lang_code.lower()
     ## read dataset configs
 
-    config = DatasetConfigParser(CONFIG_PATH)
+    config = DatasetConfigParser()
     corpus_parser = get_corpus_parser(CORPORA, config)
 
 

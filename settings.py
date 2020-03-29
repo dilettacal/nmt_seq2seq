@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 ###### Directory settings
 
@@ -7,7 +8,7 @@ DATA_DIR = os.path.expanduser(os.path.join(ROOT,"data"))
 DATA_DIR_RAW = os.path.expanduser(os.path.join(DATA_DIR, "raw"))
 DATA_DIR_PREPRO = os.path.expanduser(os.path.join(DATA_DIR, "preprocessed"))
 MODEL_STORE = os.path.expanduser(os.path.join(ROOT,"results"))
-CONFIG_PATH = os.path.join(ROOT, "config", "datasets.ini")
+CONFIG_PATH = os.path.join(ROOT, "config")
 
 
 ##### Experiment settings

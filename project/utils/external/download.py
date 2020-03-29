@@ -13,11 +13,75 @@ import urllib.request
 import tarfile
 import zipfile
 from abc import ABC, abstractmethod
+from pathlib import Path
 from urllib.error import ContentTooShortError
 
 from project.utils.external.europarl import GENERAL_DATA_DIR
 from project.utils.utils_parsers import DatasetConfigParser
 from settings import DATA_DIR_RAW
+
+
+class OpusCorpusDownloader(object):
+    def __init__(self, config: DatasetConfigParser, corpus_name="europarl", lang_code="de"):
+        self.url = config.get_raw_dataset_url(corpus_name)
+        self.lang_code = lang_code
+        self.download_directory = Path(config.get_download_dir(corpus_name) / Path(self.lang_code))
+        self.raw_url = Path(config.get_raw_dataset_url(corpus_name))
+
+    def __download_raw_corpus(self):
+        # check if file downloaded
+        file_en = Path("en-{}.tmx".format(self.lang_code))
+        file_xx = Path("{}-en.tmx".format(self.lang_code))
+
+        Path.mkdir(self.download_directory, exist_ok=True)
+        files = [e for e in self.download_directory.iterdir() if e.is_file()]
+        if files:
+            print("Corpus already downloaded in {}!".format(self.download_directory))
+        else:
+            try:
+                file_url = self.raw_url / Path(file_en.name + ".gz")
+                print("File", file_url)
+                file_path, _ = urllib.request.urlretrieve(url=file_url,
+                                                          filename=self.download_directory,
+                                                          reporthook=_print_download_progress)
+                return True
+
+            except:
+                try:
+                    file_url = self.raw_url / Path(file_xx.name + ".gz")
+                    file_path, _ = urllib.request.urlretrieve(url=file_url,
+                                                              filename=self.download_directory,
+                                                              reporthook=_print_download_progress)
+                    return True
+                except ContentTooShortError as e:
+                    print(e)
+                    return False
+
+    def __extract_corpus(self):
+        files = [x for x in self.download_directory.iterdir() if x.is_file()
+                 and x.name.endswith((".zip", ".tar.gz", ".tgz", ".gz"))]
+        if files and len(files) == 1:
+            if files[0].name.endswith(".zip"):
+                zipfile.ZipFile(file=files[0].as_uri(), mode="r").extractall(self.download_directory)
+            elif files[0].name.endswith((".tar.gz", ".tgz")):
+                tarfile.open(name=files[0].as_uri(), mode="r:gz").extractall(self.download_directory)
+            elif files[0].name.endswith(".gz"):
+                with gzip.open(files[0].as_uri(), 'rb') as gz:
+                    with open(self.download_directory, 'wb') as uncompressed:
+                        shutil.copyfileobj(gz, uncompressed)
+            return True
+
+    def download_and_extract(self):
+        download = self.__download_raw_corpus()
+        if download:
+            extract = self.__extract_corpus()
+            if extract:
+                return True
+        return False
+
+
+    def __unzip_file(self):
+        pass
 
 
 class CorpusDownloader(ABC):
@@ -86,21 +150,19 @@ class CorpusDownloader(ABC):
             return False  # filename
 
 
-
-
 class OpusEuroparlDatasetDownloader(CorpusDownloader):
     def __init__(self, dataset_config: DatasetConfigParser, corpus_name, lang_code="de"):
         super().__init__(dataset_config, corpus_name, lang_code)
         url = self.dataset_config.read_section(corpus_name).get("url")
         version = self.dataset_config.read_section(corpus_name).get("version")
         format = self.dataset_config.read_section(corpus_name).get("format")
-        self.raw_url = os.path.join(url,version, format)
+        self.raw_url = os.path.join(url, version, format)
 
     def maybe_download_and_extract(self, url, file="{}-en.tmx"):
         download = super().download_files(url, file)
 
         if download:
-            #europarl {'url': '"http://opus.nlpl.eu/download.php?f=Europarl"', 'version': '"v7"', 'genre': '"law"', 'format': '"tmx"', 'download': '"data/raw/europarl/"'}
+            # europarl {'url': '"http://opus.nlpl.eu/download.php?f=Europarl"', 'version': '"v7"', 'genre': '"law"', 'format': '"tmx"', 'download': '"data/raw/europarl/"'}
 
             data_dir = os.path.join(GENERAL_DATA_DIR, self.corpus_name)
             os.makedirs(data_dir, exist_ok=True)
@@ -108,7 +170,7 @@ class OpusEuroparlDatasetDownloader(CorpusDownloader):
             if self.tmx:
                 ##http://opus.nlpl.eu/download.php?f=Europarl/v7/tmx/de-en.tmx.gz
 
-                append_string = file + "."+self.dataset_config.read_section(self.corpus_name).get("compression")
+                append_string = file + "." + self.dataset_config.read_section(self.corpus_name).get("compression")
                 url = os.path.join(self.raw_url, append_string)
                 print("URL")
                 print(url)
