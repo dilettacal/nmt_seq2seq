@@ -1,0 +1,15 @@
+tmx_datasets:
+  - europarl:
+      genre: "law"
+      version: "v7"
+      url: "http://opus.nlpl.eu/download.php?f=Europarl"
+
+  - ted2013:
+      genre: "spoken_tv"
+      version: "v1.1"
+      url: "http://opus.nlpl.eu/download.php?f=TED2013"
+
+  - tatoeba:
+      genre: "daily_life"
+      version: "v20190709"
+      url: "http://opus.nlpl.eu/download.php?f=Tatoeba"

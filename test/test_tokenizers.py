@@ -2,7 +2,7 @@ import unittest
 import spacy
 
 from project.utils.get_tokenizer import get_custom_tokenizer
-from project.utils.utils_tokenizer import *
+from project.utils.tokenizers import *
 
 class TestEnvironmentTokenizers(unittest.TestCase):
 

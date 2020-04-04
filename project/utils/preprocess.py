@@ -5,13 +5,11 @@ import urllib
 from project.utils.data import split_data, persist_txt
 from project.utils.external.europarl import maybe_download_and_extract_dataset
 from project.utils.external.tmx_to_text import Converter, FileOutput
-from project.utils.get_corpur_parser import get_corpus_parser
 from project.utils.get_tokenizer import get_custom_tokenizer
-from project.utils.utils_tokenizer import SpacyTokenizer
-from project.utils.utils_functions import convert_time_unit
-from project.utils.utils_logging import Logger
-from project.utils.utils_parsers import DatasetConfigParser
+from project.utils.tokenizers import SpacyTokenizer
+from project.utils.utils import convert_time_unit, Logger
 from settings import DATA_DIR_RAW, DATA_DIR_PREPRO, CONFIG_PATH
+import yaml
 import os
 
 from project.utils.datasets import TMXDataset
@@ -164,10 +162,6 @@ def raw_preprocess(parser):
     CORPUS = parser.dataset
     lang_code = parser.lang_code.lower()
     ## read dataset configs
-
-    config = DatasetConfigParser()
-    corpus_parser = get_corpus_parser(CORPORA, config)
-
 
     with open(CONFIG_PATH) as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
