@@ -17,9 +17,9 @@ from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.constants import SOS_TOKEN, EOS_TOKEN, PAD_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
 from project.utils.parsers.get_translation_parser import translation_parser
-from project.utils.train_preprocessing import get_vocabularies_and_iterators
-from project.utils.translators import Translator
-from project.utils.utils import Logger
+from project.utils.utils_train_preprocessing import get_vocabularies_and_iterators
+from project.utils.utils_translator import Translator
+from project.utils.utils_logging import Logger
 
 UTF8Reader = codecs.getreader('utf8')
 sys.stdin = UTF8Reader(sys.stdin)

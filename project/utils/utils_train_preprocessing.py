@@ -6,7 +6,7 @@ from torchtext import datasets, data as data
 from torchtext.data import Field
 from project.utils.constants import PAD_TOKEN, UNK_TOKEN, SOS_TOKEN, EOS_TOKEN
 from project.utils.get_tokenizer import get_custom_tokenizer
-from project.utils.utils import convert_time_unit
+from project.utils.utils_functions import convert_time_unit
 from project.utils.datasets import Seq2SeqDataset
 from settings import DATA_DIR_PREPRO
 import numpy as np

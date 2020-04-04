@@ -7,10 +7,10 @@ from project.model.models import get_nmt_model, Seq2Seq
 from project.utils.constants import SOS_TOKEN, PAD_TOKEN, EOS_TOKEN, UNK_TOKEN
 from project.utils.experiment import Experiment
 from project.utils.get_tokenizer import get_custom_tokenizer
-from project.utils.tokenizers import SpacyTokenizer, FastTokenizer
-from project.utils.utils import Logger
+from project.utils.utils_tokenizer import SpacyTokenizer, FastTokenizer
+from project.utils.utils_logging import Logger
 from translate import translate
-from project.utils.translators import Translator
+from project.utils.utils_translator import Translator
 
 user_input = "Die europäische Union ist groß."
 

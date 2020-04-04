@@ -1,6 +1,6 @@
 import argparse
 
-from project.utils.utils import str2bool
+from project.utils.utils_functions import str2bool
 
 
 def experiment_parser():

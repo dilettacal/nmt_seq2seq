@@ -26,7 +26,6 @@ class Translator(object):
         self.max_len = max_len
         self.src_tokenizer = src_tokenizer
 
-
     def predict_sentence(self, sentence, stdout=False):
         sentence = self.src_tokenizer.tokenize(sentence.lower())
         #### Changed from original ###
