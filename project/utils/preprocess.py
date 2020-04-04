@@ -24,7 +24,6 @@ def get_datasets(config, names):
     for i, dataset in enumerate(config):
         name = names[i]
         ds_dict = dataset[names[i]]
-        print(name)
         genre = ds_dict["genre"]
         version = ds_dict["version"]
         url = ds_dict["url"]
@@ -162,7 +161,7 @@ def preprocess_single_dataset(dataset, lang_code, parser):
 
 def raw_preprocess(parser):
     # configurations
-    CORPORA = parser.dataset
+    CORPUS = parser.dataset
     lang_code = parser.lang_code.lower()
     ## read dataset configs
 
@@ -176,8 +175,8 @@ def raw_preprocess(parser):
         tmx_datasets = get_datasets(datasets, flatten(datasets))
 
     available_names = [ds.name for ds in tmx_datasets]
-    corpora = [corpus for corpus in CORPORA if corpus in available_names]
-    datasets = [dataset for dataset in tmx_datasets if dataset.name in corpora]
+    assert CORPUS in available_names, "Provide valid corpus name!"
+    datasets = [dataset for dataset in tmx_datasets if dataset.name == CORPUS]
 
     for dataset in datasets:
         print("Preprocessing dataset ", dataset.name)
