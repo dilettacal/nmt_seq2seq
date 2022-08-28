@@ -2,8 +2,10 @@ import os
 import time
 from collections import Counter
 
-from torchtext import datasets, data as data
-from torchtext.data import Field
+from torchtext.datasets import IWSLT2017
+from torchtext.legacy import data
+from torchtext.legacy.data import Field
+
 from project.utils.constants import PAD_TOKEN, UNK_TOKEN, SOS_TOKEN, EOS_TOKEN
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.utils import convert_time_unit
@@ -92,7 +94,7 @@ def get_vocabularies_and_iterators(experiment, data_dir=None, max_len=30):
         os.makedirs(path, exist_ok=True)
         exts = (".en", ".de") if experiment.get_src_lang() == "en" else (".de", ".en")
         ## see: https://lukemelas.github.io/machine-translation.html
-        train, val, test = datasets.IWSLT.splits(root=path,
+        train, val, test = IWSLT2017.splits(root=path,
                                                  exts=exts, fields=(src_vocab, trg_vocab),
                                                  filter_pred=lambda x: max(len(vars(x)['src']), len(vars(x)['trg'])) <= experiment.truncate)
 

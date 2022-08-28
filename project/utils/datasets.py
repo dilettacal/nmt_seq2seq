@@ -1,7 +1,8 @@
 import os
-from torchtext import data as data
-from torchtext.data import Dataset
 import random
+
+from torchtext.legacy.data import Dataset, Example
+
 from settings import SEED
 random.seed(SEED)
 
@@ -56,7 +57,7 @@ class Seq2SeqDataset(Dataset):
                     src_line = ' '.join(src_line)
                     trg_line = ' '.join(trg_line)
 
-                examples.append(data.Example.fromlist(
+                examples.append(Example.fromlist(
                     [src_line, trg_line], fields))
 
             if reduce > 0 and i == reduce:
