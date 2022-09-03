@@ -6,6 +6,6 @@ def data_prepro_parser():
         description='Preprocess Europarl Dataset for NMT. \nThis script allows you to preprocess and tokenize the Europarl Dataset.')
     parser.add_argument("--lang_code", default="de", type=str,
                         help="First language is English. Specifiy with 'lang_code' the second language as language code (e.g. 'de').")
-    parser.add_argument("--corpus", default="europarl", type=str,
+    parser.add_argument("--corpus", default="europarl", type=str, nargs="+",
                         help="Specify a corpus.")
     return parser

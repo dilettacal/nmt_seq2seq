@@ -7,12 +7,10 @@ from torchtext import data
 from torchtext.data import Field
 
 from project.utils.constants import PAD_TOKEN, UNK_TOKEN, SOS_TOKEN, EOS_TOKEN
-from project.utils.corpus import CORPORA_LINKS_TMX
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.utils import convert_time_unit
 from project.utils.datasets import Seq2SeqDataset
-from settings import DATA_DIR_PREPRO
-
+from settings import DATA_DIR_PREPRO, CORPORA_LINKS_TMX
 
 
 def get_vocabularies_and_iterators(experiment, data_dir=None, max_len=30):
