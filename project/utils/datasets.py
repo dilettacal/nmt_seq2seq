@@ -1,7 +1,9 @@
+import logging
 import os
 import random
 
-from torchtext.legacy.data import Dataset, Example
+from torchtext.data import Dataset
+from torchtext import data as data
 
 from settings import SEED
 random.seed(SEED)
@@ -35,7 +37,7 @@ class Seq2SeqDataset(Dataset):
         if not src_exist or not trg_exist:
             return None
 
-        print("Preprocessing files: {}, {}".format(src_path, trg_path))
+        logging.info("Preprocessing files: {}, {}".format(src_path, trg_path))
         src_lines = [line.strip("\n") for line in
                          open(os.path.join(src_path), mode="r",
                               encoding="utf-8").readlines() if line]
@@ -57,7 +59,7 @@ class Seq2SeqDataset(Dataset):
                     src_line = ' '.join(src_line)
                     trg_line = ' '.join(trg_line)
 
-                examples.append(Example.fromlist(
+                examples.append(data.Example.fromlist(
                     [src_line, trg_line], fields))
 
             if reduce > 0 and i == reduce:
