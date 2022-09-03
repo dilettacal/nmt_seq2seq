@@ -1,6 +1,7 @@
 """
 Main script to run nmt experiments
 """
+import logging
 import os, datetime, time, sys
 
 import torch
@@ -20,7 +21,7 @@ from settings import MODEL_STORE
 def main():
     TRAIN_SUB_SAMPLE = 170000
     experiment = Experiment(experiment_parser())
-    print("Running experiment on:", experiment.get_device())
+    logging.info("Running experiment on:", experiment.get_device())
     # Model configuration
     if experiment.attn != "none":
         experiment.model_type = "custom"
@@ -28,7 +29,7 @@ def main():
         experiment.model_type = "s"
 
     model_type = experiment.model_type
-    print("Model Type", model_type)
+    logging.info("Model Type", model_type)
     src_lang = experiment.get_src_lang()
     trg_lang = experiment.get_trg_lang()
 
@@ -38,7 +39,7 @@ def main():
     direction = "bi" if experiment.bi else "uni"
 
     rnn_type = experiment.rnn_type
-    experiment_path = os.path.join(MODEL_STORE, lang_comb, model_type, rnn_type, str(layers),
+    experiment_path = os.path.join(MODEL_STORE, experiment.corpus, lang_comb, model_type, rnn_type, str(layers),
                                    direction,
                                    datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
     os.makedirs(experiment_path, exist_ok=True)
