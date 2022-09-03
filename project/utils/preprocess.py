@@ -4,7 +4,7 @@ import time
 import urllib
 
 from project.utils.data import split_data, persist_txt
-from project.utils.external.europarl import maybe_download_and_extract_europarl
+from project.utils.corpus import maybe_download_and_extract_corpus_from_opus
 from project.utils.external.tmx_to_text import Converter, FileOutput
 from project.utils.get_tokenizer import get_custom_tokenizer
 from project.utils.tokenizers import SpacyTokenizer
@@ -14,7 +14,7 @@ from settings import DATA_DIR_RAW, DATA_DIR_PREPRO
 
 def raw_preprocess(parser):
     # configurations
-    CORPUS_NAME = "europarl"
+    corpus = parser.corpus
     lang_code = parser.lang_code.lower()
     if lang_code == "en":
         raise SystemExit("English is the default language. Please provide second language!")
@@ -23,28 +23,31 @@ def raw_preprocess(parser):
     # Download the raw tmx file
     try:
         print("Trying to download the file ...")
-        maybe_download_and_extract_europarl(language_code=lang_code, tmx=True)
+        maybe_download_and_extract_corpus_from_opus(corpus=corpus, language_code=lang_code, tmx=True)
     except urllib.error.HTTPError as e:
         print(e)
-        raise SystemExit("Please download the parallel corpus manually from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
+        raise SystemExit("Please download the parallel corpus manually, i.e. from: http://opus.nlpl.eu/ | Europarl > Statistics and TMX/Moses Download "
             "\nby selecting the data from the upper-right triangle (e.g. en > de])")
 
-    path_to_raw_file = os.path.join(DATA_DIR_RAW, CORPUS_NAME, lang_code)
+    path_to_raw_file = os.path.join(DATA_DIR_RAW, corpus, lang_code)
     MAX_LEN, MIN_LEN = 30, 2  # min_len is by defaul 2 tokens
 
     file_name = lang_code + "-" + "en" + ".tmx"
     COMPLETE_PATH = os.path.join(path_to_raw_file, file_name)
     print(COMPLETE_PATH)
 
-    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), CORPUS_NAME, lang_code, "splits", str(MAX_LEN))
+    STORE_PATH = os.path.join(os.path.expanduser(DATA_DIR_PREPRO), corpus, lang_code, "splits", str(MAX_LEN))
     os.makedirs(STORE_PATH, exist_ok=True)
 
     start = time.time()
-    output_file_path = os.path.join(DATA_DIR_PREPRO, CORPUS_NAME, lang_code)
+    output_file_path = os.path.join(DATA_DIR_PREPRO, corpus, lang_code)
 
     # Conversion tmx > text
     converter = Converter(output=FileOutput(output_file_path))
-    converter.convert([COMPLETE_PATH])
+    try:
+        converter.convert([COMPLETE_PATH])
+    except TypeError:
+        pass
     print("Converted lines:", converter.output_lines)
     print("Extraction took {} minutes to complete.".format(convert_time_unit(time.time()-start)))
 
