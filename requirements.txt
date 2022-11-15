@@ -73,7 +73,7 @@ pathtools==0.1.2
 pathy @ file:///home/conda/feedstock_root/build_artifacts/pathy_1656568808184/work
 pexpect @ file:///home/conda/feedstock_root/build_artifacts/pexpect_1602535608087/work
 pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1602536217715/work
-Pillow==9.2.0
+Pillow==9.3.0
 pkgutil_resolve_name @ file:///home/conda/feedstock_root/build_artifacts/pkgutil-resolve-name_1633981968097/work
 ply==3.11
 preshed @ file:///home/conda/feedstock_root/build_artifacts/preshed_1660601805173/work
