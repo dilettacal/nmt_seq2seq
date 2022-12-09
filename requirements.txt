@@ -9,7 +9,7 @@ bleach @ file:///home/conda/feedstock_root/build_artifacts/bleach_1656355450470/
 blis @ file:///home/conda/feedstock_root/build_artifacts/cython-blis_1656314523915/work
 brotlipy @ file:///home/conda/feedstock_root/build_artifacts/brotlipy_1648854175163/work
 catalogue @ file:///home/conda/feedstock_root/build_artifacts/catalogue_1661366525041/work
-certifi==2022.6.15
+certifi==2022.12.7
 cffi @ file:///home/conda/feedstock_root/build_artifacts/cffi_1656782821535/work
 charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1661170624537/work
 click @ file:///home/conda/feedstock_root/build_artifacts/click_1651215152883/work
